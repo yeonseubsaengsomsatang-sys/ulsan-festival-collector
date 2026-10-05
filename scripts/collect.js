@@ -137,7 +137,10 @@ async function main() {
         if (seen[c.url]) continue; // already surfaced in a past run
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
         newItems.push({
-          id: `gh-${Buffer.from(c.url).toString("base64url").slice(0, 24)}`,
+          // sha256 of the full URL, not a truncated base64 of it — URLs from the
+          // same board share a long prefix, so slicing plain base64 collided across
+          // different articles (fixed 2026-10-05).
+          id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
           region: "울산",
           sourceOrg: board.sourceOrg,

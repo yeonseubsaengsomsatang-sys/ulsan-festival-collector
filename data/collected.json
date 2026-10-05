@@ -328,5 +328,38 @@
     "status": "pending",
     "organizerType": "official",
     "memo": "자동수집(GitHub Actions, 울산광역시청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-aHR0cHM6Ly93d3cuZG9uZ2d1",
+    "name": "동구, 2026 울산 조선해양축제 평가 보고회 개최",
+    "region": "울산",
+    "sourceOrg": "동구청 보도자료",
+    "sourceUrl": "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=212645",
+    "collectedAt": "2026-10-05T05:09:58.888Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 동구청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-aHR0cHM6Ly93d3cuZG9uZ2d1",
+    "name": "울산 동구, 2026 청년센터 오픈데이 ‘청년들이 함께 만들어가는 축제’ 개최",
+    "region": "울산",
+    "sourceOrg": "동구청 보도자료",
+    "sourceUrl": "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=212523",
+    "collectedAt": "2026-10-05T05:10:05.859Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 동구청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-aHR0cHM6Ly93d3cudWxzYW5u",
+    "name": "고래문화재단, 제30회 울산고래축제 자원봉사 활동가 모집",
+    "region": "울산",
+    "sourceOrg": "남구청 보도자료",
+    "sourceUrl": "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardArticle.do?bbsId=press&nttId=532378",
+    "collectedAt": "2026-10-05T05:10:16.448Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 남구청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
   }
 ]

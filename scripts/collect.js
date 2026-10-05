@@ -42,17 +42,26 @@ const BOARDS = [
   // ---- 중구청 (INFERRED: view.ulsan -> list.ulsan by the site's own naming convention) ----
   { org: "울산광역시 중구청", sourceOrg: "중구청 새소식", url: "https://www.junggu.ulsan.kr/board/list.ulsan?boardId=BBS_0000057&menuCd=DOM_000000102003001000&paging=ok&startPage=1" },
 
-  // ---- 동구청 (VERIFIED working keyword search per site testing 2026-09-24) ----
+  // ---- 동구청 (FIXED 2026-10-05: ?searchWrd= does nothing — the site's real search
+  // submits via POST with a CSRF token, so GET keyword search was silently returning
+  // the same unfiltered page 1 every time. Switched to plain multi-page listing
+  // (like 북구청) so the existing local keyword regex has real content to scan.) ----
   ...["BBSMSTR_000000000323", "BBSMSTR_000000000322"].flatMap((bbsId) =>
-    KEYWORDS_FOR_SEARCH.map((kw) => ({
+    [1, 2, 3].map((page) => ({
       org: "울산광역시 동구청",
       sourceOrg: bbsId === "BBSMSTR_000000000323" ? "동구청 알림사항" : "동구청 보도자료",
-      url: `https://www.donggu.ulsan.kr/cop/bbs/selectBoardList.do?bbsId=${bbsId}&searchWrd=${encodeURIComponent(kw)}`,
+      url: `https://www.donggu.ulsan.kr/cop/bbs/selectBoardList.do?bbsId=${bbsId}&pageIndex=${page}`,
     }))
   ),
 
-  // ---- 남구청 (INFERRED: selectBoardArticle.do -> selectBoardList.do convention) ----
-  { org: "울산광역시 남구청", sourceOrg: "남구청 새소식", url: "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardList.do?bbsId=namguNews" },
+  // ---- 남구청 (FIXED 2026-10-05: bbsId=namguNews is a traffic/tax/civil-affairs board —
+  // checked 18 pages back, zero festival-related posts. bbsId=press (보도자료) actually
+  // carries them, e.g. "고래문화재단, 제30회 울산고래축제 자원봉사 활동가 모집".) ----
+  ...[1, 2, 3].map((page) => ({
+    org: "울산광역시 남구청",
+    sourceOrg: "남구청 보도자료",
+    url: `https://www.ulsannamgu.go.kr/cop/bbs/selectBoardList.do?bbsId=press&pageIndex=${page}`,
+  })),
 
   // ---- 울주군청 (VERIFIED working search endpoint per site testing 2026-09-24) ----
   ...KEYWORDS_FOR_SEARCH.map((kw) => ({

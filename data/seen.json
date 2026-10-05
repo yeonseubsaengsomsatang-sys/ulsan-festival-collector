@@ -118,5 +118,17 @@
   "https://www.ulsan.go.kr/u/rep/bbs/view.do?mId=001004001001000000&bbsId=BBS_0000000000000003&dataId=184273": {
     "firstSeen": "2026-10-05T04:42:56.836Z",
     "org": "울산광역시청"
+  },
+  "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=212645": {
+    "firstSeen": "2026-10-05T05:09:58.886Z",
+    "org": "울산광역시 동구청"
+  },
+  "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=212523": {
+    "firstSeen": "2026-10-05T05:10:05.859Z",
+    "org": "울산광역시 동구청"
+  },
+  "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardArticle.do?bbsId=press&nttId=532378": {
+    "firstSeen": "2026-10-05T05:10:16.448Z",
+    "org": "울산광역시 남구청"
   }
 }

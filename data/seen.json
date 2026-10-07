@@ -130,5 +130,21 @@
   "https://www.ulsan.go.kr/u/rep/bbs/view.do?mId=001004001001000000&bbsId=BBS_0000000000000003&dataId=184273": {
     "firstSeen": "2026-10-05T07:04:15.563Z",
     "org": "울산광역시청"
+  },
+  "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=69719&ptIdx=372&mId=0102000000": {
+    "firstSeen": "2026-10-07T21:14:27.662Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.ulju.ulsan.kr/eunyang/bbs/view.do?bIdx=69743&ptIdx=229&mId=0401000000": {
+    "firstSeen": "2026-10-07T21:14:27.663Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.ulju.ulsan.kr/ulju/bbs/view.do?bIdx=69682&ptIdx=146&mId=0404020000": {
+    "firstSeen": "2026-10-07T21:14:27.663Z",
+    "org": "울산광역시 울주군청"
+  },
+  "javascript:;": {
+    "firstSeen": "2026-10-07T21:14:27.663Z",
+    "org": "울산광역시 울주군청"
   }
 }

@@ -361,5 +361,49 @@
     "status": "pending",
     "organizerType": "official",
     "memo": "자동수집(GitHub Actions, 울산광역시청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-Sx-uez29DNpYwJz_",
+    "name": "언양불고기축제 추진위원회 내방_20261006",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=69719&ptIdx=372&mId=0102000000",
+    "collectedAt": "2026-10-07T21:14:27.663Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-jLmI2ebl5WvVea17",
+    "name": "2026 울산공업축제 추진계획 안내",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "https://www.ulju.ulsan.kr/eunyang/bbs/view.do?bIdx=69743&ptIdx=229&mId=0401000000",
+    "collectedAt": "2026-10-07T21:14:27.663Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-N5STiEqOedxSVZTF",
+    "name": "울주군 언양 한우불고기축제, 막바지 준비 ‘착착’",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "https://www.ulju.ulsan.kr/ulju/bbs/view.do?bIdx=69682&ptIdx=146&mId=0404020000",
+    "collectedAt": "2026-10-07T21:14:27.663Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-lfXlPY3-MCPOPb4m",
+    "name": "옹기축제",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "javascript:;",
+    "collectedAt": "2026-10-07T21:14:27.663Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
   }
 ]

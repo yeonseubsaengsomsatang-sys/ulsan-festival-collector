@@ -405,5 +405,16 @@
     "status": "pending",
     "organizerType": "official",
     "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-HUNXlLnbNj0RRq4D",
+    "name": "제18회 남창옹기종기시장 한마음축제_20261008",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=69791&ptIdx=372&mId=0102000000",
+    "collectedAt": "2026-10-08T21:15:15.461Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
   }
 ]

@@ -427,5 +427,16 @@
     "status": "pending",
     "organizerType": "official",
     "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-382Z6yk_GwEpu3MM",
+    "name": "울주군 언양한우불고기축제 성료",
+    "region": "울산",
+    "sourceOrg": "울주군청 통합검색",
+    "sourceUrl": "https://www.ulju.ulsan.kr/ulju/bbs/view.do?bIdx=69851&ptIdx=146&mId=0404020000",
+    "collectedAt": "2026-10-12T21:14:09.397Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
   }
 ]

@@ -438,5 +438,16 @@
     "status": "pending",
     "organizerType": "official",
     "memo": "자동수집(GitHub Actions, 울산광역시 울주군청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
+  },
+  {
+    "id": "gh-Hk-K-mgEtk9DF1EC",
+    "name": "울산고래축제 30주년, 시민이 주인공인 ‘서른 살 파티’ 열린다.",
+    "region": "울산",
+    "sourceOrg": "남구청 보도자료",
+    "sourceUrl": "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardArticle.do?bbsId=press&nttId=537287",
+    "collectedAt": "2026-10-13T21:23:32.483Z",
+    "status": "pending",
+    "organizerType": "official",
+    "memo": "자동수집(GitHub Actions, 울산광역시 남구청). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인."
   }
 ]

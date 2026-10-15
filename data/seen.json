@@ -206,5 +206,17 @@
   "https://www.gimhae.go.kr/dangam/html/sub/05_04.jsp?amode=view&idx=9": {
     "firstSeen": "2026-10-15T06:33:10.523Z",
     "org": "김해시청"
+  },
+  "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=212909": {
+    "firstSeen": "2026-10-15T21:26:11.238Z",
+    "org": "울산광역시 동구청"
+  },
+  "https://www.gimhae.go.kr/dangam/html/sub/05_01.jsp?amode=view&idx=22": {
+    "firstSeen": "2026-10-15T21:26:52.577Z",
+    "org": "김해시청"
+  },
+  "https://www.gimhae.go.kr/dangam/html/sub/05_01.jsp?amode=view&idx=21&cpage=1&gcode=1002": {
+    "firstSeen": "2026-10-15T21:26:52.810Z",
+    "org": "김해시청"
   }
 }

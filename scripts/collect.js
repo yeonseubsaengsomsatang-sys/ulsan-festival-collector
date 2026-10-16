@@ -134,6 +134,50 @@ const GYEONGJU_GIMHAE_BOARDS = [
   //  - 김해문화관광재단 http://www.ghcf.or.kr/ (접속 실패)
 ];
 
+// ---- 경상남도 밀양시청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
+// 조사 결과: www.miryang.go.kr 메인의 "보도자료" 메뉴가 실제로 가리키는 목록 URL은
+// /web/bbs/selectBoardList.do?bbsId=BBSMSTR_000000000356&mnNo=20100000000 (처음 추정했던
+// /cop/bbs/... 경로는 전부 404 — 메뉴 링크를 직접 따라가 재확인함). 페이지 제목이
+// "목록 > 보도자료"이고 페이지네이션이 939페이지까지 있어 실제 운영 중인 게시판임을 확인.
+// 이 사이트의 목록 카드 마크업은 <a href="...selectBoardDetail.do..."> 하나 안에 썸네일
+// 이미지(alt=제목 중복) + 제목(<span class="Br-h3tit1">) + 날짜(<span class="BrDate">)가
+// 전부 중첩돼 있어, 기존 ANCHOR_RE_WIDE(500자 캡처)로는 제목 앞뒤에 다른 텍스트가 섞여
+// 들어오거나 길이 제한에 걸려 추출되지 않음(실측 확인). 그래서 이 사이트 전용으로
+// href(selectBoardDetail.do) · 제목(Br-h3tit1) · 날짜(BrDate)를 한 번에 짝지어 뽑는
+// 전용 정규식을 따로 둠 — 실제 10건 추출 테스트에서 제목·원문링크·게시일(2026.10.15 등)이
+// 전부 정상 추출됨을 확인했음.
+const MIRYANG_ITEM_RE =
+  /<a href="([^"]+selectBoardDetail\.do[^"]+)">[\s\S]{0,700}?Br-h3tit1">([^<]{4,200})<[\s\S]{0,700}?BrDate">([^<]{4,20})</g;
+
+function extractMiryangCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(MIRYANG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    const rawHref = m[1].replace(/;jsessionid=[^?]*/, "");
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(rawHref), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3].trim() });
+  }
+  return out;
+}
+
+const MIRYANG_BOARDS = [1, 2, 3].map((page) => ({
+  org: "경상남도 밀양시청",
+  sourceOrg: "밀양시청 보도자료",
+  url: `https://www.miryang.go.kr/web/bbs/selectBoardList.do?bbsId=BBSMSTR_000000000356&mnNo=20100000000&pageIndex=${page}`,
+  region: "경남",
+  city: "밀양",
+  extractor: extractMiryangCandidates,
+}));
+
 // 경주·김해 확대분 전용 키워드 — 기존 KEYWORD_RE는 그대로 두고(울산 보드 동작 불변),
 // 이 사이트들에서 실제로 관찰된 표현("버스킹 참여자 모집", "체험부스팀. 공연팀 모집안내")을
 // 추가로 포함한 더 넓은 정규식을 따로 둠.
@@ -184,14 +228,96 @@ function extractPostCandidates(html, pageUrl, keywordRe) {
   return out;
 }
 
-// 모집 관련 제목 여부 — KEYWORD_RE보다 좁게, "모집" 계열 공고만 recruit 후보로 봄
+// 모집 관련 제목 여부 — KEYWORD_RE보다 좁게, "모집" 계열 공고만 1차 후보로 봄
 const RECRUIT_TITLE_RE = /(모집|신청자\s*모집|참여자\s*모집|참가업체\s*모집|셀러\s*모집)/;
-// 이미 끝난 모집(결과/선정/완료) — 제목만으로 general 처리
-const RESULT_TITLE_RE = /(선정\s*결과|결과\s*안내|마감되었|종료되었|성황리|마무리)/;
+// 실제 판매부스·체험부스·프리마켓·푸드트럭·셀러 등 "부스/상인" 모집인지 — 교육프로그램
+// 참가자 모집, 자원봉사 모집, 공연팀/버스킹 모집처럼 부스와 무관한 모집과 구분하기 위한
+// 좁은 키워드(2026-10-16 추가: 분류 정확도 개선 요청에 따라 신설).
+const BOOTH_KEYWORD_RE =
+  /(판매\s*부스|체험\s*부스|먹거리\s*부스|식음료\s*부스|프리마켓|플리마켓|푸드트럭|나눔장터|셀러\s*모집|셀러모집|부스\s*모집|부스\s*참가|부스\s*운영자|입점\s*모집|판매자\s*모집|참여상인\s*모집|참가업체\s*모집)/;
+// 이미 끝난 모집/행사(결과·선정·완료·개최 종료) — 제목만으로 general 처리.
+// "성료"가 빠져 있어 "OO축제 성료" 같은 종료 소식이 그대로 섞여 들어오던 문제를
+// 2026-10-16에 실제 수집 결과에서 확인하고 추가함(밀양시청 테스트 중 발견).
+const RESULT_TITLE_RE = /(선정\s*결과|결과\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
 // 본문에서 모집/접수/신청 기간 날짜 범위 추출
 const DATE_RANGE_RE =
   /(?:모집|접수|신청)\s*(?:기간|기한)?\s*[:：]?\s*(\d{4}[.\-]\s?\d{1,2}[.\-]\s?\d{1,2})\s*(?:~|-|부터)\s*(\d{4}[.\-]\s?\d{1,2}[.\-]\s?\d{1,2})/;
 const ATTACHMENT_RE = /([^\s]+\.(?:hwp|pdf|jpg|jpeg|png))\s*다운로드/gi;
+
+// 부스 종류 라벨 — BOOTH_KEYWORD_RE가 왜 매치됐는지 사람이 바로 알아볼 수 있도록
+// title/본문에서 가장 먼저 매치되는 패턴 하나를 골라 boothType 필드에 남긴다.
+const BOOTH_TYPE_PATTERNS = [
+  ["프리마켓", /프리마켓/],
+  ["플리마켓", /플리마켓/],
+  ["푸드트럭", /푸드트럭/],
+  ["먹거리부스", /먹거리\s*부스|식음료\s*부스/],
+  ["체험부스", /체험\s*부스/],
+  ["판매부스", /판매\s*부스|판매자\s*모집|참여상인\s*모집/],
+  ["셀러모집", /셀러\s*모집|셀러모집/],
+  ["나눔장터", /나눔장터/],
+  ["부스모집", /부스\s*모집|부스\s*참가|부스\s*운영자|입점\s*모집|참가업체\s*모집/],
+];
+function detectBoothType(text) {
+  for (const [label, re] of BOOTH_TYPE_PATTERNS) {
+    if (re.test(text)) return label;
+  }
+  return null;
+}
+
+// 제목(+가능하면 본문)을 보고 noticeType을 정하는 공통 분류기 — 기존 기관(울산·경주·김해)과
+// 신규 기관(밀양) 모두 이 한 함수를 거치도록 통일해 "같은 기준"으로 분류되게 함
+// (2026-10-16, 분류 정확도 개선 요청에 따라 신설).
+//   - "recruit" : 판매부스·체험부스·프리마켓·푸드트럭·셀러 등 부스/상인 모집 → 우선 검토 대상
+//   - "general" : 축제 개최/종료 소식, 교육 프로그램·자원봉사·공연팀 등 부스와 무관한 모집
+//   - "review"  : 제목만으로 부스 모집 여부를 확정할 수 없고 본문도 애매함 → 사람이 원문 확인
+function classifyNotice(title, bodyText) {
+  const isResult = RESULT_TITLE_RE.test(title);
+  const titleHasBooth = BOOTH_KEYWORD_RE.test(title);
+  const titleHasRecruit = RECRUIT_TITLE_RE.test(title);
+  const bodyHasBooth = !!bodyText && BOOTH_KEYWORD_RE.test(bodyText);
+
+  if (isResult) {
+    return {
+      noticeType: "general",
+      boothType: null,
+      reason: "제목에 '성료/마무리/결과 안내' 등 종료성 표현이 있어 이미 끝난 소식으로 분류됨.",
+    };
+  }
+  if (titleHasBooth && titleHasRecruit) {
+    return {
+      noticeType: "recruit",
+      boothType: detectBoothType(title) || detectBoothType(bodyText || ""),
+      reason: "제목에 판매부스/체험부스/프리마켓/셀러 등 부스 모집 키워드가 명확히 포함됨 — 우선 검토 대상.",
+    };
+  }
+  if (titleHasRecruit && !titleHasBooth) {
+    if (bodyHasBooth) {
+      return {
+        noticeType: "review",
+        boothType: detectBoothType(bodyText),
+        reason: "제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요.",
+      };
+    }
+    return {
+      noticeType: "general",
+      boothType: null,
+      reason: "제목상 부스/셀러 모집이 아니라 일반 참가자·교육프로그램·자원봉사 등 모집으로 분류됨.",
+    };
+  }
+  // 제목에 "모집" 계열 단어 자체가 없는 경우
+  if (bodyHasBooth) {
+    return {
+      noticeType: "review",
+      boothType: detectBoothType(bodyText),
+      reason: "제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요.",
+    };
+  }
+  return {
+    noticeType: "general",
+    boothType: null,
+    reason: "제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨.",
+  };
+}
 
 function parseKoDate(s) {
   const m = s.replace(/\s/g, "").match(/(\d{4})[.\-](\d{1,2})[.\-](\d{1,2})/);
@@ -216,28 +342,29 @@ async function fetchAndClassifyDetail(detailUrl, title) {
     applyStart: null,
     applyEnd: null,
     noticeType: "general",
+    boothType: null,
     recruitStatus: "unknown",
     memo: "",
   };
   let bodyText = "";
+  let fetchFailNote = "";
   try {
     const html = await fetchText(detailUrl);
     bodyText = stripHtml(html);
   } catch (err) {
-    result.memo = `상세페이지 접속 실패(${err.message}) — 목록 제목만으로 분류함.`;
+    fetchFailNote = `상세페이지 접속 실패(${err.message}) — 본문은 확인 못 하고 제목만으로 분류함. `;
   }
 
-  const isResult = RESULT_TITLE_RE.test(title);
-  const isRecruitTitle = RECRUIT_TITLE_RE.test(title) && !isResult;
+  const cls = classifyNotice(title, bodyText);
+  result.noticeType = cls.noticeType;
+  result.boothType = cls.boothType;
 
-  if (!isRecruitTitle) {
-    result.noticeType = "general";
+  if (result.noticeType !== "recruit") {
     result.recruitStatus = "unknown";
-    result.memo = result.memo || "제목상 모집공고가 아니라 일반 축제 소식/결과 안내로 분류됨.";
+    result.memo = `${fetchFailNote}${cls.reason}`;
     return result;
   }
 
-  result.noticeType = "recruit";
   const dateMatch = bodyText.match(DATE_RANGE_RE);
   if (dateMatch) {
     const start = parseKoDate(dateMatch[1]);
@@ -255,10 +382,10 @@ async function fetchAndClassifyDetail(detailUrl, title) {
   const attachments = [...bodyText.matchAll(ATTACHMENT_RE)].map((m) => m[1]);
   if (result.recruitStatus === "unknown") {
     result.memo = attachments.length
-      ? `모집기간 등 세부정보가 본문에 없고 첨부파일(${attachments.join(", ")})에만 있을 가능성이 높음 — 원문 첨부파일을 직접 확인 후 모집중/마감 여부를 판단하세요.`
-      : "모집기간을 본문에서 확인하지 못함 — 원문을 직접 확인하세요.";
+      ? `${fetchFailNote}${cls.reason} 모집기간 등 세부정보가 본문에 없고 첨부파일(${attachments.join(", ")})에만 있을 가능성이 높음 — 원문 첨부파일을 직접 확인 후 모집중/마감 여부를 판단하세요.`
+      : `${fetchFailNote}${cls.reason} 모집기간을 본문에서 확인하지 못함 — 원문을 직접 확인하세요.`;
   } else {
-    result.memo = `본문에서 모집기간(${result.applyStart}~${result.applyEnd}) 확인됨. 참가자격·신청방법 등 세부사항은 원문/첨부파일에서 추가 확인 필요.`;
+    result.memo = `${cls.reason} 본문에서 모집기간(${result.applyStart}~${result.applyEnd}) 확인됨. 참가자격·신청방법 등 세부사항은 원문/첨부파일에서 추가 확인 필요.`;
   }
   return result;
 }
@@ -324,6 +451,12 @@ async function main() {
       for (const c of candidates) {
         if (seen[c.url]) continue; // already surfaced in a past run
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
+
+        // 2026-10-16: 경주·김해·밀양과 동일한 기준(classifyNotice)을 울산 보드에도 적용해
+        // 판매부스·체험부스·프리마켓 등 실제 부스 모집만 noticeType="recruit"(우선 검토)로
+        // 남기고, 축제 개최/종료 소식이나 교육·자원봉사 등 부스 무관 모집은 "general"로,
+        // 제목만으로 애매하면 "review"로 구분한다. (분류 정확도 개선 요청에 따른 변경)
+        const cls = await fetchAndClassifyDetail(c.url, c.title);
         newItems.push({
           // sha256 of the full URL, not a truncated base64 of it — URLs from the
           // same board share a long prefix, so slicing plain base64 collided across
@@ -333,10 +466,15 @@ async function main() {
           region: "울산",
           sourceOrg: board.sourceOrg,
           sourceUrl: c.url,
+          applyStart: cls.applyStart,
+          applyEnd: cls.applyEnd,
+          boothType: cls.boothType,
           collectedAt: new Date().toISOString(),
           status: "pending",
           organizerType: "official",
-          memo: `자동수집(GitHub Actions, ${board.org}). 원문 확인 후 승인 필요 — 모집기간 등 세부정보는 원문에서 직접 확인.`,
+          noticeType: cls.noticeType,
+          recruitStatus: cls.recruitStatus,
+          memo: `자동수집(GitHub Actions, ${board.org}). ${cls.memo}`,
         });
       }
     } catch (err) {
@@ -344,12 +482,15 @@ async function main() {
     }
   }
 
-  // ---- 경주·김해 확대분: 실제 모집 여부까지 분류해서 기록 (noticeType/recruitStatus) ----
+  // ---- 경주·김해·밀양 확대분: 실제 모집 여부까지 분류해서 기록 (noticeType/recruitStatus) ----
+  // 밀양시청은 목록 마크업이 달라 전용 추출기(extractMiryangCandidates)를 쓴다 — 그 외
+  // 흐름(상세페이지 분류, dedup, 데이터 저장)은 경주·김해와 완전히 동일하게 재사용한다.
   const seenThisRunByPost = new Set(); // 같은 글이 배너+목록 등 서로 다른 URL(쿼리파라미터만 다름)로 중복 추출되는 것 방지
-  for (const board of GYEONGJU_GIMHAE_BOARDS) {
+  for (const board of [...GYEONGJU_GIMHAE_BOARDS, ...MIRYANG_BOARDS]) {
     try {
       const html = await fetchText(board.url);
-      const candidates = extractPostCandidates(html, board.url, NEW_SITE_KEYWORD_RE);
+      const extractFn = board.extractor || ((h, u) => extractPostCandidates(h, u, NEW_SITE_KEYWORD_RE));
+      const candidates = extractFn(html, board.url);
       perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중)`);
 
       for (const c of candidates) {
@@ -368,13 +509,14 @@ async function main() {
           city: board.city,
           sourceOrg: board.sourceOrg,
           sourceUrl: c.url,
+          postedDate: c.postedDate || null,
           applyStart: cls.applyStart,
           applyEnd: cls.applyEnd,
           festivalStart: null,
           festivalEnd: null,
           applyLink: null,
           fee: null,
-          boothType: null,
+          boothType: cls.boothType,
           eligibility: null,
           ulsanEligible: "unknown",
           collectedAt: new Date().toISOString(),

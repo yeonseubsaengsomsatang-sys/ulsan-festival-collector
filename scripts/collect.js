@@ -160,7 +160,15 @@ function extractMiryangCandidates(html, pageUrl) {
     const rawHref = m[1].replace(/;jsessionid=[^?]*/, "");
     let absUrl;
     try {
-      absUrl = new URL(decodeEntities(rawHref), pageUrl).href;
+      const u = new URL(decodeEntities(rawHref), pageUrl);
+      // 2026-10-16 수정: pageIndex는 "지금 몇 페이지에서 봤는지"일 뿐 글의 정체성과
+      // 무관한데, 이 게시판은 날짜순이라 새 글이 쌓이면 같은 글이 다음 실행 때 다른
+      // pageIndex로 밀려 다른 URL(=다른 id)로 다시 "신규"로 잡히는 실제 중복 수집
+      // 버그가 있었음(nttId=198627 글이 pageIndex=2 -> 3으로 밀리며 중복 수집된 걸
+      // 재시도 기능 테스트 중 실측으로 발견). nttId가 글의 진짜 식별자이므로
+      // pageIndex는 URL에서 제거해 항상 같은 URL(=같은 id)이 나오게 고정한다.
+      u.searchParams.delete("pageIndex");
+      absUrl = u.href;
     } catch {
       continue;
     }
@@ -503,12 +511,45 @@ function decodeEntities(s) {
     .trim();
 }
 
+// 2026-10-16 추가: 울산·밀양·창원 기관에서 GitHub Actions 쪽 네트워크가 일시적으로
+// "fetch failed"(연결 자체 실패)를 뱉는 사례가 반복 관측됨 — 같은 코드로 몇 분 뒤
+// 재실행하면 정상 복구되는 걸 확인했었음(일시적 장애, 코드/URL 문제 아님). 그래서 모든
+// fetchText() 호출(게시판 목록 + 글 상세페이지 전부 이 함수를 통하므로 한 곳만 고치면
+// 전체 적용됨)에 "최초 시도 포함 총 3회(최초 1회 + 재시도 2회), 3초 간격" 재시도를 추가.
+// 재시도마다 실패 원인(err.message + err.cause, 있으면)을 즉시 콘솔에 남겨 다음에
+// FETCH FAILED가 또 나오면 DNS/타임아웃/HTTP 에러 중 무엇이었는지 바로 구분할 수 있게 함.
+const FETCH_MAX_RETRIES = 2;
+const FETCH_RETRY_DELAY_MS = 3000;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function describeFetchError(err) {
+  const cause = err && err.cause ? (err.cause.code || err.cause.message || String(err.cause)) : null;
+  return cause ? `${err.message} (원인: ${cause})` : err.message;
+}
+
 async function fetchText(url) {
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; UlsanFestivalCollector/1.0)" },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.text();
+  let lastErr;
+  for (let attempt = 1; attempt <= FETCH_MAX_RETRIES + 1; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; UlsanFestivalCollector/1.0)" },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.text();
+    } catch (err) {
+      lastErr = err;
+      const isLast = attempt === FETCH_MAX_RETRIES + 1;
+      console.log(
+        `  [fetch 실패 ${attempt}/${FETCH_MAX_RETRIES + 1}] ${url} — ${describeFetchError(err)}` +
+          (isLast ? " — 재시도 소진, 이 요청은 포기" : ` — ${FETCH_RETRY_DELAY_MS / 1000}초 후 재시도`)
+      );
+      if (!isLast) await sleep(FETCH_RETRY_DELAY_MS);
+    }
+  }
+  throw lastErr;
 }
 
 // Generic anchor extractor: works across differing board markups without
@@ -579,7 +620,7 @@ async function main() {
         });
       }
     } catch (err) {
-      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED — ${err.message}`);
+      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
     }
   }
 
@@ -602,7 +643,7 @@ async function main() {
       for (const c of candidates) {
         if (seen[c.url]) continue;
         const u = new URL(c.url);
-        const postKey = `${u.origin}${u.pathname}|${u.searchParams.get("idx") || u.searchParams.get("parm_bod_uid") || c.url}`;
+        const postKey = `${u.origin}${u.pathname}|${u.searchParams.get("idx") || u.searchParams.get("parm_bod_uid") || u.searchParams.get("nttId") || c.url}`;
         if (seenThisRunByPost.has(postKey)) continue;
         seenThisRunByPost.add(postKey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
@@ -634,7 +675,7 @@ async function main() {
         });
       }
     } catch (err) {
-      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED — ${err.message}`);
+      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
     }
   }
 

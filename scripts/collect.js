@@ -178,6 +178,107 @@ const MIRYANG_BOARDS = [1, 2, 3].map((page) => ({
   extractor: extractMiryangCandidates,
 }));
 
+// ---- 경상북도 영주시청 공지사항 · 경상북도 경산시청 고시공고 (2026-10-16 추가, 실제 fetch로 검증) ----
+// 둘 다 경주시청과 같은 "open_content/.../page.do?mnu_uid=" CMS 계열이지만, 목록 행의 CSS
+// 클래스가 배포마다 다름(영주: <td class="subject">, 경산: <td class="aL sub_tit">, 날짜 칸도
+// 영주는 class="date", 경산은 class="con_rgstDateTime") — 그래서 특정 클래스 이름에 기대지
+// 않고 "parm_bod_uid=가 포함된 링크의 title 속성(=항상 전체 제목이 온전히 들어있음) + 그 뒤
+// 가장 가까운 YYYY-MM-DD 날짜"를 뽑는 공용 추출기로 둘 다 처리한다. title 속성을 쓰는 이유:
+// 화면에 보이는 링크 텍스트는 "...긴 제목 중간에서 잘림... &nbsp;" 형태로 잘려 있어서, 잘린
+// 지점 뒤에 있던 키워드(예: "...행사 개최..." 뒤의 "참가자 모집")가 통째로 사라지는 걸
+// 영주시청 실제 응답으로 확인함 — title 속성에는 항상 전체 제목이 들어있어 이 문제가 없음.
+// 경산 "공지사항"(mnu_uid=6055)은 실제로 받아보니 게시판 목록이 아니라 포털 메인 화면이
+// 그대로 응답됨(parm_bod_uid= 링크 0개) — 추측 등록 금지 원칙에 따라 SKIPPED, 고시공고만 등록.
+// 날짜 탐색 범위를 4000자로 넉넉히 둔 이유: 첨부파일이 여러 개 달린 글(영주 실측 사례 —
+// 첨부 5개짜리 행)은 제목과 날짜 칸 사이에 첨부파일 목록 HTML이 2000자 넘게 끼어 있어,
+// 1500자로는 그 행의 날짜를 못 찾아 해당 글 자체가 통째로 누락됐음(실측으로 발견·수정).
+const OPEN_CONTENT_ITEM_RE =
+  /<a href="([^"]*parm_bod_uid=[^"]*)"[^>]*title="([^"]{4,200})">[\s\S]{0,4000}?(\d{4}-\d{2}-\d{2})/g;
+
+function extractOpenContentCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(OPEN_CONTENT_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const YEONGJU_GYEONGSAN_BOARDS = [
+  {
+    org: "경상북도 영주시청",
+    sourceOrg: "영주시청 공지사항",
+    url: "https://www.yeongju.go.kr/open_content/main/page.do?mnu_uid=1521",
+    region: "경북",
+    city: "영주",
+    extractor: extractOpenContentCandidates,
+  },
+  {
+    org: "경상북도 경산시청",
+    sourceOrg: "경산시청 고시공고",
+    url: "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=6334",
+    region: "경북",
+    city: "경산",
+    extractor: extractOpenContentCandidates,
+  },
+  // SKIPPED: 경산시청 공지사항 mnu_uid=6055 — 실제 응답이 포털 메인 화면이라 게시판 목록 없음.
+];
+
+// ---- 경상남도 창원특례시청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
+// 카드형 목록이라 제목(<strong class="t1">)에는 실제로 "축제"라는 단어가 없는 경우가 있었음
+// (실측 사례: 제목 "합성동의 가을밤, 맥주와 청춘으로 다시 들썩인다." — 실제 행사명("마산
+// 합성동 젊음의 거리 맥주 축제")은 그 아래 요약문 <span class="t2">에만 등장) — 제목만 보면
+// 이 글을 완전히 놓치므로, 제목+요약문을 합쳐서 키워드 판정을 한다.
+// 고시공고 게시판은 카드형이 아니라 단순 표 형태라 이번엔 추출기를 따로 검증하지 못해
+// SKIPPED — 보도자료만 등록.
+const CHANGWON_ITEM_RE =
+  /<a href="(\?[^"]*amode=view[^"]*)"[^>]*>[\s\S]{0,500}?<strong class="t1">([\s\S]{0,300}?)<\/strong>[\s\S]{0,150}?<span class="t2">([\s\S]{0,500}?)<\/span>[\s\S]{0,500}?<span class="t3">([^<]{4,20})<\/span>/g;
+
+function extractChangwonCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHANGWON_ITEM_RE.source, "g");
+  let m;
+  const clean = (s) => decodeEntities(s.replace(/<[^>]*>/g, "")).replace(/새\s*글/g, "").trim();
+  while ((m = re.exec(html))) {
+    const title = clean(m[2]);
+    const summary = clean(m[3]);
+    if (title.length < 4 || title.length > 200) continue;
+    const combined = `${title} ${summary}`;
+    if (!NEW_SITE_KEYWORD_RE.test(combined) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[4].trim() });
+  }
+  return out;
+}
+
+const CHANGWON_BOARDS = [
+  {
+    org: "경상남도 창원특례시청",
+    sourceOrg: "창원시청 보도자료",
+    url: "https://www.changwon.go.kr/cwportal/10310/10429/10432.web",
+    region: "경남",
+    city: "창원",
+    extractor: extractChangwonCandidates,
+  },
+  // SKIPPED: 창원시청 고시공고 — 보도자료와 마크업이 전혀 달라(카드형 아닌 단순 표) 이번엔
+  // 추출기를 따로 검증하지 못함. 추측 등록 금지 원칙에 따라 제외.
+];
+
 // 경주·김해 확대분 전용 키워드 — 기존 KEYWORD_RE는 그대로 두고(울산 보드 동작 불변),
 // 이 사이트들에서 실제로 관찰된 표현("버스킹 참여자 모집", "체험부스팀. 공연팀 모집안내")을
 // 추가로 포함한 더 넓은 정규식을 따로 둠.
@@ -482,11 +583,16 @@ async function main() {
     }
   }
 
-  // ---- 경주·김해·밀양 확대분: 실제 모집 여부까지 분류해서 기록 (noticeType/recruitStatus) ----
-  // 밀양시청은 목록 마크업이 달라 전용 추출기(extractMiryangCandidates)를 쓴다 — 그 외
-  // 흐름(상세페이지 분류, dedup, 데이터 저장)은 경주·김해와 완전히 동일하게 재사용한다.
+  // ---- 경주·김해·밀양·영주·경산·창원 확대분: 실제 모집 여부까지 분류해서 기록 ----
+  // 사이트마다 목록 마크업이 달라 전용 추출기를 쓰는 곳이 있다(밀양/영주·경산/창원) — 그 외
+  // 흐름(상세페이지 분류, dedup, 데이터 저장)은 전부 동일하게 재사용한다.
   const seenThisRunByPost = new Set(); // 같은 글이 배너+목록 등 서로 다른 URL(쿼리파라미터만 다름)로 중복 추출되는 것 방지
-  for (const board of [...GYEONGJU_GIMHAE_BOARDS, ...MIRYANG_BOARDS]) {
+  for (const board of [
+    ...GYEONGJU_GIMHAE_BOARDS,
+    ...MIRYANG_BOARDS,
+    ...YEONGJU_GYEONGSAN_BOARDS,
+    ...CHANGWON_BOARDS,
+  ]) {
     try {
       const html = await fetchText(board.url);
       const extractFn = board.extractor || ((h, u) => extractPostCandidates(h, u, NEW_SITE_KEYWORD_RE));

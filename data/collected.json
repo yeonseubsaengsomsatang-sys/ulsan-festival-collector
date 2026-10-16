@@ -855,5 +855,29 @@
     "noticeType": "general",
     "recruitStatus": "unknown",
     "memo": "자동수집(GitHub Actions, 경상남도 창원특례시청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
+  },
+  {
+    "id": "gh-TZN0DE5x6S1cE01C",
+    "name": "진주시ㆍ용인특례시 자매결연…상생협력 시대 연다",
+    "region": "경남",
+    "city": "진주",
+    "sourceOrg": "진주시청 보도자료",
+    "sourceUrl": "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39621817&amode=view&",
+    "postedDate": "2026-10-16",
+    "applyStart": null,
+    "applyEnd": null,
+    "festivalStart": null,
+    "festivalEnd": null,
+    "applyLink": null,
+    "fee": null,
+    "boothType": "나눔장터",
+    "eligibility": null,
+    "ulsanEligible": "unknown",
+    "collectedAt": "2026-10-16T08:26:24.512Z",
+    "status": "pending",
+    "organizerType": "official",
+    "noticeType": "review",
+    "recruitStatus": "unknown",
+    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
   }
 ]

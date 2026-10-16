@@ -242,15 +242,19 @@ const YEONGJU_GYEONGSAN_BOARDS = [
   // SKIPPED: 경산시청 공지사항 mnu_uid=6055 — 실제 응답이 포털 메인 화면이라 게시판 목록 없음.
 ];
 
-// ---- 경상남도 창원특례시청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
+// ---- 경상남도 창원특례시청·진주시청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
+// 둘 다 같은 "카드형" CMS(클래스명까지 완전히 동일: wrap1/a1/t1/t2/wrap1t3/t3)를 쓴다.
 // 카드형 목록이라 제목(<strong class="t1">)에는 실제로 "축제"라는 단어가 없는 경우가 있었음
-// (실측 사례: 제목 "합성동의 가을밤, 맥주와 청춘으로 다시 들썩인다." — 실제 행사명("마산
+// (실측 사례: 창원 "합성동의 가을밤, 맥주와 청춘으로 다시 들썩인다." — 실제 행사명("마산
 // 합성동 젊음의 거리 맥주 축제")은 그 아래 요약문 <span class="t2">에만 등장) — 제목만 보면
 // 이 글을 완전히 놓치므로, 제목+요약문을 합쳐서 키워드 판정을 한다.
-// 고시공고 게시판은 카드형이 아니라 단순 표 형태라 이번엔 추출기를 따로 검증하지 못해
+// 윈도우 크기(800/1000/2000/800/800)를 넉넉히 둔 이유: 진주시청 글 중 첨부파일 아이콘
+// (<img>)이 여러 개 달린 행은 제목(<strong class="t1">) 안에만 공백 포함 790자가 들어있어
+// 처음에 쓰던 더 좁은 창(500/300/150/500)으로는 통째로 매치 실패했음(실측으로 발견·수정).
+// 고시공고 게시판(창원)은 카드형이 아니라 단순 표 형태라 이번엔 추출기를 따로 검증하지 못해
 // SKIPPED — 보도자료만 등록.
 const CHANGWON_ITEM_RE =
-  /<a href="(\?[^"]*amode=view[^"]*)"[^>]*>[\s\S]{0,500}?<strong class="t1">([\s\S]{0,300}?)<\/strong>[\s\S]{0,150}?<span class="t2">([\s\S]{0,500}?)<\/span>[\s\S]{0,500}?<span class="t3">([^<]{4,20})<\/span>/g;
+  /<a href="(\?[^"]*amode=view[^"]*)"[^>]*>[\s\S]{0,800}?<strong class="t1">([\s\S]{0,1000}?)<\/strong>[\s\S]{0,2000}?<span class="t2">([\s\S]{0,800}?)<\/span>[\s\S]{0,800}?<span class="t3">([^<]{4,20})<\/span>/g;
 
 function extractChangwonCandidates(html, pageUrl) {
   const out = [];
@@ -283,8 +287,54 @@ const CHANGWON_BOARDS = [
     city: "창원",
     extractor: extractChangwonCandidates,
   },
+  {
+    org: "경상남도 진주시청",
+    sourceOrg: "진주시청 보도자료",
+    url: "https://www.jinju.go.kr/00138.web",
+    region: "경남",
+    city: "진주",
+    extractor: extractChangwonCandidates,
+  },
   // SKIPPED: 창원시청 고시공고 — 보도자료와 마크업이 전혀 달라(카드형 아닌 단순 표) 이번엔
   // 추출기를 따로 검증하지 못함. 추측 등록 금지 원칙에 따라 제외.
+];
+
+// ---- 경상남도 하동군청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
+// 창원·진주와 같은 CMS 계열(URL에 amode=view)이지만 화면 스킨이 전혀 다름 — 카드형이
+// 아니라 단순 표(<td class="tal"><a href="?...amode=view...">제목<i>새 글</i></a></td>,
+// 그 다음다음 칸에 날짜 <td>YYYY-MM-DD</td>)라 전용 추출기를 따로 둠(영주/경산이 같은
+// open_content CMS인데도 클래스명이 서로 달랐던 것과 같은 패턴).
+const HADONG_ITEM_RE =
+  /<a href="(\?[^"]*amode=view[^"]*)">([\s\S]{0,400}?)<\/a>[\s\S]{0,800}?(\d{4}-\d{2}-\d{2})/g;
+
+function extractHadongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(HADONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2].replace(/<[^>]*>/g, "")).replace(/새\s*글/g, "").replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const HADONG_BOARDS = [
+  {
+    org: "경상남도 하동군청",
+    sourceOrg: "하동군청 보도자료",
+    url: "https://www.hadong.go.kr/media/00013/03607.web",
+    region: "경남",
+    city: "하동",
+    extractor: extractHadongCandidates,
+  },
 ];
 
 // 경주·김해 확대분 전용 키워드 — 기존 KEYWORD_RE는 그대로 두고(울산 보드 동작 불변),
@@ -633,6 +683,7 @@ async function main() {
     ...MIRYANG_BOARDS,
     ...YEONGJU_GYEONGSAN_BOARDS,
     ...CHANGWON_BOARDS,
+    ...HADONG_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

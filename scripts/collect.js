@@ -400,6 +400,112 @@ const POST_LINK_RE = /parm_bod_uid=|amode=view/;
 // 긴 설명문 때문에 태그 내부 길이가 200자를 넘어 기존 정규식으로는 아예 안 잡혔음(실측 296자).
 const ANCHOR_RE_WIDE = /<a\s+[^>]*href="([^"#][^"]*)"[^>]*>([\s\S]{1,500}?)<\/a>/g;
 
+// ---- 2026-10-18 전국 확대 1단계: 충북도청·제주 서귀포시청·인천광역시청 (실제 fetch +
+// 정규식 매치 테스트로 각 10건씩 검증 완료, 울산·경남·경북과 전혀 다른 CMS라 신규
+// 추출기 3종을 새로 만듦). 이 3곳은 이전 조사(전국 14개 시도 약 30개 기관 조사)에서
+// 유일하게 "정적 HTML에 깨끗한 글 목록 패턴이 있다"고 확인된 곳들 — 나머지 지역
+// (수도권 대부분은 JS로 목록을 그려서 fetch로는 글 목록 자체가 안 보임, 강원·충청·호남·
+// 부산·대구는 각각 또 다른 CMS)는 이번 단계에서 다루지 못함.
+
+// 충북도청 보도자료: selectBbsNttList.do(목록)/selectBbsNttView.do(상세) 계열,
+// 제목은 <span class="p-table__text">, 날짜는 <time datetime="YYYY-MM-DD">.
+const CHUNGBUK_ITEM_RE =
+  /<a href="(\.\/selectBbsNttView\.do\?[^"]*nttNo=\d+[^"]*)"[^>]*>[\s\S]{0,500}?<span class="p-table__text">([^<]{4,200})<\/span>[\s\S]{0,500}?<time datetime="(\d{4}-\d{2}-\d{2})">/g;
+
+function extractChungbukCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHUNGBUK_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 제주 서귀포시청 보도자료: 블로그형 목록(<p class="title"><a>제목</a></p> ...
+// <p class="date"> 부서명 | YYYY-MM-DD</p>).
+const SEOGWIPO_ITEM_RE =
+  /<p class="title"><a href="([^"]*act=view[^"]*)">([^<]{4,200})<\/a><\/p>[\s\S]{0,1500}?<p class="date">[^|]*\|\s*(\d{4}-\d{2}-\d{2})<\/p>/g;
+
+function extractSeogwipoCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SEOGWIPO_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 인천광역시청 보도자료: repSeq= 파라미터 게시판뷰형, 제목은
+// <strong class="subject">, 날짜는 <dt>제공일자</dt><dd>YYYY-MM-DD</dd>.
+const INCHEON_ITEM_RE =
+  /<a href="([^"]*repSeq=[^"]*)">[\s\S]{0,500}?<strong class="subject">([^<]{4,200})<\/strong>[\s\S]{0,800}?<dt>제공일자<\/dt>\s*<dd>(\d{4}-\d{2}-\d{2})<\/dd>/g;
+
+function extractIncheonCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(INCHEON_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE1_BOARDS = [
+  {
+    org: "충청북도청",
+    sourceOrg: "충청북도청 보도자료",
+    url: "https://www.chungbuk.go.kr/www/selectBbsNttList.do?key=429&bbsNo=65",
+    region: "충북",
+    city: "충북",
+    extractor: extractChungbukCandidates,
+  },
+  {
+    org: "제주특별자치도 서귀포시청",
+    sourceOrg: "서귀포시청 시정뉴스",
+    url: "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm",
+    region: "제주",
+    city: "서귀포",
+    extractor: extractSeogwipoCandidates,
+  },
+  {
+    org: "인천광역시청",
+    sourceOrg: "인천시청 보도자료",
+    url: "https://www.incheon.go.kr/IC010205/list",
+    region: "인천",
+    city: "인천",
+    extractor: extractIncheonCandidates,
+  },
+];
+
 function extractPostCandidates(html, pageUrl, keywordRe) {
   const out = [];
   let m;
@@ -893,6 +999,7 @@ async function main() {
     ...YEONGJU_GYEONGSAN_BOARDS,
     ...CHANGWON_BOARDS,
     ...HADONG_BOARDS,
+    ...NATIONWIDE_PHASE1_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

@@ -242,5 +242,21 @@
   "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39621817&amode=view&": {
     "firstSeen": "2026-10-16T08:26:23.399Z",
     "org": "경상남도 진주시청"
+  },
+  "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=70021&ptIdx=372&mId=0102000000": {
+    "firstSeen": "2026-10-17T21:21:49.169Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.tongyeong.go.kr/00852/00853/00859.web?gcode=9078&idx=663482&amode=view&": {
+    "firstSeen": "2026-10-17T21:24:42.230Z",
+    "org": "경상남도 통영시청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9243": {
+    "firstSeen": "2026-10-17T21:26:39.728Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015769276&curPage=1": {
+    "firstSeen": "2026-10-17T21:26:56.029Z",
+    "org": "인천광역시청"
   }
 }

@@ -398,10 +398,33 @@ const BOOTH_KEYWORD_RE =
 // "성료"가 빠져 있어 "OO축제 성료" 같은 종료 소식이 그대로 섞여 들어오던 문제를
 // 2026-10-16에 실제 수집 결과에서 확인하고 추가함(밀양시청 테스트 중 발견).
 const RESULT_TITLE_RE = /(선정\s*결과|결과\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
-// 본문에서 모집/접수/신청 기간 날짜 범위 추출
+// 본문에서 모집/접수/신청 기간 날짜 범위 추출 (2026-10-17: 날짜 표현 다양화 — 실제
+// 수집 데이터에서 "모집기간: YYYY.M.D~YYYY.M.D" 형태 하나만 잡던 기존 정규식이
+// "신청마감 YYYY-MM-DD"(마감일만 언급), "O월 O일부터 O월 O일까지"(연도 없는 한글 표현)
+// 같은 흔한 표현을 놓쳐서 사람이 직접 원문을 확인해야 했던 사례가 여러 번 있었음.
+// 구분자에 "/"도 허용하고, 아래 두 패턴을 추가로 둔다 — 단, 시작일을 확정 못 하는
+// 경우(마감일만 언급)는 "마감(closed)" 판정에만 쓰고 "모집중(open)"이라고 단정하지
+// 않는다(추측 금지 원칙 유지, extractDateRange() 참고).
 const DATE_RANGE_RE =
-  /(?:모집|접수|신청)\s*(?:기간|기한)?\s*[:：]?\s*(\d{4}[.\-]\s?\d{1,2}[.\-]\s?\d{1,2})\s*(?:~|-|부터)\s*(\d{4}[.\-]\s?\d{1,2}[.\-]\s?\d{1,2})/;
+  /(?:모집|접수|신청)\s*(?:기간|기한)?\s*[:：]?\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})\s*(?:~|-|부터)\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})/;
+// 연도 없이 "O월 O일부터 O월 O일까지"만 적힌 경우 — 수집 시점(올해)을 연도로 가정
+const KOREAN_MONTH_DAY_RANGE_RE =
+  /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:\([^)]{1,4}\))?\s*(?:~|-|부터)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/;
+// 마감일만 언급된 경우(시작일 없음)
+const DATE_DEADLINE_ONLY_RE =
+  /(?:신청|접수|모집)\s*(?:기간|기한)?\s*(?:마감|종료)\s*[:：]?\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})|(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})\s*까지/;
 const ATTACHMENT_RE = /([^\s]+\.(?:hwp|pdf|jpg|jpeg|png))\s*다운로드/gi;
+
+// 관외(타지역) 사업자 참가 가능 여부 (2026-10-17 신설) — 반드시 본문에 명시적 근거
+// 문구가 있을 때만 yes/no로 판정하고, 그 외에는 전부 "unknown"으로 남긴다. 둘 다
+// 매치되거나(모순) 둘 다 안 매치되면(근거 없음) 애매한 것으로 보고 unknown 유지.
+const ELIGIBILITY_OUTSIDE_OK_RE =
+  /(관외.{0,12}(가능|무관|상관없|제한\s*없)|관내외\s*(무관|구분\s*없)|지역\s*제한\s*없|전국\s*(누구나|대상|모집)|거주지\s*무관|개인\s*또는\s*단체\s*누구나|지역\s*무관)/;
+// 둘째 그룹(마지막 대안)은 "안동시에 주소를 둔 ...만" 처럼 "관내"라는 단어 없이
+// 특정 시·군·구 이름으로 관내 한정을 표현하는, 실제 수집 데이터에서 자주 보이는
+// 패턴까지 잡기 위한 것(2026-10-17 보강).
+const ELIGIBILITY_OUTSIDE_NO_RE =
+  /(관내\s*(거주|소재|주소|업체|사업자|한정)[^.]{0,10}(만|한정)|관외\s*(불가|제외|배제)|지역\s*내\s*(업체|사업자|거주자)만|해당\s*지역\s*거주자?\s*만|[가-힣]{2,6}(시|군|구)에\s*(주소를\s*둔|소재한|거주하는)[^.]{0,20}(만|한정))/;
 
 // 부스 종류 라벨 — BOOTH_KEYWORD_RE가 왜 매치됐는지 사람이 바로 알아볼 수 있도록
 // title/본문에서 가장 먼저 매치되는 패턴 하나를 골라 boothType 필드에 남긴다.
@@ -479,10 +502,84 @@ function classifyNotice(title, bodyText) {
 }
 
 function parseKoDate(s) {
-  const m = s.replace(/\s/g, "").match(/(\d{4})[.\-](\d{1,2})[.\-](\d{1,2})/);
+  const m = s.replace(/\s/g, "").match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
   if (!m) return null;
   const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
   return isNaN(d.getTime()) ? null : d;
+}
+
+function parseKoMonthDay(monthStr, dayStr, year) {
+  const d = new Date(Date.UTC(year, +monthStr - 1, +dayStr));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// 본문에서 신청기간을 뽑아내는 3단계 폴백 — 위에서 아래로 시도하며, 먼저 성공한 패턴을
+// 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
+// 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
+// 않고 unknown으로 남긴다(2026-10-17 신설, 날짜 표현 다양화 개선).
+function extractDateRange(bodyText) {
+  const out = { applyStart: null, applyEnd: null, recruitStatus: "unknown" };
+  const today = new Date();
+
+  const rangeMatch = bodyText.match(DATE_RANGE_RE);
+  if (rangeMatch) {
+    const start = parseKoDate(rangeMatch[1]);
+    const end = parseKoDate(rangeMatch[2]);
+    if (start && end) {
+      out.applyStart = rangeMatch[1].replace(/\s/g, "");
+      out.applyEnd = rangeMatch[2].replace(/\s/g, "");
+      out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
+      return out;
+    }
+  }
+
+  const kmdMatch = bodyText.match(KOREAN_MONTH_DAY_RANGE_RE);
+  if (kmdMatch) {
+    const year = today.getFullYear();
+    const start = parseKoMonthDay(kmdMatch[1], kmdMatch[2], year);
+    const end = parseKoMonthDay(kmdMatch[3], kmdMatch[4], year);
+    if (start && end && end >= start) {
+      out.applyStart = `${year}-${String(kmdMatch[1]).padStart(2, "0")}-${String(kmdMatch[2]).padStart(2, "0")}`;
+      out.applyEnd = `${year}-${String(kmdMatch[3]).padStart(2, "0")}-${String(kmdMatch[4]).padStart(2, "0")}`;
+      out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
+      return out;
+    }
+  }
+
+  const deadlineMatch = bodyText.match(DATE_DEADLINE_ONLY_RE);
+  if (deadlineMatch) {
+    const raw = deadlineMatch[1] || deadlineMatch[2];
+    const end = parseKoDate(raw);
+    if (end) {
+      out.applyEnd = raw.replace(/\s/g, "");
+      // 시작일을 모르므로 "이미 마감됐는지"만 확정하고, 안 지났으면 모집중이라 단정하지
+      // 않고 unknown 유지.
+      out.recruitStatus = today > end ? "closed" : "unknown";
+    }
+  }
+
+  return out;
+}
+
+// 관외(타지역) 사업자 참가 가능 여부 판정 (2026-10-17 신설). boardRegion은 게시판이
+// 속한 지역(예: "경북"/"경남") — 그 게시판 자체가 "울산"이면 "관내"가 곧 울산이므로,
+// "관내만 가능"이라는 문구가 오히려 울산 사업자에겐 유리하다는 점을 반영한다.
+function detectEligibility(bodyText, boardRegion) {
+  if (!bodyText) return { eligibility: null, ulsanEligible: "unknown" };
+  const outsideOk = ELIGIBILITY_OUTSIDE_OK_RE.exec(bodyText);
+  const outsideNo = ELIGIBILITY_OUTSIDE_NO_RE.exec(bodyText);
+  if (outsideOk && !outsideNo) {
+    return { eligibility: outsideOk[0].replace(/\s+/g, " "), ulsanEligible: "yes" };
+  }
+  if (outsideNo && !outsideOk) {
+    const quote = outsideNo[0].replace(/\s+/g, " ");
+    if (boardRegion === "울산") {
+      return { eligibility: quote, ulsanEligible: "yes" };
+    }
+    return { eligibility: quote, ulsanEligible: "no" };
+  }
+  // 근거 문구가 없거나(둘 다 미매치) 모순되게 둘 다 매치되면 — 추측하지 않고 unknown 유지
+  return { eligibility: null, ulsanEligible: "unknown" };
 }
 
 function stripHtml(html) {
@@ -496,13 +593,15 @@ function stripHtml(html) {
     .trim();
 }
 
-async function fetchAndClassifyDetail(detailUrl, title) {
+async function fetchAndClassifyDetail(detailUrl, title, region) {
   const result = {
     applyStart: null,
     applyEnd: null,
     noticeType: "general",
     boothType: null,
     recruitStatus: "unknown",
+    eligibility: null,
+    ulsanEligible: "unknown",
     memo: "",
   };
   let bodyText = "";
@@ -524,27 +623,24 @@ async function fetchAndClassifyDetail(detailUrl, title) {
     return result;
   }
 
-  const dateMatch = bodyText.match(DATE_RANGE_RE);
-  if (dateMatch) {
-    const start = parseKoDate(dateMatch[1]);
-    const end = parseKoDate(dateMatch[2]);
-    if (start && end) {
-      result.applyStart = dateMatch[1].replace(/\s/g, "");
-      result.applyEnd = dateMatch[2].replace(/\s/g, "");
-      const today = new Date();
-      if (today < start) result.recruitStatus = "upcoming";
-      else if (today > end) result.recruitStatus = "closed";
-      else result.recruitStatus = "open";
-    }
-  }
+  const dateInfo = extractDateRange(bodyText);
+  result.applyStart = dateInfo.applyStart;
+  result.applyEnd = dateInfo.applyEnd;
+  result.recruitStatus = dateInfo.recruitStatus;
+
+  const eligInfo = detectEligibility(bodyText, region);
+  result.eligibility = eligInfo.eligibility;
+  result.ulsanEligible = eligInfo.ulsanEligible;
 
   const attachments = [...bodyText.matchAll(ATTACHMENT_RE)].map((m) => m[1]);
+  const eligNote = eligInfo.eligibility ? ` 참가자격 근거: "${eligInfo.eligibility}".` : "";
   if (result.recruitStatus === "unknown") {
     result.memo = attachments.length
-      ? `${fetchFailNote}${cls.reason} 모집기간 등 세부정보가 본문에 없고 첨부파일(${attachments.join(", ")})에만 있을 가능성이 높음 — 원문 첨부파일을 직접 확인 후 모집중/마감 여부를 판단하세요.`
-      : `${fetchFailNote}${cls.reason} 모집기간을 본문에서 확인하지 못함 — 원문을 직접 확인하세요.`;
+      ? `${fetchFailNote}${cls.reason} 모집기간 등 세부정보가 본문에 없고 첨부파일(${attachments.join(", ")})에만 있을 가능성이 높음 — 원문 첨부파일을 직접 확인 후 모집중/마감 여부를 판단하세요.${eligNote}`
+      : `${fetchFailNote}${cls.reason} 모집기간을 본문에서 확인하지 못함 — 원문을 직접 확인하세요.${eligNote}`;
   } else {
-    result.memo = `${cls.reason} 본문에서 모집기간(${result.applyStart}~${result.applyEnd}) 확인됨. 참가자격·신청방법 등 세부사항은 원문/첨부파일에서 추가 확인 필요.`;
+    const periodText = result.applyStart ? `${result.applyStart}~${result.applyEnd}` : `~${result.applyEnd}(시작일 미확인)`;
+    result.memo = `${cls.reason} 본문에서 모집기간(${periodText}) 확인됨. 참가자격·신청방법 등 세부사항은 원문/첨부파일에서 추가 확인 필요.${eligNote}`;
   }
   return result;
 }
@@ -631,6 +727,27 @@ async function main() {
   const existingCollected = fs.existsSync(OUT_PATH) ? JSON.parse(fs.readFileSync(OUT_PATH, "utf8")) : [];
   const stillPendingUrls = new Set(existingCollected.map((i) => i.url));
 
+  // 2026-10-17: 같은 글이 리스트 페이지 번호가 바뀌거나(밀양 pageIndex 사례) 검색
+  // 키워드가 달라져서 다른 URL로 다시 수집되는 걸 막기 위한 공용 중복 방지 키.
+  // seen.json은 "전체 URL"을 키로 쓰지만, 그와 별도로 "진짜 글 식별자"(idx,
+  // parm_bod_uid, nttId 등 게시판마다 쓰는 고유번호 파라미터)만 뽑아 비교하는 보조
+  // 인덱스를 같이 두고, 기존에 이미 수집된 seen.json 전체에서도 미리 만들어 둔다 —
+  // 이러면 과거에 다른 페이지 번호로 저장된 글도 오늘 다른 URL로 다시 안 잡힌다.
+  // 이전엔 확장 보드(경주/김해 등)에서만 이번 실행 한정으로 썼는데, 이번에 울산
+  // 보드까지 포함해 seen.json 전체 기준으로 범위를 넓혔다.
+  function canonicalDedupKey(urlStr) {
+    try {
+      const u = new URL(urlStr);
+      const idParam = ["idx", "parm_bod_uid", "nttId", "bIdx", "article_seq", "dataId"]
+        .map((k) => u.searchParams.get(k))
+        .find((v) => v);
+      return idParam ? `${u.origin}${u.pathname}|${idParam}` : `${u.origin}${u.pathname}${u.search}`;
+    } catch {
+      return urlStr;
+    }
+  }
+  const seenCanonical = new Set(Object.keys(seen).map(canonicalDedupKey));
+
   const newItems = [];
   const perBoardCounts = [];
 
@@ -642,13 +759,16 @@ async function main() {
 
       for (const c of candidates) {
         if (seen[c.url]) continue; // already surfaced in a past run
+        const ckey = canonicalDedupKey(c.url);
+        if (seenCanonical.has(ckey)) continue; // 같은 글이 다른 페이지/파라미터로 재수집되는 것 방지
+        seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
         // 2026-10-16: 경주·김해·밀양과 동일한 기준(classifyNotice)을 울산 보드에도 적용해
         // 판매부스·체험부스·프리마켓 등 실제 부스 모집만 noticeType="recruit"(우선 검토)로
         // 남기고, 축제 개최/종료 소식이나 교육·자원봉사 등 부스 무관 모집은 "general"로,
         // 제목만으로 애매하면 "review"로 구분한다. (분류 정확도 개선 요청에 따른 변경)
-        const cls = await fetchAndClassifyDetail(c.url, c.title);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, "울산");
         newItems.push({
           // sha256 of the full URL, not a truncated base64 of it — URLs from the
           // same board share a long prefix, so slicing plain base64 collided across
@@ -661,6 +781,8 @@ async function main() {
           applyStart: cls.applyStart,
           applyEnd: cls.applyEnd,
           boothType: cls.boothType,
+          eligibility: cls.eligibility,
+          ulsanEligible: cls.ulsanEligible,
           collectedAt: new Date().toISOString(),
           status: "pending",
           organizerType: "official",
@@ -674,10 +796,9 @@ async function main() {
     }
   }
 
-  // ---- 경주·김해·밀양·영주·경산·창원 확대분: 실제 모집 여부까지 분류해서 기록 ----
+  // ---- 경주·김해·밀양·영주·경산·창원·하동 확대분: 실제 모집 여부까지 분류해서 기록 ----
   // 사이트마다 목록 마크업이 달라 전용 추출기를 쓰는 곳이 있다(밀양/영주·경산/창원) — 그 외
   // 흐름(상세페이지 분류, dedup, 데이터 저장)은 전부 동일하게 재사용한다.
-  const seenThisRunByPost = new Set(); // 같은 글이 배너+목록 등 서로 다른 URL(쿼리파라미터만 다름)로 중복 추출되는 것 방지
   for (const board of [
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
@@ -693,13 +814,12 @@ async function main() {
 
       for (const c of candidates) {
         if (seen[c.url]) continue;
-        const u = new URL(c.url);
-        const postKey = `${u.origin}${u.pathname}|${u.searchParams.get("idx") || u.searchParams.get("parm_bod_uid") || u.searchParams.get("nttId") || c.url}`;
-        if (seenThisRunByPost.has(postKey)) continue;
-        seenThisRunByPost.add(postKey);
+        const ckey = canonicalDedupKey(c.url);
+        if (seenCanonical.has(ckey)) continue;
+        seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
-        const cls = await fetchAndClassifyDetail(c.url, c.title);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region);
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
@@ -715,8 +835,8 @@ async function main() {
           applyLink: null,
           fee: null,
           boothType: cls.boothType,
-          eligibility: null,
-          ulsanEligible: "unknown",
+          eligibility: cls.eligibility,
+          ulsanEligible: cls.ulsanEligible,
           collectedAt: new Date().toISOString(),
           status: "pending",
           organizerType: "official",

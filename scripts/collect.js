@@ -479,7 +479,39 @@ function extractIncheonCandidates(html, pageUrl) {
   return out;
 }
 
+// 강원특별자치도청 보도자료: eGovFrame 계열, <td class="skinTb-sbj"><a>제목</a></td>,
+// 날짜는 <td class="skinTb-date">YYYY-MM-DD</td> (실제 fetch로 15/15건 매치 검증).
+const GANGWON_ITEM_RE =
+  /<td class="skinTb-sbj"><a href="([^"]*seq=\d+[^"]*)">\s*([^<]{4,200}?)\s*<\/a><\/td>[\s\S]{0,300}?<td class="skinTb-date">(\d{4}-\d{2}-\d{2})<\/td>/g;
+
+function extractGangwonCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GANGWON_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
 const NATIONWIDE_PHASE1_BOARDS = [
+  {
+    org: "강원특별자치도청",
+    sourceOrg: "강원도청 보도자료",
+    url: "https://state.gwd.go.kr/portal/briefing/pressRelease",
+    region: "강원",
+    city: "강원",
+    extractor: extractGangwonCandidates,
+  },
   {
     org: "충청북도청",
     sourceOrg: "충청북도청 보도자료",

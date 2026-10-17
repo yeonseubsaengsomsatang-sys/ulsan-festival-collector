@@ -297,6 +297,53 @@ const CHANGWON_BOARDS = [
   },
   // SKIPPED: 창원시청 고시공고 — 보도자료와 마크업이 전혀 달라(카드형 아닌 단순 표) 이번엔
   // 추출기를 따로 검증하지 못함. 추측 등록 금지 원칙에 따라 제외.
+
+  // ---- 2026-10-18 전국 확대: 창원·진주와 완전히 동일한 카드형 CMS(class="t1"/"t2"/"t3")를
+  // 쓰는 것으로 실제 fetch + 정규식 매치로 검증된 5개 기관 추가. 검증 과정에서 창녕군청은
+  // class="t3"(날짜) 자체가 없어 매치 0건으로 확인되어 제외했고(추측 등록 금지), 군위·의성은
+  // 이전 조사에서 "같은 CMS일 것"으로 추정됐던 URL이 실제로는 parm_bod_uid= 링크가 전혀
+  // 없는 다른 페이지로 확인되어 역시 제외함 — 반드시 실제 응답을 받아 매치 건수를 확인한
+  // 기관만 등록.
+  {
+    org: "경상남도 통영시청",
+    sourceOrg: "통영시청 보도자료",
+    url: "https://www.tongyeong.go.kr/00852/00853/00859.web",
+    region: "경남",
+    city: "통영",
+    extractor: extractChangwonCandidates,
+  },
+  {
+    org: "경상남도 사천시청",
+    sourceOrg: "사천시청 보도자료",
+    url: "https://www.sacheon.go.kr/news/00009/00010.web",
+    region: "경남",
+    city: "사천",
+    extractor: extractChangwonCandidates,
+  },
+  {
+    org: "경상남도 함안군청",
+    sourceOrg: "함안군청 보도자료",
+    url: "https://www.haman.go.kr/00956/00958.web",
+    region: "경남",
+    city: "함안",
+    extractor: extractChangwonCandidates,
+  },
+  {
+    org: "경상남도 함양군청",
+    sourceOrg: "함양군청 보도자료",
+    url: "https://www.hygn.go.kr/01997/02007.web",
+    region: "경남",
+    city: "함양",
+    extractor: extractChangwonCandidates,
+  },
+  {
+    org: "경상남도 합천군청",
+    sourceOrg: "합천군청 보도자료",
+    url: "https://www.hc.go.kr/04923/04924/04953.web",
+    region: "경남",
+    city: "합천",
+    extractor: extractChangwonCandidates,
+  },
 ];
 
 // ---- 경상남도 하동군청 보도자료 (2026-10-16 추가, 실제 fetch로 검증) ----
@@ -715,7 +762,11 @@ async function fetchText(url) {
   for (let attempt = 1; attempt <= FETCH_MAX_RETRIES + 1; attempt++) {
     try {
       const res = await fetch(url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; UlsanFestivalCollector/1.0)" },
+        // 2026-10-18: 전국 확대 과정에서 사천·함안·창녕·함양시청 등 일부 기관이 이
+        // 식별용 User-Agent를 WAF로 차단(HTTP 400 "Request Blocked")하는 것을 실측으로
+        // 확인 — 일반 브라우저 UA로 바꿔서 해결(기존에 정상 응답하던 기관들에는 영향 없음,
+        // 더 흔한 UA로 바뀌는 것뿐이라 차단 가능성은 오히려 낮아짐).
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();

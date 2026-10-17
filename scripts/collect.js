@@ -603,6 +603,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region) {
     eligibility: null,
     ulsanEligible: "unknown",
     memo: "",
+    linkStatus: "ok",
+    linkCheckedAt: new Date().toISOString(),
+    linkCheckDetail: null,
   };
   let bodyText = "";
   let fetchFailNote = "";
@@ -611,6 +614,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region) {
     bodyText = stripHtml(html);
   } catch (err) {
     fetchFailNote = `상세페이지 접속 실패(${err.message}) — 본문은 확인 못 하고 제목만으로 분류함. `;
+    const linkErr = classifyLinkError(err);
+    result.linkStatus = linkErr.status;
+    result.linkCheckDetail = linkErr.detail;
   }
 
   const cls = classifyNotice(title, bodyText);
@@ -674,6 +680,34 @@ function sleep(ms) {
 function describeFetchError(err) {
   const cause = err && err.cause ? (err.cause.code || err.cause.message || String(err.cause)) : null;
   return cause ? `${err.message} (원인: ${cause})` : err.message;
+}
+
+// 2026-10-17 추가: 공식 신청 링크(원문 URL) 접속 오류를 "일시적 네트워크 문제"와
+// "실제로 깨진 링크(HTTPS 인증서 오류 등 — 브라우저에서도 똑같이 막힘)"로 구분하기
+// 위한 분류. 사용자가 실제로 ulsanwhale.com에서 NET::ERR_CERT_COMMON_NAME_INVALID를
+// 겪은 사례처럼, 인증서 오류는 재시도해도 해결되지 않고 모든 방문자에게 동일하게
+// 발생하므로 "linkStatus: needs_review"로 표시해 사람이 확인하게 한다. 링크 자체를
+// 임의로 지우거나 바꾸지는 않는다(이 함수는 상태만 분류함).
+const CERT_ERROR_CODES = [
+  "CERT_HAS_EXPIRED",
+  "ERR_TLS_CERT_ALTNAME_INVALID",
+  "DEPTH_ZERO_SELF_SIGNED_CERT",
+  "SELF_SIGNED_CERT_IN_CHAIN",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "CERT_UNTRUSTED",
+  "ERR_TLS_CERT_ALTNAME_FORMAT",
+  "HOSTNAME_MISMATCH",
+  "ERR_SSL_WRONG_VERSION_NUMBER",
+];
+function classifyLinkError(err) {
+  const cause = err && err.cause ? err.cause : null;
+  const code = cause && cause.code ? cause.code : null;
+  const message = describeFetchError(err);
+  const isCert = (code && CERT_ERROR_CODES.includes(code)) || /certificate|SSL|TLS/i.test(message);
+  // fetchText()가 이미 3회(최초 1회 + 재시도 2회) 시도한 뒤에만 여기로 오므로, 단순 일시적
+  // 네트워크 지연일 가능성은 낮다고 보고 인증서 오류든 아니든 동일하게 "needs_review"로
+  // 둔다 — detail에 원인(인증서 문제인지 등)을 남겨 사람이 구분해서 볼 수 있게 한다.
+  return { status: "needs_review", detail: isCert ? `[인증서 오류] ${message}` : message };
 }
 
 async function fetchText(url) {
@@ -783,6 +817,9 @@ async function main() {
           boothType: cls.boothType,
           eligibility: cls.eligibility,
           ulsanEligible: cls.ulsanEligible,
+          linkStatus: cls.linkStatus,
+          linkCheckedAt: cls.linkCheckedAt,
+          linkCheckDetail: cls.linkCheckDetail,
           collectedAt: new Date().toISOString(),
           status: "pending",
           organizerType: "official",
@@ -837,6 +874,9 @@ async function main() {
           boothType: cls.boothType,
           eligibility: cls.eligibility,
           ulsanEligible: cls.ulsanEligible,
+          linkStatus: cls.linkStatus,
+          linkCheckedAt: cls.linkCheckedAt,
+          linkCheckDetail: cls.linkCheckDetail,
           collectedAt: new Date().toISOString(),
           status: "pending",
           organizerType: "official",

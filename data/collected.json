@@ -981,5 +981,32 @@
     "noticeType": "general",
     "recruitStatus": "unknown",
     "memo": "자동수집(GitHub Actions, 인천광역시청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
+  },
+  {
+    "id": "gh-HZL-e3YBzXpS48uw",
+    "name": "2026 창원 북 페스타, 10월 17일 개막",
+    "region": "경남",
+    "city": "창원",
+    "sourceOrg": "창원시청 보도자료",
+    "sourceUrl": "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=885921&amode=view&",
+    "postedDate": "2026-10-18",
+    "applyStart": null,
+    "applyEnd": null,
+    "festivalStart": null,
+    "festivalEnd": null,
+    "applyLink": null,
+    "fee": null,
+    "boothType": null,
+    "eligibility": null,
+    "ulsanEligible": "unknown",
+    "linkStatus": "ok",
+    "linkCheckedAt": "2026-10-18T21:20:48.605Z",
+    "linkCheckDetail": null,
+    "collectedAt": "2026-10-18T21:20:50.502Z",
+    "status": "pending",
+    "organizerType": "official",
+    "noticeType": "general",
+    "recruitStatus": "unknown",
+    "memo": "자동수집(GitHub Actions, 경상남도 창원특례시청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
   }
 ]

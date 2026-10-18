@@ -258,5 +258,9 @@
   "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015769276&curPage=1": {
     "firstSeen": "2026-10-17T21:26:56.029Z",
     "org": "인천광역시청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=885921&amode=view&": {
+    "firstSeen": "2026-10-18T21:20:48.604Z",
+    "org": "경상남도 창원특례시청"
   }
 }

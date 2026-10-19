@@ -26,8 +26,10 @@ LLM(Claude 등) 호출이 전혀 없는 순수 HTTP + 정규식 스크립트이�
    **"Read and write permissions"**를 선택합니다 (커밋을 위해 필요).
 3. Actions 탭에서 `Collect Ulsan festival/booth postings` 워크플로를 확인하고,
    `workflow_dispatch`로 한 번 수동 실행해서 정상 동작하는지 확인합니다.
-4. 매일 07:00(KST)에 자동 실행됩니다. 시간을 바꾸려면
-   `.github/workflows/collect.yml`의 cron 값을 수정하세요 (UTC 기준).
+4. 매일 14:00(KST)에 자동 실행됩니다. 시간을 바꾸려면
+   `.github/workflows/collect.yml`의 cron 값을 수정하세요 (UTC 기준). 홈페이지 DB
+   동기화 예약 작업(아래 "홈페이지 연동" 참고)도 수집 완료 후 15분 뒤(14:15 KST)에
+   맞춰 돌아가도록 같이 설정돼 있습니다.
 
 ## 실행 로그로 확인할 것
 

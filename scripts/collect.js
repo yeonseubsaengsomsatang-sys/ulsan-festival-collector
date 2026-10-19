@@ -23,6 +23,7 @@ const path = require("path");
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
 const OUT_PATH = path.join(DATA_DIR, "collected.json");
+const BOARD_STATUS_PATH = path.join(DATA_DIR, "board_status.json");
 
 const KEYWORD_RE =
   /(축제|체험\s*부스|판매\s*부스|먹거리\s*부스|식음료\s*부스|프리마켓|플리마켓|나눔장터|셀러\s*모집|셀러모집|부스\s*모집|부스운영|부스\s*참가|판매자\s*모집|참여상인\s*모집|운영자\s*모집|참가업체\s*모집|참가자\s*모집)/;
@@ -503,6 +504,461 @@ function extractGangwonCandidates(html, pageUrl) {
   return out;
 }
 
+// ---- 2026-10-18 전국 확대 2단계: 서울 3개 구(강남·송파·마포), 경기 3개 시(용인·화성·
+// 남양주), 세종시청, 충남 보령시청, 전북 군산시청, 전남 목포시청 — 10개 기관 전부 실제
+// fetch + 정규식 매치로 직접 검증(각 8~16건) 후 등록. CMS가 전부 제각각이라 추출기도
+// 전부 따로 둠 — 같은 "전자정부" 계열이라도 스킨(클래스명)이 다르면 매치가 전혀 안 되는
+// 경우가 많다는 걸 이번 단계에서도 재확인함(예: 남양주는 충북과 URL 파라미터 구조는 같지만
+// 스킨이 달라 별도 정규식이 필요했음).
+
+// 강남구청: /board/B_NNNNNN/NNNNNNN/view.do, 날짜는 바로 다음 <td>YYYY-MM-DD</td>.
+const GANGNAM_ITEM_RE =
+  /<a href="(\/board\/B_\d+\/\d+\/view\.do[^"]*)"[^>]*>\s*([^<]{4,200}?)\s*<\/a>[\s\S]{0,600}?<td>(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractGangnamCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GANGNAM_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 송파구청: class="p-subject" 안의 selectBbsNttView.do 링크, 날짜는 그 뒤 <span>YYYY.MM.DD.
+const SONGPA_ITEM_RE =
+  /class="p-subject">[\s\S]{0,300}?<a href="(\.\/selectBbsNttView\.do\?[^"]*nttNo=\d+[^"]*)"[^>]*>[\s\S]{0,50}?([^<]{4,200}?)\s*(?:<span class="p-icon[^>]*>[^<]*<\/span>)?\s*<\/a>[\s\S]{0,900}?<span>\s*(\d{4})\.(\d{2})\.(\d{2})/g;
+function extractSongpaCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SONGPA_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
+// 마포구청: class="s-line2" 링크(/board/press/NNNNNN?...), 날짜는 YYYY.MM.DD(상세 페이지에서
+// 재확인 필요 — 목록에서는 날짜 위치가 불안정해 이번엔 postedDate를 비워둠, noticeType 분류는
+// fetchAndClassifyDetail이 본문을 다시 받아서 처리하므로 지장 없음).
+const MAPO_ITEM_RE =
+  /<a href="([^"]*\/board\/press\/\d+\?[^"]*)"[^>]*class="s-line2">\s*([^<]{4,200}?)\s*<\/a>/g;
+function extractMapoCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(MAPO_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: null });
+  }
+  return out;
+}
+
+// 용인특례시청: OpenWorks형, BD_selectBbs.do?...q_bbscttSn=, 날짜는 <dd class="binfo"><li>.
+const YONGIN_ITEM_RE =
+  /<a href="(BD_selectBbs\.do\?[^"]*q_bbscttSn=\d+[^"]*)"[^>]*>([^<]{4,200})<\/a>[\s\S]{0,600}?<dd class="binfo">[\s\S]{0,200}?<li>(\d{4}-\d{2}-\d{2})<\/li>/g;
+function extractYonginCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(YONGIN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 화성특례시청: 용인과 같은 OpenWorks 계열이지만 스킨이 달라 날짜가
+// <td data-cell-header="등록일자 : ">에 들어있음.
+const HWASEONG_ITEM_RE =
+  /<a href="([^"]*BD_selectBbs\.do\?[^"]*q_bbscttSn=\d+[^"]*)">([^<]{4,200})<\/a>[\s\S]{0,300}?<td data-cell-header="등록일자 : ">(\d{4}-\d{2}-\d{2})/g;
+function extractHwaseongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(HWASEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 남양주시청: URL 파라미터는 충북형과 같은 selectBbsNttList/View.do?key=&bbsNo= 계열이지만
+// 스킨이 달라 제목은 <em class="p-media__heading-text">, 날짜는 <time class="p-split">.
+const NAMYANGJU_ITEM_RE =
+  /<a href="(\.\/selectBbsNttView\.do\?[^"]*nttNo=\d+[^"]*)"[^>]*>[\s\S]{0,800}?<em class="p-media__heading-text">\s*([^<]{4,200}?)\s*<\/em>[\s\S]{0,300}?<time class="p-split">(\d{4}-\d{2}-\d{2})<\/time>/g;
+function extractNamyangjuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(NAMYANGJU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 세종특별자치시청: <a href="/bbs/R0071/view.do?nttId=...">제목</a>, 날짜는 한참 뒤
+// <td data-cell-header="등록일">YYYY-MM-DD</td>(제목·작성자·조회수 칸을 지나야 해서
+// 탐색 범위를 3200자로 넉넉히 둠 — 실측상 title~date 거리 약 2700자).
+const SEJONG_ITEM_RE =
+  /<a href="(\/bbs\/R0071\/view\.do\?nttId=[^"]*)"[^>]*>[\s\S]{0,50}?([^<]{4,200}?)<\/a>[\s\S]{0,3200}?<td data-cell-header="등록일">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractSejongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SEJONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 충남 보령시청: 울산 동구청과 유사한 전자정부 selectBoardArticle.do?...nttId= 계열,
+// 날짜는 <td class="date">.
+const BORYEONG_ITEM_RE =
+  /<a href="([^"]*selectBoardArticle\.do[^"]*nttId=\d+[^"]*)">([\s\S]{0,300}?)<\/a>[\s\S]{0,400}?<td class="date">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractBoryeongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(BORYEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2].replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 전북 군산시청: /main/m140/view/NNNNNNN? 링크, 날짜는 2자리 연도(YY.MM.DD) — 20XX로 보정.
+const GUNSAN_ITEM_RE =
+  /<a href="(\/main\/m140\/view\/\d+\?)">([^<]{4,200})<\/a>[\s\S]{0,600}?<td>(\d{2})\.(\d{2})\.(\d{2})<\/td>/g;
+function extractGunsanCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GUNSAN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `20${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
+// 전남 목포시청: idx=&mode=view 링크, 제목은 <h3>, 날짜는 <dd class="date">.
+const MOKPO_ITEM_RE =
+  /<a href="([^"]*idx=\d+&amp;mode=view)"[^>]*>[\s\S]{0,400}?<h3>([^<]{4,200})<span[\s\S]{0,800}?<dd class="date">(\d{4}-\d{2}-\d{2})<\/dd>/g;
+function extractMokpoCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(MOKPO_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE2_BOARDS = [
+  {
+    org: "서울특별시 강남구청",
+    sourceOrg: "강남구청 보도자료",
+    url: "https://www.gangnam.go.kr/board/B_000031/list.do?mid=ID01_0313",
+    region: "서울",
+    city: "강남",
+    extractor: extractGangnamCandidates,
+  },
+  {
+    org: "서울특별시 송파구청",
+    sourceOrg: "송파구청 보도자료",
+    url: "https://www.songpa.go.kr/www/selectBbsNttList.do?bbsNo=96&key=2781",
+    region: "서울",
+    city: "송파",
+    extractor: extractSongpaCandidates,
+  },
+  {
+    org: "서울특별시 마포구청",
+    sourceOrg: "마포구청 보도자료",
+    url: "https://www.mapo.go.kr/site/main/board/press",
+    region: "서울",
+    city: "마포",
+    extractor: extractMapoCandidates,
+  },
+  {
+    org: "경기도 용인특례시청",
+    sourceOrg: "용인특례시청 보도자료",
+    url: "https://www.yongin.go.kr/user/bbs/BD_selectBbsList.do?q_bbsCode=1020",
+    region: "경기",
+    city: "용인",
+    extractor: extractYonginCandidates,
+  },
+  {
+    org: "경기도 화성특례시청",
+    sourceOrg: "화성특례시청 보도자료",
+    url: "https://www.hscity.go.kr/www/user/bbs/BD_selectBbsList.do?q_bbsCode=1051",
+    region: "경기",
+    city: "화성",
+    extractor: extractHwaseongCandidates,
+  },
+  {
+    org: "경기도 남양주시청",
+    sourceOrg: "남양주시청 보도자료",
+    url: "https://www.nyj.go.kr/www/selectBbsNttList.do?key=2498&bbsNo=68",
+    region: "경기",
+    city: "남양주",
+    extractor: extractNamyangjuCandidates,
+  },
+  {
+    org: "세종특별자치시청",
+    sourceOrg: "세종시청 공지사항",
+    url: "https://www.sejong.go.kr/bbs/R0071/list.do",
+    region: "세종",
+    city: "세종",
+    extractor: extractSejongCandidates,
+  },
+  {
+    org: "충청남도 보령시청",
+    sourceOrg: "보령시청 시정소식",
+    url: "https://www.brcn.go.kr/cop/bbs/BBSMSTR_000000000263/selectBoardList.do",
+    region: "충남",
+    city: "보령",
+    extractor: extractBoryeongCandidates,
+  },
+  {
+    org: "전라북도 군산시청",
+    sourceOrg: "군산시청 고시공고",
+    url: "https://www.gunsan.go.kr/main/m140",
+    region: "전북",
+    city: "군산",
+    extractor: extractGunsanCandidates,
+  },
+  {
+    org: "전라남도 목포시청",
+    sourceOrg: "목포시청 보도자료",
+    url: "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material",
+    region: "전남",
+    city: "목포",
+    extractor: extractMokpoCandidates,
+  },
+];
+
+// ---- 2026-10-19 전국 확대 3단계: 광역시 4곳(부산·대구·광주·대전) 추가 — 이걸로 17개
+// 시도 전체(서울·부산·대구·인천·광주·대전·울산·세종·경기·강원·충북·충남·전북·전남·경북·
+// 경남·제주) 중 최소 1개 기관 이상을 커버하게 됨. 역시 실제 fetch + 정규식 매치로 직접
+// 검증 후 등록(각 6~15건) — 추측 등록 없음.
+//   - 대구는 주의가 필요했음: 검색으로 먼저 찾은 "보도자료"(mkey=26) 게시판은 제목이 전부
+//     "대구광역시 보도자료(YYYY-MM-DD)" 형태로 통일돼 있고 실제 개별 기사 제목은 첨부
+//     .hwp 파일 안에만 있어 정규식으로 못 읽음(김해시청과 같은 유형) — SKIPPED하고, 대신
+//     같은 뉴스룸의 "시정소식"(mkey=2) 게시판으로 바꿈. 여긴 기사마다 실제 제목이
+//     <p class="title">에 개별로 들어있어 VERIFIED.
+
+// 부산광역시청: /nbtnews/NNNNNNN?... 링크, 제목은 같은 <td class="...title">, 날짜는
+// 바로 다음 <td class="pc_Y ta_Y mo_Y nowrap">.
+const BUSAN_ITEM_RE =
+  /<td class="pc_Y ta_Y mo_Y title">\s*<a href="(\/nbtnews\/\d+\?[^"]*)">\s*([^<]{4,200}?)<\/a>\s*<\/td>[\s\S]{0,300}?<td class="pc_Y ta_Y mo_Y nowrap">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractBusanCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(BUSAN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 대구광역시청 뉴스룸 "시정소식"(mkey=2): mtnmain.php?mtnkey=articleview&mkey2=2&aid=...
+// 링크, 제목은 <p class="title">, 날짜는 바로 다음 <p class="date">.
+const DAEGU_ITEM_RE =
+  /<a href="(\.\/mtnmain\.php\?mtnkey=articleview&mkey=scatelist&mkey2=2&aid=\d+[^"]*)"[^>]*>[\s\S]{0,400}?<p class="title">([^<]{4,200}?)<\/p>\s*<p class="date">(\d{4}-\d{2}-\d{2})<\/p>/g;
+function extractDaeguCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(DAEGU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 광주광역시청: /boardView.do?...boardId=BD_0000000027&seq=... 링크, 제목은 목록 텍스트가
+// "..."로 잘려 있어 대신 title 속성(전체 제목)에서 추출, 날짜는 <div class="date"><span
+// class="blind">작성일</span> 뒤.
+const GWANGJU_ITEM_RE =
+  /<a href="(\/boardView\.do\?pageId=&amp;boardId=BD_0000000027&amp;seq=\d+[^"]*)" data-view="L" data-seq="\d+" title="([^"]{4,200})"[\s\S]{0,400}?<div class="date">\s*<span class="blind">작성일<\/span>\s*(\d{4}-\d{2}-\d{2})/g;
+function extractGwangjuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GWANGJU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 대전광역시청: /drh/board/boardNormalView.do?boardId=normal_0189&... 링크, 날짜는
+// <td class="date">.
+const DAEJEON_ITEM_RE =
+  /<td class="al_left subject"><a href="(\/drh\/board\/boardNormalView\.do\?boardId=normal_0189[^"]*)">\s*([^<]{4,200}?)\s*<\/a>[\s\S]{0,400}?<td class="date">\s*(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractDaejeonCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(DAEJEON_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE3_BOARDS = [
+  {
+    org: "부산광역시청",
+    sourceOrg: "부산시청 보도·해명자료",
+    url: "https://www.busan.go.kr/nbtnews",
+    region: "부산",
+    city: "부산",
+    extractor: extractBusanCandidates,
+  },
+  {
+    org: "대구광역시청",
+    sourceOrg: "대구시청 뉴스룸 시정소식",
+    url: "https://info.daegu.go.kr/newshome/mtnmain.php?mtnkey=scatelist&mkey=2",
+    region: "대구",
+    city: "대구",
+    extractor: extractDaeguCandidates,
+  },
+  {
+    org: "광주광역시청",
+    sourceOrg: "광주시청 보도자료",
+    url: "https://www.gwangju.go.kr/boardList.do?boardId=BD_0000000027",
+    region: "광주",
+    city: "광주",
+    extractor: extractGwangjuCandidates,
+  },
+  {
+    org: "대전광역시청",
+    sourceOrg: "대전시청 보도자료",
+    url: "https://www.daejeon.go.kr/drh/board/boardNormalList.do?boardId=normal_0189&menuSeq=6825",
+    region: "대전",
+    city: "대전",
+    extractor: extractDaejeonCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -895,6 +1351,46 @@ function classifyLinkError(err) {
   return { status: "needs_review", detail: isCert ? `[인증서 오류] ${message}` : message };
 }
 
+// 2026-10-18: 전국 34개 기관으로 늘어난 뒤, 응답을 아예 안 보내고 연결만 붙잡고 있는
+// 사이트 하나 때문에 전체 수집이 통째로 멈추는(무한 대기) 사고를 실제로 겪었음 — fetch()에
+// 기본 타임아웃이 없어서 생긴 문제. AbortSignal.timeout으로 요청당 최대 대기 시간을 둬서
+// 이런 사이트 하나가 전체 파이프라인을 막지 못하게 함(재시도 로직과는 별개 — 타임아웃도
+// 똑같이 FETCH_MAX_RETRIES만큼 재시도됨).
+const FETCH_TIMEOUT_MS = 20000;
+const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+// 2026-10-19: 함안군청 등 일부 사이트가 HTTP 응답 헤더에 HTTP/1.1 스펙에 어긋나는 값(예:
+// 헤더값에 들어있으면 안 되는 제어문자)을 그대로 보내는 걸 실측으로 확인 — Node의 기본
+// fetch(undici)는 이를 엄격하게 거부해 "Response does not match the HTTP/1.1 protocol
+// (Invalid header value char)" 에러로 요청 자체가 실패한다. 브라우저는 이런 응답도 그냥
+// 보여주므로(실제로 접속은 된다는 뜻) 실제 접속 불가가 아니라 Node 쪽 파싱이 과하게
+// 엄격한 것 — node:https를 insecureHTTPParser 옵션으로 직접 호출해 우회한다(인증서 검증은
+// 그대로 유지되고, 느슨해지는 건 헤더 파싱 엄격도뿐).
+const MALFORMED_HEADER_RE = /does not match the HTTP\/1\.1 protocol|Parse Error|invalid header/i;
+
+function fetchTextLenient(url) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith("http://") ? require("http") : require("https");
+    const req = mod.get(
+      url,
+      { headers: { "User-Agent": BROWSER_UA }, insecureHTTPParser: true, timeout: FETCH_TIMEOUT_MS },
+      (res) => {
+        if (res.statusCode && res.statusCode >= 400) {
+          res.resume();
+          reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+        let data = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => resolve(data));
+      }
+    );
+    req.on("timeout", () => req.destroy(new Error("lenient fetch timeout")));
+    req.on("error", reject);
+  });
+}
+
 async function fetchText(url) {
   let lastErr;
   for (let attempt = 1; attempt <= FETCH_MAX_RETRIES + 1; attempt++) {
@@ -904,15 +1400,24 @@ async function fetchText(url) {
         // 식별용 User-Agent를 WAF로 차단(HTTP 400 "Request Blocked")하는 것을 실측으로
         // 확인 — 일반 브라우저 UA로 바꿔서 해결(기존에 정상 응답하던 기관들에는 영향 없음,
         // 더 흔한 UA로 바뀌는 것뿐이라 차단 가능성은 오히려 낮아짐).
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+        headers: { "User-Agent": BROWSER_UA },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     } catch (err) {
-      lastErr = err;
+      if (MALFORMED_HEADER_RE.test(describeFetchError(err))) {
+        try {
+          return await fetchTextLenient(url);
+        } catch (lenientErr) {
+          lastErr = lenientErr;
+        }
+      } else {
+        lastErr = err;
+      }
       const isLast = attempt === FETCH_MAX_RETRIES + 1;
       console.log(
-        `  [fetch 실패 ${attempt}/${FETCH_MAX_RETRIES + 1}] ${url} — ${describeFetchError(err)}` +
+        `  [fetch 실패 ${attempt}/${FETCH_MAX_RETRIES + 1}] ${url} — ${describeFetchError(lastErr)}` +
           (isLast ? " — 재시도 소진, 이 요청은 포기" : ` — ${FETCH_RETRY_DELAY_MS / 1000}초 후 재시도`)
       );
       if (!isLast) await sleep(FETCH_RETRY_DELAY_MS);
@@ -974,11 +1479,38 @@ async function main() {
   const newItems = [];
   const perBoardCounts = [];
 
+  // 2026-10-19: "실제 수집에 성공한 기관과 실패한 기관을 구분"하기 위한 기관(org) 단위
+  // 집계. 같은 기관이 게시판 여러 개(북구청 3개, 울주군청 키워드별 7개 등)로 등록돼 있으니
+  // 기관명으로 묶어서, 그중 하나라도 fetch에 성공하면 그 기관은 "ok"로 본다 — 사람이 볼 땐
+  // "울주군청이 수집 중이냐"가 궁금한 거지 "울주군청 검색어 3번째 게시판이냐"가 아니기 때문.
+  // 전부 실패한 기관만 "fetch_failed"로 남겨 홈페이지에서 바로 구분할 수 있게 한다.
+  const orgStatus = new Map();
+  function recordBoardResult(board, ok, detail) {
+    const key = board.org;
+    const prev = orgStatus.get(key) || {
+      org: board.org,
+      region: board.region || "울산",
+      boards: 0,
+      okBoards: 0,
+      failedBoards: 0,
+      lastError: null,
+    };
+    prev.boards += 1;
+    if (ok) {
+      prev.okBoards += 1;
+    } else {
+      prev.failedBoards += 1;
+      prev.lastError = detail;
+    }
+    orgStatus.set(key, prev);
+  }
+
   for (const board of BOARDS) {
     try {
       const html = await fetchText(board.url);
       const candidates = extractCandidates(html, board.url);
       perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중)`);
+      recordBoardResult(board, true);
 
       for (const c of candidates) {
         if (seen[c.url]) continue; // already surfaced in a past run
@@ -1019,6 +1551,7 @@ async function main() {
       }
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(board, false, describeFetchError(err));
     }
   }
 
@@ -1032,12 +1565,15 @@ async function main() {
     ...CHANGWON_BOARDS,
     ...HADONG_BOARDS,
     ...NATIONWIDE_PHASE1_BOARDS,
+    ...NATIONWIDE_PHASE2_BOARDS,
+    ...NATIONWIDE_PHASE3_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);
       const extractFn = board.extractor || ((h, u) => extractPostCandidates(h, u, NEW_SITE_KEYWORD_RE));
       const candidates = extractFn(html, board.url);
       perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중)`);
+      recordBoardResult(board, true);
 
       for (const c of candidates) {
         if (seen[c.url]) continue;
@@ -1077,6 +1613,7 @@ async function main() {
       }
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(board, false, describeFetchError(err));
     }
   }
 
@@ -1090,15 +1627,35 @@ async function main() {
     (i) => new Date(i.collectedAt).getTime() >= cutoff
   );
 
+  // 기관 목록을 지역별로 보기 좋게 정렬 — 실패(ok=false)부터, 그다음 지역명 순.
+  const boardStatusList = [...orgStatus.values()]
+    .map((o) => ({
+      org: o.org,
+      region: o.region,
+      status: o.okBoards > 0 ? "ok" : "fetch_failed",
+      boards: o.boards,
+      okBoards: o.okBoards,
+      failedBoards: o.failedBoards,
+      lastError: o.okBoards > 0 ? null : o.lastError,
+      checkedAt: new Date().toISOString(),
+    }))
+    .sort((a, b) => (a.status === b.status ? a.region.localeCompare(b.region, "ko") : a.status === "fetch_failed" ? -1 : 1));
+
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(SEEN_PATH, JSON.stringify(seen, null, 2));
   fs.writeFileSync(OUT_PATH, JSON.stringify(merged, null, 2));
+  fs.writeFileSync(BOARD_STATUS_PATH, JSON.stringify(boardStatusList, null, 2));
 
   console.log("=== 게시판별 결과 ===");
   perBoardCounts.forEach((l) => console.log(l));
   console.log(`\n신규 발견: ${newItems.length}건`);
   newItems.forEach((i) => console.log(` - [${i.sourceOrg}] ${i.name} -> ${i.sourceUrl}`));
   console.log(`\n누적 pending 총 ${merged.length}건 (data/collected.json)`);
+  const failedOrgs = boardStatusList.filter((o) => o.status === "fetch_failed");
+  console.log(`\n=== 기관별 수집 상태 (${boardStatusList.length}개 기관, 실패 ${failedOrgs.length}개) ===`);
+  if (failedOrgs.length > 0) {
+    failedOrgs.forEach((o) => console.log(` - [실패] ${o.region} ${o.org}: ${o.lastError}`));
+  }
 }
 
 main().catch((err) => {

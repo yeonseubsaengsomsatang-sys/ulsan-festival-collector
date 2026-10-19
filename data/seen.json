@@ -242,5 +242,133 @@
   "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39621817&amode=view&": {
     "firstSeen": "2026-10-16T08:26:23.399Z",
     "org": "경상남도 진주시청"
+  },
+  "https://www.tongyeong.go.kr/00852/00853/00859.web?gcode=9078&idx=663482&amode=view&": {
+    "firstSeen": "2026-10-17T16:06:58.110Z",
+    "org": "경상남도 통영시청"
+  },
+  "https://www.hygn.go.kr/01997/02007.web?gcode=2001&idx=952044&amode=view&": {
+    "firstSeen": "2026-10-17T16:07:05.503Z",
+    "org": "경상남도 함양군청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9243": {
+    "firstSeen": "2026-10-17T16:07:07.347Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155602669": {
+    "firstSeen": "2026-10-17T16:07:09.054Z",
+    "org": "제주특별자치도 서귀포시청"
+  },
+  "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015769276&curPage=1": {
+    "firstSeen": "2026-10-17T16:07:11.114Z",
+    "org": "인천광역시청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075477/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-17T16:07:11.841Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.songpa.go.kr/www/selectBbsNttView.do?bbsNo=96&nttNo=19279675&&pageUnit=10&key=2781&pageIndex=1": {
+    "firstSeen": "2026-10-17T16:07:13.175Z",
+    "org": "서울특별시 송파구청"
+  },
+  "https://www.songpa.go.kr/www/selectBbsNttView.do?bbsNo=96&nttNo=19279591&&pageUnit=10&key=2781&pageIndex=1": {
+    "firstSeen": "2026-10-17T16:07:13.626Z",
+    "org": "서울특별시 송파구청"
+  },
+  "https://www.mapo.go.kr/site/main/board/press/278638?cp=1&sortOrder=BA_REGDATE&sortDirection=DESC&listType=list&bcId=press&baNotice=false&baCommSelec=false&baOpenDay=false&baUse=true": {
+    "firstSeen": "2026-10-17T16:07:15.499Z",
+    "org": "서울특별시 마포구청"
+  },
+  "https://www.mapo.go.kr/site/main/board/press/278499?cp=1&sortOrder=BA_REGDATE&sortDirection=DESC&listType=list&bcId=press&baNotice=false&baCommSelec=false&baOpenDay=false&baUse=true": {
+    "firstSeen": "2026-10-17T16:07:16.082Z",
+    "org": "서울특별시 마포구청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000162999Jk9dK2i&mno=sub02_01&cmsNoStr=&kind=&pageIndex=1": {
+    "firstSeen": "2026-10-17T16:07:24.353Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000162691Ze7tE9d&mno=sub02_01&cmsNoStr=&kind=&pageIndex=1": {
+    "firstSeen": "2026-10-17T16:07:24.501Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000162282Vu1lQ5q&mno=sub02_01&cmsNoStr=&kind=&pageIndex=1": {
+    "firstSeen": "2026-10-17T16:07:24.613Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163213Da8uW3m&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-17T16:07:24.705Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.gunsan.go.kr/main/m140/view/9835494?": {
+    "firstSeen": "2026-10-17T16:07:27.373Z",
+    "org": "전라북도 군산시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549428&mode=view": {
+    "firstSeen": "2026-10-17T16:07:29.154Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549393&mode=view": {
+    "firstSeen": "2026-10-17T16:07:29.476Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=70021&ptIdx=372&mId=0102000000": {
+    "firstSeen": "2026-10-19T09:05:59.749Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886000&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:12.258Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=885996&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:13.396Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39621908&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:15.060Z",
+    "org": "경상남도 진주시청"
+  },
+  "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39621860&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:15.853Z",
+    "org": "경상남도 진주시청"
+  },
+  "https://www.hygn.go.kr/01997/02007.web?gcode=2001&idx=952113&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:23.853Z",
+    "org": "경상남도 함양군청"
+  },
+  "https://www.hc.go.kr/04923/04924/04953.web?gcode=1017&idx=29030764&amode=view&": {
+    "firstSeen": "2026-10-19T09:06:25.145Z",
+    "org": "경상남도 합천군청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9263": {
+    "firstSeen": "2026-10-19T09:06:30.095Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075486/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-19T09:06:34.011Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.mapo.go.kr/site/main/board/press/278648?cp=1&sortOrder=BA_REGDATE&sortDirection=DESC&listType=list&bcId=press&baNotice=false&baCommSelec=false&baOpenDay=false&baUse=true": {
+    "firstSeen": "2026-10-19T09:06:35.970Z",
+    "org": "서울특별시 마포구청"
+  },
+  "https://www.yongin.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1020&q_bbscttSn=20261019081620539": {
+    "firstSeen": "2026-10-19T09:06:37.481Z",
+    "org": "경기도 용인특례시청"
+  },
+  "https://www.yongin.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1020&q_bbscttSn=20261019081416091": {
+    "firstSeen": "2026-10-19T09:06:38.284Z",
+    "org": "경기도 용인특례시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163282Ht5sL7s&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-19T09:06:40.818Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549496&mode=view": {
+    "firstSeen": "2026-10-19T09:06:44.117Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549478&mode=view": {
+    "firstSeen": "2026-10-19T09:06:44.421Z",
+    "org": "전라남도 목포시청"
   }
 }

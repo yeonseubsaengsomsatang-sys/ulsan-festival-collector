@@ -1065,6 +1065,115 @@ const NATIONWIDE_PHASE4_BOARDS = [
   },
 ];
 
+// ---- 2026-10-19 전국 확대 5단계: 울산·경남·경북 우선 보강(경남 거제·고성 추가) +
+// 나머지 지역 보강(전남 함평) — 전부 실제 fetch + 정규식 매치로 검증 후 등록.
+//   - 이번 단계에서 양산시청/포항시청/구미시청은 목록이 전부 JS onclick 네비게이션이라
+//     서버 HTML에 상세페이지 링크가 아예 없어 제외(포항은 "portal/board/post" 계열
+//     스킨 자체가 JS 전용인 것으로 보임 — 같은 스킨을 쓰는 다른 기관도 주의).
+//   - 안동시청 "보도자료" 게시판은 제목이 전부 "10월 19일 보도자료"처럼 날짜만 적힌
+//     묶음 공고라 실제 기사 제목이 본문/첨부에만 있어 제외(대구 공보 게시판과 동일 유형).
+//   - 남해군청은 pgnews 게시판의 카테고리 필터(pCate1=9)가 2020년 글을 최상단에 반환해
+//     실제 "최신 보도자료" 목록이 맞는지 확신할 수 없어 제외.
+//   - 청도군청, 경상북도문화관광공사(GTC)도 조사했으나 목록이 JS 폼 제출 방식이라
+//     서버 HTML에 상세페이지 링크가 없어 제외.
+
+// 거제시청: /board/view.geoje?boardId=BBS_0000028&...dataSid=... 링크, 제목은
+// <span class="tit">, 날짜는 <span class="fr">.
+const GEOJE_ITEM_RE =
+  /<a href="(\/board\/view\.geoje\?boardId=BBS_0000028&amp;[^"]*dataSid=\d+)">[\s\S]{0,400}?<span class="tit">([^<]{4,200}?)<\/span>[\s\S]{0,600}?<span class="fr">(\d{4}-\d{2}-\d{2})<\/span>/g;
+function extractGeojeCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GEOJE_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상남도 고성군청: /board/view.goseong?boardId=BBS_0000196&...dataSid=... 링크, 제목은
+// title 속성(목록 끝에 "[부서명]" 꼬리표가 붙어 떼어냄), 날짜는 <td class="date">가
+// 2자리 연도 YY.MM.DD. 형식.
+const GOSEONG_GN_ITEM_RE =
+  /<a href="(\/board\/view\.goseong\?boardId=BBS_0000196&amp;[^"]*dataSid=\d+)" title="([^"]{4,220}?)(?:\s*\[[^\]]*\])?">[^<]*<\/a>[\s\S]{0,500}?<td class="date">(\d{2})\.(\d{2})\.(\d{2})\.<\/td>/g;
+function extractGoseongGnCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GOSEONG_GN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `20${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
+// 전라남도 함평군청: /boardView.do?pageId=www275&boardId=NEWS&seq=... 링크(광주광역시청과
+// 같은 CMS 계열이지만 스킨이 달라 목록 텍스트가 안 잘려있음), 날짜는 <div class="date">.
+const HAMPYEONG_ITEM_RE =
+  /<a href="(\/boardView\.do\?pageId=www275&amp;boardId=NEWS&amp;seq=\d+[^"]*)"[^>]*>\s*([^<]{4,220}?)<\/a>[\s\S]{0,300}?<div class="date">\s*<div class="blind">작성일<\/div>\s*(\d{4}-\d{2}-\d{2})/g;
+function extractHampyeongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(HAMPYEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE5_BOARDS = [
+  {
+    org: "경상남도 거제시청",
+    sourceOrg: "거제시청 보도자료",
+    url: "https://www.geoje.go.kr/board/list.geoje?boardId=BBS_0000028&menuCd=DOM_000008902003004000",
+    region: "경남",
+    city: "거제",
+    extractor: extractGeojeCandidates,
+  },
+  {
+    org: "경상남도 고성군청",
+    sourceOrg: "고성군청 보도자료",
+    url: "https://www.goseong.go.kr/board/list.goseong?boardId=BBS_0000196&menuCd=DOM_000000102002008000",
+    region: "경남",
+    city: "고성",
+    extractor: extractGoseongGnCandidates,
+  },
+  {
+    org: "전라남도 함평군청",
+    sourceOrg: "함평군청 보도자료",
+    url: "https://www.hampyeong.go.kr/boardList.do?pageId=www275&boardId=NEWS",
+    region: "전남",
+    city: "함평",
+    extractor: extractHampyeongCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -1674,6 +1783,7 @@ async function main() {
     ...NATIONWIDE_PHASE2_BOARDS,
     ...NATIONWIDE_PHASE3_BOARDS,
     ...NATIONWIDE_PHASE4_BOARDS,
+    ...NATIONWIDE_PHASE5_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

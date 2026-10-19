@@ -1845,5 +1845,32 @@
     "noticeType": "general",
     "recruitStatus": "unknown",
     "memo": "자동수집(GitHub Actions, 강원특별자치도 춘천시청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
+  },
+  {
+    "id": "gh-P4edlOYi826VEsmb",
+    "name": "“남도의 멋과 풍류 꽃피다”…함평군, 포우헌에서 제10회 영산강 시서화 문화축제 개최",
+    "region": "전남",
+    "city": "함평",
+    "sourceOrg": "함평군청 보도자료",
+    "sourceUrl": "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=1128085&movePage=1&recordCnt=10",
+    "postedDate": "2026-10-19",
+    "applyStart": null,
+    "applyEnd": null,
+    "festivalStart": null,
+    "festivalEnd": null,
+    "applyLink": null,
+    "fee": null,
+    "boothType": null,
+    "eligibility": null,
+    "ulsanEligible": "unknown",
+    "linkStatus": "ok",
+    "linkCheckedAt": "2026-10-19T10:10:46.165Z",
+    "linkCheckDetail": null,
+    "collectedAt": "2026-10-19T10:10:46.464Z",
+    "status": "pending",
+    "organizerType": "official",
+    "noticeType": "general",
+    "recruitStatus": "unknown",
+    "memo": "자동수집(GitHub Actions, 전라남도 함평군청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
   }
 ]

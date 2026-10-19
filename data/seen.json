@@ -243,25 +243,33 @@
     "firstSeen": "2026-10-16T08:26:23.399Z",
     "org": "경상남도 진주시청"
   },
+  "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=70021&ptIdx=372&mId=0102000000": {
+    "firstSeen": "2026-10-19T09:05:59.749Z",
+    "org": "울산광역시 울주군청"
+  },
   "https://www.tongyeong.go.kr/00852/00853/00859.web?gcode=9078&idx=663482&amode=view&": {
     "firstSeen": "2026-10-17T16:06:58.110Z",
     "org": "경상남도 통영시청"
-  },
-  "https://www.hygn.go.kr/01997/02007.web?gcode=2001&idx=952044&amode=view&": {
-    "firstSeen": "2026-10-17T16:07:05.503Z",
-    "org": "경상남도 함양군청"
   },
   "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9243": {
     "firstSeen": "2026-10-17T16:07:07.347Z",
     "org": "강원특별자치도청"
   },
-  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155602669": {
-    "firstSeen": "2026-10-17T16:07:09.054Z",
-    "org": "제주특별자치도 서귀포시청"
-  },
   "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015769276&curPage=1": {
     "firstSeen": "2026-10-17T16:07:11.114Z",
     "org": "인천광역시청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=885921&amode=view&": {
+    "firstSeen": "2026-10-18T21:20:48.604Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.hygn.go.kr/01997/02007.web?gcode=2001&idx=952044&amode=view&": {
+    "firstSeen": "2026-10-17T16:07:05.503Z",
+    "org": "경상남도 함양군청"
+  },
+  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155602669": {
+    "firstSeen": "2026-10-17T16:07:09.054Z",
+    "org": "제주특별자치도 서귀포시청"
   },
   "https://www.gangnam.go.kr/board/B_000031/1075477/view.do?mid=ID01_0313": {
     "firstSeen": "2026-10-17T16:07:11.841Z",
@@ -310,10 +318,6 @@
   "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549393&mode=view": {
     "firstSeen": "2026-10-17T16:07:29.476Z",
     "org": "전라남도 목포시청"
-  },
-  "https://www.ulju.ulsan.kr/muniroom/bbs/view.do?bIdx=70021&ptIdx=372&mId=0102000000": {
-    "firstSeen": "2026-10-19T09:05:59.749Z",
-    "org": "울산광역시 울주군청"
   },
   "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886000&amode=view&": {
     "firstSeen": "2026-10-19T09:06:12.258Z",

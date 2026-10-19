@@ -959,6 +959,112 @@ const NATIONWIDE_PHASE3_BOARDS = [
   },
 ];
 
+// ---- 2026-10-19 전국 확대 4단계: 기관 1개뿐이던 지역(강원·충북·전남)에 기초단체를
+// 하나씩 더 추가 — 실제 fetch + 정규식 매치로 직접 검증(각 8~15건) 후 등록.
+//   - 부산 해운대구청/대구 구청/대전 유성구청/전북 전주시청/인천 연수구청도 조사했지만,
+//     전부 실제 서버 HTML에 개별 기사 목록이 없거나(전주 index.9is, 연수 report.asp는
+//     JS로 그려지는 페이지였음) 엉뚱한 과거 아카이브 게시판으로 연결돼(해운대
+//     BBS_0000039는 "2019년 이전자료" 전용 게시판이었음) — 전부 SKIPPED(추측 등록
+//     금지 원칙에 따라 제외). 유성구청(BBSMSTR_000000000103)은 JS 네비게이션만 있고
+//     목록 자체가 서버 HTML에 없어 제외.
+
+// 춘천시청: /mayor/newsroom/press-release/?bbsId=...&nttId=...&flag=view 링크, 제목은
+// <p>, 날짜는 <ul class="news-box-info"> 안 4번째 <li>.
+const CHUNCHEON_ITEM_RE =
+  /<a href="(\/mayor\/newsroom\/press-release\/\?bbsId=BBSMSTR_000000000335&nttId=\d+&flag=view)"[^>]*>\s*<p>([^<]{4,200}?)<\/p>[\s\S]{0,300}?<li>(\d{4}-\d{2}-\d{2})<\/li>/g;
+function extractChuncheonCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHUNCHEON_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 청주시청: ./selectBbsNttView.do?key=23485&bbsNo=40&nttNo=... 링크, 날짜는 YYYY.MM.DD
+// 형식의 <td>(점 구분자라 대시로 변환).
+const CHEONGJU_ITEM_RE =
+  /<a href="(\.\/selectBbsNttView\.do\?key=23485&amp;bbsNo=40&amp;nttNo=\d+[^"]*)"\s*>\s*([^<]{4,200}?)\s*<[\s\S]{0,1200}?<td>(\d{4})\.(\d{2})\.(\d{2})<\/td>/g;
+function extractCheongjuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHEONGJU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
+// 여수시청: /www/govt/news/release/press?idx=...&mode=view 링크, 제목은 title 속성("...에
+// 대한 글내용 보기." 접미사를 잘라냄), 날짜가 당일 작성글은 시:분:초만 나와서(예: "11:08:50")
+// 그런 행은 날짜 매치가 안 되어 자연히 건너뛴다(추측하지 않음).
+const YEOSU_ITEM_RE =
+  /<a href="(\/www\/govt\/news\/release\/press\?idx=\d+&amp;mode=view)" class="basic_cont[^"]*" title="([^"]{4,220}?) 에 대한 글내용 보기\."[\s\S]{0,350}?<td>(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractYeosuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(YEOSU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE4_BOARDS = [
+  {
+    org: "강원특별자치도 춘천시청",
+    sourceOrg: "춘천시청 보도자료",
+    url: "https://www.chuncheon.go.kr/mayor/newsroom/press-release/",
+    region: "강원",
+    city: "춘천",
+    extractor: extractChuncheonCandidates,
+  },
+  {
+    org: "충청북도 청주시청",
+    sourceOrg: "청주시청 보도자료",
+    url: "https://www.cheongju.go.kr/www/selectBbsNttList.do?bbsNo=40&key=279",
+    region: "충북",
+    city: "청주",
+    extractor: extractCheongjuCandidates,
+  },
+  {
+    org: "전라남도 여수시청",
+    sourceOrg: "여수시청 보도자료",
+    url: "https://www.yeosu.go.kr/www/govt/news/release/press",
+    region: "전남",
+    city: "여수",
+    extractor: extractYeosuCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -1567,6 +1673,7 @@ async function main() {
     ...NATIONWIDE_PHASE1_BOARDS,
     ...NATIONWIDE_PHASE2_BOARDS,
     ...NATIONWIDE_PHASE3_BOARDS,
+    ...NATIONWIDE_PHASE4_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

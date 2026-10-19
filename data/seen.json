@@ -374,5 +374,17 @@
   "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549478&mode=view": {
     "firstSeen": "2026-10-19T09:06:44.421Z",
     "org": "전라남도 목포시청"
+  },
+  "https://www.gyeongju.go.kr/open_content/ko/page.do?pageNo=1&pagePrvNxt=1&pageRef=0&pageOrder=0&step=258&parm_bod_uid=337186&srchVoteType=-1&parm_mnu_uid=0&srchEnable=1&srchBgpUid=-1&srchKeyword=&srchSDate=1960-01-01&srchColumn=&srchEDate=9999-12-31&mnu_uid=423&": {
+    "firstSeen": "2026-10-19T09:59:35.607Z",
+    "org": "경주시청"
+  },
+  "https://www.chuncheon.go.kr/mayor/newsroom/press-release/?bbsId=BBSMSTR_000000000335&nttId=530755&flag=view": {
+    "firstSeen": "2026-10-19T10:00:06.612Z",
+    "org": "강원특별자치도 춘천시청"
+  },
+  "https://www.chuncheon.go.kr/mayor/newsroom/press-release/?bbsId=BBSMSTR_000000000335&nttId=530748&flag=view": {
+    "firstSeen": "2026-10-19T10:00:07.125Z",
+    "org": "강원특별자치도 춘천시청"
   }
 }

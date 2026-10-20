@@ -1174,6 +1174,131 @@ const NATIONWIDE_PHASE5_BOARDS = [
   },
 ];
 
+// ---- 2026-10-20 울산·경남·경북 6단계 보강: 시/군청이 아닌 재단·진흥원까지 확대 —
+// 전부 실제 fetch + 정규식 매치로 검증 후 등록.
+//   - 울산문화관광재단(uctf.or.kr)은 id="app" 등 Vue 마커가 있는 SPA라 /board/notice의
+//     서버 HTML에 글 목록이 없음(네비게이션 메뉴 텍스트만 반복) — SKIPPED.
+//   - 의령군청(uiryeong.go.kr)은 거제·고성과 같은 "board/list.OOO" CMS 계열로 보이지만
+//     실제 요청 시 "시스템 점검 중입니다" 에러 페이지만 반환됨 — 추측 등록 금지 원칙에
+//     따라 제외(사이트 자체 문제일 수 있어 추후 재확인 가치 있음).
+//   - 거창군청(geochang.go.kr)은 뉴스 게시판 링크가
+//     "00452.web?...&news_epct_no={{news_epct_no}}" 형태로 Vue 템플릿 placeholder가
+//     그대로 노출돼 있어(서버가 값을 채우지 않음) 클라이언트 JS 렌더링으로 판단 — SKIPPED.
+//   - 예천군청(ycg.kr, open.content 경로)과 봉화군청(bonghwa.go.kr, portal/board/post)은
+//     둘 다 목록 페이지 서버 HTML에 개별 글 링크가 없고(예천) 검색 폼(POST)만 있어(봉화)
+//     제외. 김천·영천·상주·문경·군위·의성·청송·영양·영덕·고령·성주·칠곡·울진·울릉은
+//     이번 단계에서 시간 관계상 미조사 — 다음 확대 때 이어서 조사할 것.
+
+// 경남문화예술진흥원(gcaf.or.kr): 그누보드 계열, 게시판 URL은 bo_table=sub3_1(공고/공지).
+// 제목은 <a href="...bo_table=sub3_1&amp;wr_id=NNNN">TITLE</a>, 날짜는 그 뒤
+// <td class="td_datetime">YYYY-MM-DD</td>.
+const GCAF_ITEM_RE =
+  /<a href="([^"]*bo_table=sub3_1[^"]*wr_id=\d+[^"]*)">\s*([^<]{4,200}?)\s*<\/a>[\s\S]{0,400}?<td class="td_datetime">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractGcafCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GCAF_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경남관광재단(gnto.or.kr): 공지사항(sub04/sub01_01.php)·보도자료(sub04/sub05_01.php) 둘 다
+// 같은 마크업 — 제목은 <a href="...mode=view..."><span class="title">TITLE</span></a>, 날짜는
+// 같은 <li> 블록 안의 <span class="date">YYYY-MM-DD</span>(제목보다 뒤에 나옴).
+const GNTO_ITEM_RE =
+  /<a href="([^"]*mode=view[^"]*)">[\s\S]{0,150}?<span class="title">([^<]{4,200})<\/span>[\s\S]{0,300}?<span class="date">(\d{4}-\d{2}-\d{2})<\/span>/g;
+function extractGntoCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GNTO_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상남도 산청군청(sancheong.go.kr) 보도자료: 충북/남양주와 같은 selectBbsNttList/View.do
+// 계열이지만 스킨이 또 달라, 제목은 <strong class="news_ti">, 요약문은 <span class="news_txt">
+// (창원처럼 제목에 키워드가 없고 요약문에만 있는 경우가 있어 둘을 합쳐서 판정), 날짜는
+// <span class="news_date">YYYY.MM.DD</span>.
+const SANCHEONG_ITEM_RE =
+  /<a href="(\.\/selectBbsNttView\.do\?key=1825&amp;bbsNo=115&amp;nttNo=\d+[^"]*)"\s*>\s*<strong class="news_ti">\s*([\s\S]{0,200}?)\s*(?:<img[^>]*>)?\s*<\/strong>\s*<span class="news_txt">([\s\S]{0,800}?)<\/span>\s*<span class="news_date">(\d{4})\.(\d{2})\.(\d{2})<\/span>/g;
+function extractSancheongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SANCHEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const summary = decodeEntities(m[3]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    const combined = `${title} ${summary}`;
+    if (!NEW_SITE_KEYWORD_RE.test(combined) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `${m[4]}-${m[5]}-${m[6]}` });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE6_BOARDS = [
+  {
+    org: "경남문화예술진흥원",
+    sourceOrg: "경남문화예술진흥원 공고/공지",
+    url: "https://www.gcaf.or.kr/bbs/board.php?bo_table=sub3_1",
+    region: "경남",
+    city: "경남",
+    extractor: extractGcafCandidates,
+  },
+  {
+    org: "경남관광재단",
+    sourceOrg: "경남관광재단 공지사항",
+    url: "https://www.gnto.or.kr/sub04/sub01_01.php",
+    region: "경남",
+    city: "경남",
+    extractor: extractGntoCandidates,
+  },
+  {
+    org: "경남관광재단",
+    sourceOrg: "경남관광재단 보도자료",
+    url: "https://www.gnto.or.kr/sub04/sub05_01.php",
+    region: "경남",
+    city: "경남",
+    extractor: extractGntoCandidates,
+  },
+  {
+    org: "경상남도 산청군청",
+    sourceOrg: "산청군청 보도자료",
+    url: "https://www.sancheong.go.kr/news/selectBbsNttList.do?key=1825&bbsNo=115",
+    region: "경남",
+    city: "산청",
+    extractor: extractSancheongCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -1784,6 +1909,7 @@ async function main() {
     ...NATIONWIDE_PHASE3_BOARDS,
     ...NATIONWIDE_PHASE4_BOARDS,
     ...NATIONWIDE_PHASE5_BOARDS,
+    ...NATIONWIDE_PHASE6_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

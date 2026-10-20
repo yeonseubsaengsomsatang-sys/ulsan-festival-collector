@@ -390,5 +390,61 @@
   "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=1128085&movePage=1&recordCnt=10": {
     "firstSeen": "2026-10-19T10:10:46.162Z",
     "org": "전라남도 함평군청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886071&amode=view&": {
+    "firstSeen": "2026-10-20T14:13:00.304Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886070&amode=view&": {
+    "firstSeen": "2026-10-20T14:13:01.196Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886063&amode=view&": {
+    "firstSeen": "2026-10-20T14:13:02.215Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.tongyeong.go.kr/00852/00853/00859.web?gcode=9078&idx=663539&amode=view&": {
+    "firstSeen": "2026-10-20T14:13:04.267Z",
+    "org": "경상남도 통영시청"
+  },
+  "https://www.hygn.go.kr/01997/02007.web?gcode=2001&idx=952183&amode=view&": {
+    "firstSeen": "2026-10-20T14:13:05.783Z",
+    "org": "경상남도 함양군청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9275": {
+    "firstSeen": "2026-10-20T14:13:07.744Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155636086": {
+    "firstSeen": "2026-10-20T14:13:09.323Z",
+    "org": "제주특별자치도 서귀포시청"
+  },
+  "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015787613&curPage=1": {
+    "firstSeen": "2026-10-20T14:13:11.496Z",
+    "org": "인천광역시청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075493/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-20T14:13:12.275Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549517&mode=view": {
+    "firstSeen": "2026-10-20T14:13:20.596Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.chuncheon.go.kr/mayor/newsroom/press-release/?bbsId=BBSMSTR_000000000335&nttId=530816&flag=view": {
+    "firstSeen": "2026-10-20T14:13:28.665Z",
+    "org": "강원특별자치도 춘천시청"
+  },
+  "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=5060316&movePage=1&recordCnt=10": {
+    "firstSeen": "2026-10-20T14:13:35.501Z",
+    "org": "전라남도 함평군청"
+  },
+  "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=800414&movePage=1&recordCnt=10": {
+    "firstSeen": "2026-10-20T14:13:35.823Z",
+    "org": "전라남도 함평군청"
+  },
+  "https://www.sancheong.go.kr/news/selectBbsNttView.do?key=1825&bbsNo=115&nttNo=166041&searchCtgry=&searchCnd=all&searchKrwd=&pageIndex=1&integrDeptCode=": {
+    "firstSeen": "2026-10-20T14:13:38.375Z",
+    "org": "경상남도 산청군청"
   }
 }

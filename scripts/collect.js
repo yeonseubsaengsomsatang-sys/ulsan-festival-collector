@@ -19,6 +19,13 @@
 
 const fs = require("fs");
 const path = require("path");
+// 2026-10-21: 모집공고 본문에 없는 세부정보(참가비·부스크기·전기·참가자격 등)가 공식
+// 첨부파일(PDF)에만 있는 경우가 실제로 매우 흔함(경주 윈터포차라이트 사례로 실측 확인).
+// pdf-parse는 무료 오픈소스(MIT) 라이브러리로 외부 API 호출이 전혀 없어 이 프로젝트의
+// "LLM 호출 없는 순수 HTTP+정규식" 철학에 맞음 — 비용 $0, GitHub Actions에 npm install
+// 단계만 추가됨. .hwp(구 바이너리 한글파일)는 무료로 안정적으로 읽을 라이브러리가 없어
+// 지금처럼 "확인 필요"로 남긴다(추측 금지 원칙).
+const { PDFParse } = require("pdf-parse");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
@@ -1937,6 +1944,97 @@ const DATE_DEADLINE_ONLY_RE =
   /(?:신청|접수|모집)\s*(?:기간|기한)?\s*(?:마감|종료)\s*[:：]?\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})|(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})\s*까지/;
 const ATTACHMENT_RE = /([^\s]+\.(?:hwp|pdf|jpg|jpeg|png))\s*다운로드/gi;
 
+// ---- 2026-10-21 신설: 모집공고 상세정보(행사명/장소/기간/모집규모/참가비/신청방법) 자동
+// 추출. 정부 공고 양식은 라벨(행사명/기간/장소 등)이 2~3글자라 "행 사 명"처럼 글자마다
+// 벌려 쓴 PDF 레이아웃이 실측으로 확인돼(경주 윈터포차라이트 PDF), 라벨 내부에 \s*를
+// 끼워 넣어 공백이 있어도/없어도 매치되게 한다. 값은 줄바꿈 전까지만 캡처해 다음 라벨과
+// 섞이지 않게 한다. 매치 안 되면 null -> 화면에서 "확인 필요"로 표시(추측 금지 원칙).
+const EVENT_NAME_RE = /행\s*사\s*명\s*[:：]\s*([^\n]{2,80})/;
+const VENUE_RE = /(?:행\s*사\s*장\s*소|개\s*최\s*장\s*소|장\s*소)\s*[:：]\s*([^\n]{2,60})/;
+const BOOTH_COUNT_RE = /(?:모\s*집\s*규\s*모|부스\s*수|참가\s*업체\s*수)\s*[:：]\s*([^\n]{1,40})/;
+const FEE_RE = /참\s*가\s*비\s*[:：]\s*([^\n]{1,40})/;
+const APPLY_METHOD_RE = /(?:접수\s*방법|신청\s*방법|제출\s*방법)\s*[:：]\s*([^\n]{1,60})/;
+
+// "라벨: YYYY.M.D ~ (YYYY.)(M.)D" 형태를 라벨 종류 무관하게 전부 찾아서, 라벨 텍스트로
+// "모집/접수/신청 기간"(기존 extractDateRange가 이미 처리)과 "행사 기간"을 구분한다.
+// 레이블 앞에서 글자 단위로 안 벌어지는 경우/벌어지는 경우 둘 다 매치하려고 라벨 자체는
+// 넓게(1~4글자, 글자 사이 공백 허용) 잡고 JS 코드에서 내용으로 판정 — 정규식 lookbehind로
+// "모집/접수/신청"을 제외하려던 첫 시도보다 훨씬 안전함(실제 "기간"만 단독으로 쓰인 라벨도
+// 있어 lookbehind 방식은 오탐 위험이 있었음, 로컬 테스트로 확인하고 이 방식으로 교체).
+const LABELED_DATE_RANGE_RE =
+  /([가-힣](?:\s*[가-힣]){0,3})\s*[:：]\s*(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})\.?\s*(?:\([^)]{0,4}\))?\s*(?:~|-|부터)\s*(?:(\d{4})[.\-/]\s*)?(?:(\d{1,2})[.\-/]\s*)?(\d{1,2})\.?\s*(?:\([^)]{0,4}\))?/g;
+// 마감일을 "공고일 ~ M.D" 형태(연도 없이, 시작일은 "공고일"이라는 말로만 표현)로 쓰는
+// 경우가 실제로 많음(경주 사례로 확인) — 이 경우 공고가 이미 게시됐다는 사실 자체가
+// "시작됨"의 증거이므로, 기존 "마감일만 있는 경우"(unknown 유지)보다 한 단계 더 확실하게
+// open/closed를 판정할 수 있다.
+const APPLY_PERIOD_ANNOUNCE_RE =
+  /(?:접수|신청|모집)\s*(?:기간|기한)?\s*[:：]?\s*공고일\s*(?:~|-|부터)\s*(?:(\d{4})[.\-/]\s*)?(\d{1,2})[.\-/]\s*(\d{1,2})\.?\s*(?:\([^)]{0,4}\))?/;
+// "OO시/군/구에 사업장을 둔(두고)" 식으로 특정 지자체를 참가 전제조건으로 못박는 표현은
+// "만"/"한정" 같은 명시적 단어가 없어도 사실상 관내 한정이다(경주 사례로 실측 확인 —
+// 기존 ELIGIBILITY_OUTSIDE_NO_RE는 "만/한정" 트레일링을 요구해 이 표현을 놓쳤음).
+const ELIGIBILITY_LOCAL_BIZ_RE = /([가-힣]{2,6}(?:시|군|구))에\s*사업장을\s*(?:둔|두고|두거나)/;
+
+function cleanValue(s) {
+  return s ? s.replace(/\s+/g, " ").trim() : null;
+}
+
+function extractVenue(text) {
+  const m = text.match(VENUE_RE);
+  return m ? cleanValue(m[1]) : null;
+}
+function extractBoothCount(text) {
+  const m = text.match(BOOTH_COUNT_RE);
+  return m ? cleanValue(m[1]) : null;
+}
+function extractFee(text) {
+  const m = text.match(FEE_RE);
+  return m ? cleanValue(m[1]) : null;
+}
+function extractApplyMethod(text) {
+  const m = text.match(APPLY_METHOD_RE);
+  return m ? cleanValue(m[1]) : null;
+}
+function extractEventName(text) {
+  const m = text.match(EVENT_NAME_RE);
+  return m ? cleanValue(m[1]) : null;
+}
+
+// 행사(개최) 기간 — 모집기간과는 다른 필드(festivalStart/festivalEnd). "모집/접수/신청"
+// 라벨은 제외하고, 그 외 날짜범위 라벨(기간/행사기간/행사일/축제기간/개최기간 등)
+// 중 처음 나오는 것을 행사 기간으로 본다. 둘 다 없으면 null -> 확인 필요.
+function extractEventPeriod(text) {
+  const re = new RegExp(LABELED_DATE_RANGE_RE.source, "g");
+  let m;
+  while ((m = re.exec(text))) {
+    const label = m[1].replace(/\s+/g, "");
+    if (/모집|접수|신청/.test(label)) continue;
+    const [, , y, mo, d, ey, emo, ed] = m;
+    const endYear = ey || y;
+    const endMonth = emo || mo;
+    return {
+      festivalStart: `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`,
+      festivalEnd: `${endYear}-${endMonth.padStart(2, "0")}-${ed.padStart(2, "0")}`,
+    };
+  }
+  return { festivalStart: null, festivalEnd: null };
+}
+
+// 제공시설(부스 크기·전기·테이블 등)은 사이트마다 표현이 너무 다양해 필드별로 쪼개지
+// 않고, "지원 사항"/"제공 사항" 블록의 불릿 목록을 하나의 설명 문자열로 그대로 옮긴다
+// (추측 조합 없음 — 원문 불릿을 그대로 보여줘서 사람이 바로 판단할 수 있게 함).
+function extractFacilities(text) {
+  const m = text.match(
+    /(?:지원\s*사항|제공\s*사항|지원\s*내용)\s*\n([\s\S]{1,600}?)(?=\n□|\n선정\s*방법|\n접수|\n문의처|$)/
+  );
+  if (!m) return null;
+  const lines = m[1]
+    .split("\n")
+    .map((l) => cleanValue(l.replace(/^[-◦\s]+/, "")))
+    .filter((l) => l && l.length > 0 && l.length < 120);
+  if (!lines.length) return null;
+  return lines.slice(0, 8).join("; ");
+}
+
 // 관외(타지역) 사업자 참가 가능 여부 (2026-10-17 신설) — 반드시 본문에 명시적 근거
 // 문구가 있을 때만 yes/no로 판정하고, 그 외에는 전부 "unknown"으로 남긴다. 둘 다
 // 매치되거나(모순) 둘 다 안 매치되면(근거 없음) 애매한 것으로 보고 unknown 유지.
@@ -2041,7 +2139,7 @@ function parseKoMonthDay(monthStr, dayStr, year) {
 // 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
 // 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
 // 않고 unknown으로 남긴다(2026-10-17 신설, 날짜 표현 다양화 개선).
-function extractDateRange(bodyText) {
+function extractDateRange(bodyText, postedDate) {
   const out = { applyStart: null, applyEnd: null, recruitStatus: "unknown" };
   const today = new Date();
 
@@ -2079,6 +2177,23 @@ function extractDateRange(bodyText) {
       // 시작일을 모르므로 "이미 마감됐는지"만 확정하고, 안 지났으면 모집중이라 단정하지
       // 않고 unknown 유지.
       out.recruitStatus = today > end ? "closed" : "unknown";
+      return out;
+    }
+  }
+
+  // 2026-10-21 추가: "접수기간: 공고일 ~ M.D" 형태(경주 사례로 실측) — 시작일을 "공고일"
+  // 이라는 말로만 표현해 위 패턴들이 못 잡던 경우. 공고가 이미 게시됐다는 사실 자체가
+  // "모집이 시작됐다"는 근거이므로(추측이 아니라 "공고=게시일"이라는 사실관계), 마감일만
+  // 있는 일반적인 경우(unknown 유지)보다 한 단계 더 확실하게 open/closed를 판정한다.
+  const announceMatch = bodyText.match(APPLY_PERIOD_ANNOUNCE_RE);
+  if (announceMatch) {
+    const [, endYearRaw, endMonth, endDay] = announceMatch;
+    const endYear = endYearRaw || today.getFullYear();
+    const end = parseKoMonthDay(endMonth, endDay, +endYear);
+    if (end) {
+      out.applyStart = postedDate || null;
+      out.applyEnd = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
+      out.recruitStatus = today > end ? "closed" : "open";
     }
   }
 
@@ -2088,22 +2203,50 @@ function extractDateRange(bodyText) {
 // 관외(타지역) 사업자 참가 가능 여부 판정 (2026-10-17 신설). boardRegion은 게시판이
 // 속한 지역(예: "경북"/"경남") — 그 게시판 자체가 "울산"이면 "관내"가 곧 울산이므로,
 // "관내만 가능"이라는 문구가 오히려 울산 사업자에겐 유리하다는 점을 반영한다.
+// 2026-10-21: "전국 업체 참가 가능 / 지역 업체 한정(+제한 지역명) / 참가 자격 확인 필요"
+// 3분류를 eligibilityCategory/restrictedRegion으로 새로 추가(기존 ulsanEligible은 그대로
+// 둬서 울산 우선 확인 기능 등 기존 동작을 깨지 않음). "행사 개최 지역"과 "참가업체 사업장
+// 소재지 제한"을 혼동하지 않도록, 지역명은 반드시 "~에 사업장을 둔/관내~" 류 참가자격
+// 문구에서만 뽑고, 게시판 자체의 region(개최 지역)에서는 절대 추론하지 않는다.
 function detectEligibility(bodyText, boardRegion) {
-  if (!bodyText) return { eligibility: null, ulsanEligible: "unknown" };
+  if (!bodyText) {
+    return { eligibility: null, ulsanEligible: "unknown", eligibilityCategory: "unknown", restrictedRegion: null };
+  }
   const outsideOk = ELIGIBILITY_OUTSIDE_OK_RE.exec(bodyText);
   const outsideNo = ELIGIBILITY_OUTSIDE_NO_RE.exec(bodyText);
+  const localBiz = ELIGIBILITY_LOCAL_BIZ_RE.exec(bodyText);
+
   if (outsideOk && !outsideNo) {
-    return { eligibility: outsideOk[0].replace(/\s+/g, " "), ulsanEligible: "yes" };
+    return {
+      eligibility: outsideOk[0].replace(/\s+/g, " "),
+      ulsanEligible: "yes",
+      eligibilityCategory: "nationwide",
+      restrictedRegion: null,
+    };
   }
   if (outsideNo && !outsideOk) {
     const quote = outsideNo[0].replace(/\s+/g, " ");
-    if (boardRegion === "울산") {
-      return { eligibility: quote, ulsanEligible: "yes" };
-    }
-    return { eligibility: quote, ulsanEligible: "no" };
+    const regionMatch = /([가-힣]{2,6}(?:시|군|구))에\s*(?:주소를\s*둔|소재한|거주하는)/.exec(bodyText);
+    return {
+      eligibility: quote,
+      ulsanEligible: boardRegion === "울산" ? "yes" : "no",
+      eligibilityCategory: "local_only",
+      restrictedRegion: regionMatch ? regionMatch[1] : null,
+    };
   }
-  // 근거 문구가 없거나(둘 다 미매치) 모순되게 둘 다 매치되면 — 추측하지 않고 unknown 유지
-  return { eligibility: null, ulsanEligible: "unknown" };
+  // 2026-10-21 추가: "OO시에 사업장을 둔/두고" — "만"/"한정" 같은 명시적 단어는 없지만
+  // 특정 지자체를 참가 전제조건으로 못박아 실질적으로 관내 한정인 경우(경주 사례로 실측
+  // 확인). outsideOk/outsideNo가 둘 다 안 걸렸을 때만 보는 마지막 폴백.
+  if (localBiz && !outsideOk) {
+    return {
+      eligibility: localBiz[0].replace(/\s+/g, " "),
+      ulsanEligible: boardRegion === "울산" ? "yes" : "no",
+      eligibilityCategory: "local_only",
+      restrictedRegion: localBiz[1],
+    };
+  }
+  // 근거 문구가 없거나 모순되게 여러 패턴이 동시에 매치되면 — 추측하지 않고 unknown 유지
+  return { eligibility: null, ulsanEligible: "unknown", eligibilityCategory: "unknown", restrictedRegion: null };
 }
 
 function stripHtml(html) {
@@ -2117,25 +2260,132 @@ function stripHtml(html) {
     .trim();
 }
 
-async function fetchAndClassifyDetail(detailUrl, title, region) {
+// 2026-10-21 신설: 위 stripHtml()은 날짜/자격 판정용으로 전부 공백 한 줄로 뭉개는데,
+// "행사명 : ... / 행사장소 : ... / 모집규모 : ..." 처럼 한 줄에 한 항목인 공고는 줄바꿈이
+// 없어지면 값이 다음 항목까지 전부 삼켜버리는 문제가 실측으로 확인됨(경주 사례). 신규
+// 상세필드(행사명/장소/모집규모/참가비/신청방법) 추출에만 쓰는 별도 버전으로, <br>·블록
+// 종료태그를 줄바꿈으로 바꿔서 "한 줄 = 한 항목" 구조를 보존한다. 기존 stripHtml()은
+// 그대로 둬서(날짜·자격판정 등 기존 50여개 기관에서 이미 검증된 동작) 회귀 위험이 없다.
+function stripHtmlPreserveLines(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|dd|dt|tr|td|th|h[1-6])>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .filter((line) => line.length > 0)
+    .join("\n");
+}
+
+// ---- 2026-10-21 신설: 공식 첨부파일(PDF) 분석 ----
+// 비용 조사 결과(사용자 승인 완료): pdf-parse는 무료 오픈소스라 외부 API 호출/비용이
+// 전혀 없음. .hwp(구 바이너리 한글파일)는 무료로 안정적으로 읽을 라이브러리가 없어
+// 지금처럼 건드리지 않고 "확인 필요"로 남긴다 — PDF만 지원.
+const DIRECT_PDF_LINK_RE = /<a[^>]+href="([^"]+\.pdf)"[^>]*>/gi;
+// eminwon(경주 등 NTIS 계열 게시판)의 첨부파일은 onclick="goDownLoad('표시이름','저장이름',
+// '경로',파일ID)"로 다운로드되고, 실제 다운로드 URL은 그 사이트의 외부 js(utility.js)에
+// 박혀 있는 "eminwon.<도메인>/emwp/jsp/ofr/FileDown.jsp?..." 패턴으로 역추적해 확인함
+// (경주 윈터포차라이트 PDF를 실제로 받아 pdf-parse로 100% 정확하게 읽어냄 — 비용 보고
+// 단계에서 실측 검증 완료).
+const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*\d+\)/g;
+
+function extractAttachmentPdfUrls(html, pageUrl) {
+  const out = [];
+  let m;
+  const direct = new RegExp(DIRECT_PDF_LINK_RE.source, "gi");
+  while ((m = direct.exec(html))) {
+    try {
+      out.push(new URL(decodeEntities(m[1]), pageUrl).href);
+    } catch {
+      /* ignore malformed href */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  const godown = new RegExp(GODOWNLOAD_RE.source, "g");
+  while ((m = godown.exec(html))) {
+    const [, userFileNm, sysFileNm, filePath] = m;
+    if (!/\.pdf$/i.test(userFileNm)) continue; // .hwp/.hwpx/이미지는 지원 안 함 — 확인 필요로 남김
+    try {
+      const host = new URL(pageUrl).hostname.replace(/^www\./, "");
+      const url =
+        `https://eminwon.${host}/emwp/jsp/ofr/FileDown.jsp?` +
+        `user_file_nm=${encodeURI(decodeEntities(userFileNm))}` +
+        `&sys_file_nm=${encodeURI(decodeEntities(sysFileNm))}` +
+        `&file_path=${encodeURI(decodeEntities(filePath))}`;
+      out.push(url);
+    } catch {
+      /* ignore */
+    }
+  }
+  return out.slice(0, 2);
+}
+
+// PDF를 받아 텍스트만 뽑는다 — 실패(네트워크·암호화·손상 등)는 전부 조용히 무시하고
+// null을 반환, 호출 쪽에서 "본문만으로 분류"로 안전하게 폴백한다(절대 전체 수집을
+// 중단시키지 않음).
+async function fetchPdfText(pdfUrl) {
+  try {
+    const res = await fetch(pdfUrl, {
+      headers: { "User-Agent": BROWSER_UA },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > 15 * 1024 * 1024) return null; // 비정상적으로 큰 파일은 스킵
+    const parser = new PDFParse({ data: buf });
+    const { text } = await parser.getText();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchAttachmentPdfText(html, pageUrl) {
+  const urls = extractAttachmentPdfUrls(html, pageUrl);
+  const texts = [];
+  for (const url of urls) {
+    const text = await fetchPdfText(url);
+    if (text) texts.push(text);
+    if (texts.join("\n").length > 8000) break; // 과도하게 긴 PDF는 앞부분만
+  }
+  return texts.length ? texts.join("\n").slice(0, 8000) : null;
+}
+
+async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
   const result = {
     applyStart: null,
     applyEnd: null,
+    festivalStart: null,
+    festivalEnd: null,
+    venue: null,
+    boothCount: null,
+    fee: null,
+    facilities: null,
+    applyMethod: null,
     noticeType: "general",
     boothType: null,
     recruitStatus: "unknown",
     eligibility: null,
     ulsanEligible: "unknown",
+    eligibilityCategory: "unknown",
+    restrictedRegion: null,
+    attachmentParsed: false,
     memo: "",
     linkStatus: "ok",
     linkCheckedAt: new Date().toISOString(),
     linkCheckDetail: null,
   };
+  let rawHtml = "";
   let bodyText = "";
   let fetchFailNote = "";
   try {
-    const html = await fetchText(detailUrl);
-    bodyText = stripHtml(html);
+    rawHtml = await fetchText(detailUrl);
+    bodyText = stripHtml(rawHtml);
   } catch (err) {
     fetchFailNote = `상세페이지 접속 실패(${err.message}) — 본문은 확인 못 하고 제목만으로 분류함. `;
     const linkErr = classifyLinkError(err);
@@ -2153,24 +2403,56 @@ async function fetchAndClassifyDetail(detailUrl, title, region) {
     return result;
   }
 
-  const dateInfo = extractDateRange(bodyText);
+  // 2026-10-21: "recruit"로 확정된 공고에 한해서만 첨부 PDF를 추가로 받아본다(모든 공고에
+  // 다 시도하면 불필요한 네트워크 호출이 늘어나므로, 실제로 검토 대상인 것만). 본문과
+  // PDF 텍스트를 합쳐서 하나의 텍스트로 모든 필드를 추출 — PDF만 있거나 본문만 있어도
+  // 전부 커버됨. PDF 다운로드/파싱이 실패해도 본문 분석 결과는 그대로 유지(안전한 폴백).
+  let pdfText = null;
+  if (rawHtml) {
+    pdfText = await fetchAttachmentPdfText(rawHtml, detailUrl);
+    result.attachmentParsed = !!pdfText;
+  }
+  const combinedText = pdfText ? `${bodyText}\n${pdfText}` : bodyText;
+  // 행사명/장소/모집규모/참가비/신청방법처럼 "한 줄에 한 항목"인 라벨은 줄바꿈이 살아있는
+  // 버전으로 뽑아야 값이 다음 항목까지 삼켜지지 않는다(위 stripHtmlPreserveLines 참고).
+  const lineAwareBody = rawHtml ? stripHtmlPreserveLines(rawHtml) : bodyText;
+  const lineAwareText = pdfText ? `${lineAwareBody}\n${pdfText}` : lineAwareBody;
+
+  const dateInfo = extractDateRange(combinedText, postedDate || null);
   result.applyStart = dateInfo.applyStart;
   result.applyEnd = dateInfo.applyEnd;
   result.recruitStatus = dateInfo.recruitStatus;
 
-  const eligInfo = detectEligibility(bodyText, region);
+  const eventPeriod = extractEventPeriod(lineAwareText);
+  result.festivalStart = eventPeriod.festivalStart;
+  result.festivalEnd = eventPeriod.festivalEnd;
+
+  result.venue = extractVenue(lineAwareText);
+  result.boothCount = extractBoothCount(lineAwareText);
+  result.fee = extractFee(lineAwareText);
+  result.facilities = extractFacilities(lineAwareText);
+  result.applyMethod = extractApplyMethod(lineAwareText);
+
+  const eligInfo = detectEligibility(combinedText, region);
   result.eligibility = eligInfo.eligibility;
   result.ulsanEligible = eligInfo.ulsanEligible;
+  result.eligibilityCategory = eligInfo.eligibilityCategory;
+  result.restrictedRegion = eligInfo.restrictedRegion;
 
   const attachments = [...bodyText.matchAll(ATTACHMENT_RE)].map((m) => m[1]);
-  const eligNote = eligInfo.eligibility ? ` 참가자격 근거: "${eligInfo.eligibility}".` : "";
+  const eligNote = eligInfo.eligibility
+    ? ` 참가자격 근거: "${eligInfo.eligibility}"${eligInfo.restrictedRegion ? ` (제한 지역: ${eligInfo.restrictedRegion})` : ""}.`
+    : "";
+  const pdfNote = result.attachmentParsed
+    ? " 첨부 PDF 공고문에서 세부정보를 추가로 확인함."
+    : attachments.length
+      ? ` 첨부파일(${attachments.join(", ")})이 있으나 자동분석에 실패했거나 지원하지 않는 형식(.hwp 등)이라 직접 확인이 필요함.`
+      : "";
   if (result.recruitStatus === "unknown") {
-    result.memo = attachments.length
-      ? `${fetchFailNote}${cls.reason} 모집기간 등 세부정보가 본문에 없고 첨부파일(${attachments.join(", ")})에만 있을 가능성이 높음 — 원문 첨부파일을 직접 확인 후 모집중/마감 여부를 판단하세요.${eligNote}`
-      : `${fetchFailNote}${cls.reason} 모집기간을 본문에서 확인하지 못함 — 원문을 직접 확인하세요.${eligNote}`;
+    result.memo = `${fetchFailNote}${cls.reason} 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.${eligNote}${pdfNote}`;
   } else {
     const periodText = result.applyStart ? `${result.applyStart}~${result.applyEnd}` : `~${result.applyEnd}(시작일 미확인)`;
-    result.memo = `${cls.reason} 본문에서 모집기간(${periodText}) 확인됨. 참가자격·신청방법 등 세부사항은 원문/첨부파일에서 추가 확인 필요.${eligNote}`;
+    result.memo = `${cls.reason} 모집기간(${periodText}) 확인됨.${eligNote}${pdfNote}`;
   }
   return result;
 }
@@ -2406,7 +2688,7 @@ async function main() {
         // 판매부스·체험부스·프리마켓 등 실제 부스 모집만 noticeType="recruit"(우선 검토)로
         // 남기고, 축제 개최/종료 소식이나 교육·자원봉사 등 부스 무관 모집은 "general"로,
         // 제목만으로 애매하면 "review"로 구분한다. (분류 정확도 개선 요청에 따른 변경)
-        const cls = await fetchAndClassifyDetail(c.url, c.title, "울산");
+        const cls = await fetchAndClassifyDetail(c.url, c.title, "울산", null);
         newItems.push({
           // sha256 of the full URL, not a truncated base64 of it — URLs from the
           // same board share a long prefix, so slicing plain base64 collided across
@@ -2418,9 +2700,19 @@ async function main() {
           sourceUrl: c.url,
           applyStart: cls.applyStart,
           applyEnd: cls.applyEnd,
+          festivalStart: cls.festivalStart,
+          festivalEnd: cls.festivalEnd,
+          applyLink: null,
+          venue: cls.venue,
+          boothCount: cls.boothCount,
+          fee: cls.fee,
+          facilities: cls.facilities,
+          applyMethod: cls.applyMethod,
           boothType: cls.boothType,
           eligibility: cls.eligibility,
           ulsanEligible: cls.ulsanEligible,
+          eligibilityCategory: cls.eligibilityCategory,
+          restrictedRegion: cls.restrictedRegion,
           linkStatus: cls.linkStatus,
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,
@@ -2472,7 +2764,7 @@ async function main() {
         seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
-        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null);
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
@@ -2483,13 +2775,19 @@ async function main() {
           postedDate: c.postedDate || null,
           applyStart: cls.applyStart,
           applyEnd: cls.applyEnd,
-          festivalStart: null,
-          festivalEnd: null,
+          festivalStart: cls.festivalStart,
+          festivalEnd: cls.festivalEnd,
           applyLink: null,
-          fee: null,
+          venue: cls.venue,
+          boothCount: cls.boothCount,
+          fee: cls.fee,
+          facilities: cls.facilities,
+          applyMethod: cls.applyMethod,
           boothType: cls.boothType,
           eligibility: cls.eligibility,
           ulsanEligible: cls.ulsanEligible,
+          eligibilityCategory: cls.eligibilityCategory,
+          restrictedRegion: cls.restrictedRegion,
           linkStatus: cls.linkStatus,
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,
@@ -2548,7 +2846,29 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// 2026-10-21: require.main 가드를 추가해 "node scripts/collect.js"로 직접 실행할 때의
+// 동작(GitHub Actions 포함)은 그대로 두고, 테스트 스크립트에서 require()로 불러와
+// fetchAndClassifyDetail() 등 개별 함수만 검증할 수 있게 함(검증 후 수동 실행 없이
+// require만 해도 전체 수집이 돌아가지 않게 하려는 목적 — 실제 동작은 변경 없음).
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  fetchAndClassifyDetail,
+  extractDateRange,
+  extractEventPeriod,
+  detectEligibility,
+  extractVenue,
+  extractBoothCount,
+  extractFee,
+  extractFacilities,
+  extractApplyMethod,
+  classifyNotice,
+  extractAttachmentPdfUrls,
+  fetchPdfText,
+  fetchText,
+};

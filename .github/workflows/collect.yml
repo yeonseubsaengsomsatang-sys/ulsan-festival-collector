@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install dependencies (pdf-parse — free, no API key)
+        run: npm ci
+
       - name: Run collector
         run: node scripts/collect.js
 

@@ -1,0 +1,18 @@
+{
+  "name": "ulsan-festival-collector",
+  "version": "1.0.0",
+  "description": "전국 시·도 공공기관 게시판에서 축제/부스/셀러 모집공고를 자동수집하는 스크립트",
+  "main": "scripts/collect.js",
+  "scripts": {
+    "collect": "node scripts/collect.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeonseubsaengsomsatang-sys/ulsan-festival-collector.git"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "pdf-parse": "^2.4.5"
+  }
+}

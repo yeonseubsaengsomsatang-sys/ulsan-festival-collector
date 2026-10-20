@@ -1299,6 +1299,117 @@ const NATIONWIDE_PHASE6_BOARDS = [
   },
 ];
 
+// ---- 2026-10-20 경북 7단계 보강: 6단계에서 시간 관계상 미조사였던 경북 시·군 조사.
+//   - 김천시(gc.go.kr)·영천시(yc.go.kr)·상주시(sangju.go.kr)·의성군(usc.go.kr)은
+//     홈페이지 서버 응답 자체가 비정상(빈 응답/리다이렉트 루프/극히 짧은 응답)이라
+//     게시판 URL 자체를 확보하지 못함 — SKIPPED(사이트 문제일 수 있어 재확인 가치 있음).
+//   - 문경시(gbmg.go.kr)는 검색으로 찾은 보도자료 후보 URL들이 전부 빈 응답(0바이트)을
+//     반환해 제외. 청송군(cs.go.kr)은 사이트 자체는 정상(메타 태그로 확인)이나 이번
+//     조사에서 공지/보도자료 게시판의 정확한 URL을 못 찾아 미등록.
+//   - 영덕군(yd.go.kr, 워드프레스)·울진군(uljin.go.kr)·고령군(goryeong.go.kr)·
+//     성주군(sj.go.kr)·군위군(gunwi.go.kr)·칠곡군(chilgok.go.kr)·울릉군(ulleung.go.kr) 중
+//     실제 글 목록이 서버 HTML에 있던 곳만 아래에 등록(영덕·군위·칠곡·울릉은 메뉴/목록이
+//     JS·AJAX로 그려져 서버 HTML에 글 링크가 없어 제외).
+
+// 경상북도 성주군청(sj.go.kr): 경주·영주·경산과 같은 "page.do?mnu_uid=" 계열 CMS지만, 이
+// 사이트는 title 속성 없이 <td class="list_tit txtL"><a href="...bod_uid=NNNN...">제목</a>
+// 구조라 OPEN_CONTENT_ITEM_RE(parm_bod_uid=+title 속성 전용)로는 안 잡힘 — 전용 추출기 필요.
+// 날짜는 그 뒤 <td class="list_date">YYYY-MM-DD</td>(실제 고시공고 29건 매치 테스트 완료).
+const SEONGJU_ITEM_RE =
+  /<a href="(page\.do\?[^"]*bod_uid=\d+[^"]*)">([\s\S]{0,400}?)<\/a>[\s\S]{0,400}?<td class="list_date">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractSeongjuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SEONGJU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2].replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상북도 울진군청(uljin.go.kr) 보도자료: board/list.uljin 계열(동구청과 같은 구조이나
+// 스킨이 다름) — 제목은 <strong>TITLE<img .../></strong>(첨부파일 없으면 img 없음), 그 뒤
+// <em class="info">작성일 : YYYY-MM-DD</em>. 실제 "N건 매칭" 테스트로 확인.
+const ULJIN_ITEM_RE =
+  /<a href="(\/board\/view\.uljin\?[^"]*dataSid=\d+[^"]*)">[\s\S]{0,60}?<strong>\s*([\s\S]{0,200}?)\s*(?:<img[^>]*>)?\s*<\/strong>[\s\S]{0,600}?작성일\s*:\s*(\d{4}-\d{2}-\d{2})/g;
+function extractUljinCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(ULJIN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상북도 고령군청(goryeong.go.kr) "고령뉴스"(BRD_ID=1062): 목록 항목의 상세 링크가
+// <a href="javascript:;" onclick="fn_articleLink(NNNNN);">라서 겉보기엔 JS 네비게이션이지만,
+// onclick 안의 글 번호가 그냥 리터럴 숫자라 정규식으로 바로 뽑을 수 있고, 그 번호로
+// boardView.do?BRD_ID=1062&BOARD_IDX=NNNNN&IDX=157 상세 URL을 직접 조립하면 실제 글
+// 상세페이지가 뜨는 것을 fetch로 확인했음(포항/구미처럼 글 식별자 자체가 서버 HTML에
+// 없어 URL을 못 만드는 경우와 달리, 여기는 식별자가 리터럴로 노출돼 있어 조립 가능).
+// 제목은 <p>TITLE</p>, 날짜는 <span class="gL_date">YYYY-MM-DD</span>.
+const GORYEONG_ITEM_RE =
+  /onclick="fn_articleLink\((\d+)\);"[\s\S]{0,400}?<p>([^<]{4,200})<\/p>[\s\S]{0,200}?<span class="gL_date">(\d{4}-\d{2}-\d{2})<\/span>/g;
+function extractGoryeongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GORYEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    const absUrl = `https://www.goryeong.go.kr/kor/boardView.do?BRD_ID=1062&BOARD_IDX=${m[1]}&IDX=157`;
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE7_BOARDS = [
+  {
+    org: "경상북도 성주군청",
+    sourceOrg: "성주군청 고시공고",
+    url: "https://sj.go.kr/page.do?mnu_uid=1044",
+    region: "경북",
+    city: "성주",
+    extractor: extractSeongjuCandidates,
+  },
+  {
+    org: "경상북도 울진군청",
+    sourceOrg: "울진군청 보도자료",
+    url: "https://www.uljin.go.kr/board/list.uljin?boardId=BBS_0000126&menuCd=DOM_000000103002013000&paging=ok&startPage=1",
+    region: "경북",
+    city: "울진",
+    extractor: extractUljinCandidates,
+  },
+  {
+    org: "경상북도 고령군청",
+    sourceOrg: "고령군청 고령뉴스",
+    url: "https://www.goryeong.go.kr/kor/boardList.do?BRD_ID=1062&IDX=157",
+    region: "경북",
+    city: "고령",
+    extractor: extractGoryeongCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -1910,6 +2021,7 @@ async function main() {
     ...NATIONWIDE_PHASE4_BOARDS,
     ...NATIONWIDE_PHASE5_BOARDS,
     ...NATIONWIDE_PHASE6_BOARDS,
+    ...NATIONWIDE_PHASE7_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

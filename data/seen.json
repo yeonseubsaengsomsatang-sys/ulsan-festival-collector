@@ -450,5 +450,29 @@
   "https://sj.go.kr/page.do?srchEnable=1&srchSDate=&srchKwd=&srchColumn=&srchEDate=&mnu_uid=1044&&srchBgpUid=&srchDept=&bod_uid=617475&pageNo=1&cmd=2": {
     "firstSeen": "2026-10-20T14:43:32.046Z",
     "org": "경상북도 성주군청"
+  },
+  "https://www.chilgok.go.kr/portal/bbs/view.do?bIdx=204209&ptIdx=111&mId=0201010000": {
+    "firstSeen": "2026-10-20T17:23:22.437Z",
+    "org": "경상북도 칠곡군청"
+  },
+  "https://www.cng.go.kr/01541/01552.web?gcode=1016&idx=583732&amode=view&": {
+    "firstSeen": "2026-10-20T17:23:26.267Z",
+    "org": "경상남도 창녕군청"
+  },
+  "https://www.suseong.kr/index.do?menu_id=00000063&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=BBSMSTR_000000000015&nttId=139629": {
+    "firstSeen": "2026-10-20T17:23:31.368Z",
+    "org": "대구광역시 수성구청"
+  },
+  "https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=21852": {
+    "firstSeen": "2026-10-20T17:23:37.719Z",
+    "org": "충청남도 공주시청"
+  },
+  "https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=21353": {
+    "firstSeen": "2026-10-20T17:23:39.845Z",
+    "org": "충청남도 공주시청"
+  },
+  "https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=21105": {
+    "firstSeen": "2026-10-20T17:23:41.064Z",
+    "org": "충청남도 공주시청"
   }
 }

@@ -1413,6 +1413,254 @@ const NATIONWIDE_PHASE7_BOARDS = [
   },
 ];
 
+// ---- 2026-10-21 경북·경남 8단계 보강: 7단계에서 SKIPPED였던 곳을 재조사(사이트가 바뀌었을
+// 수 있어서) + 아직 안 본 곳도 확인.
+//   - 경북 김천시(gc.go.kr)·영천시(yc.go.kr)·상주시(sangju.go.kr) 재확인 결과:
+//     * 김천시는 "통합자료실"(portal/bbs/list.do?ptIdx=1519)은 서버 렌더링되어 실제 글
+//       목록을 뽑을 수 있었음(VERIFIED) — 다만 보건소 약품 소모 내역처럼 축제/부스와 무관한
+//       글이 대부분이라 매칭 빈도는 낮을 것으로 예상되지만, 등록 자체는 가능해 포함.
+//     * 영천시는 사이트가 new.yc.go.kr로 이전 중인 것으로 보이고(기존 yc.go.kr 메인에 메뉴
+//       텍스트 자체가 없음), 이전 도메인도 접속이 불안정해 명확한 보도자료 URL을 확보하지
+//       못함 — SKIPPED 유지.
+//     * 상주시는 보도자료 게시판(page/10330/10640.tc)에 실제 접속은 되지만, 목록 제목이
+//       전부 "보도자료(10. 20.)"처럼 날짜만 들어간 묶음형이라(안동시와 같은 문제) 제목
+//       키워드 매칭이 원천적으로 불가능 — SKIPPED 유지.
+//   - 경북 의성군(usc.go.kr)·청송군(cs.go.kr)·칠곡군(chilgok.go.kr)은 전부 신규 VERIFIED.
+//     의성·칠곡은 title 속성 또는 onclick의 리터럴 bIdx로 상세 URL을 조립할 수 있는
+//     "portal/bbs" 계열(김천과 같은 CMS, 다만 마크업 변형이 있어 전용 추출기 필요).
+//   - 경북 문경(gbmg.go.kr)·영덕(yd.go.kr)·군위(gunwi.go.kr)·울릉(ulleung.go.kr)은 재확인
+//     결과 메인 페이지 응답 자체가 수십~수백 바이트짜리 빈 셸이라(JS 리다이렉트 추정)
+//     게시판 URL 확보 자체가 불가능 — SKIPPED 유지. 포항·안동·구미·청도·경북문화관광공사는
+//     이번 단계에서 재확인하지 않음(기존 SKIPPED 사유가 바뀔 가능성이 낮아 우선순위를 낮춤).
+//   - 경남 양산시(yangsan.go.kr)는 재확인 결과 목록 자체는 서버 HTML에 있으나(자료실
+//     게시판), 상세보기가 전부 `onclick="yhLib.inline.post(this)"` 식 AJAX 인라인 로딩이라
+//     개별 글의 실제 URL을 구성할 방법이 없음 — SKIPPED 유지(기존 조사와 동일 결론).
+//   - 경남 남해군(namhae.go.kr)은 재확인 결과, 이전에 과거(2020년) 글만 보이던 건
+//     카테고리 필터(pCate1) 문제가 아니라 **정렬 파라미터 누락** 때문이었음 —
+//     `orderBy=wdate desc`를 붙이면 최신글이 정상적으로 나옴(실제 2026-10-20일자 글 확인).
+//     기존 "카테고리 필터가 과거 글 반환"이라는 원인 진단이 부정확했던 것으로 정정하고
+//     VERIFIED 등록.
+//   - 경남 거창군(geochang.go.kr)은 7단계 때 "Vue 템플릿 placeholder({{news_epct_no}})
+//     노출"로 제외했던 그 사이트가 재확인 결과 정상적인 리터럴 값으로 서버 렌더링되고
+//     있어(사이트 쪽에서 임시 오류가 있었던 것으로 추정) VERIFIED로 재등록.
+//   - 경남 창녕군(cng.go.kr)은 신규 조사 — 메인 페이지의 "창녕군 뉴스" 위젯은 제목이
+//     "..."로 잘려 나와 못 쓰지만, 같은 글이 걸려 있는 전체 목록 페이지
+//     (01541/01552.web?gcode=1016)는 제목이 안 잘리고 그대로 나와 이쪽을 VERIFIED 등록.
+//   - 경남 의령군(uiryeong.go.kr)은 재확인해도 여전히 "의령군청 에러페이지"만 반환 —
+//     SKIPPED 유지(실제 사이트 문제로 추정, 추후 재확인 가치 있음).
+
+// 경상북도 김천시청(gc.go.kr) "통합자료실": onclick="goTo.view('list','BIDX','PTIDX','MID'...)
+// 형태의 CMS — title 속성이 있을 때도/없을 때도 있어, 있으면 title을, 없으면 <a> 안쪽
+// 텍스트를 쓰는 공용 추출기로 처리(칠곡군청도 같은 CMS라 재사용).
+const PORTAL_BBS_ITEM_RE =
+  /onclick="goTo\.view\('list','(\d+)','(\d+)','(\d+)'[^)]*\);\s*return false;"(?:\s+title="([^"]*)")?>([\s\S]{0,300}?)<\/a>[\s\S]{0,1500}?<td class="list_date">(\d{4}-\d{2}-\d{2})/g;
+function makePortalBbsExtractor(viewPathTemplate) {
+  return function extractPortalBbsCandidates(html, pageUrl) {
+    const out = [];
+    const re = new RegExp(PORTAL_BBS_ITEM_RE.source, "g");
+    let m;
+    while ((m = re.exec(html))) {
+      let title = m[4]
+        ? m[4].replace(/\s*게시글\s*바로가기$/, "")
+        : m[5].replace(/<[^>]*>/g, "");
+      title = decodeEntities(title).replace(/\s+/g, " ").trim();
+      if (title.length < 4 || title.length > 200) continue;
+      if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+      const [, bIdx, ptIdx, mId] = m;
+      let absUrl;
+      try {
+        absUrl = new URL(viewPathTemplate(bIdx, ptIdx, mId), pageUrl).href;
+      } catch {
+        continue;
+      }
+      out.push({ title, url: absUrl, postedDate: m[6] });
+    }
+    return out;
+  };
+}
+const extractGimcheonCandidates = makePortalBbsExtractor(
+  (bIdx, ptIdx, mId) => `view.do?bIdx=${bIdx}&ptIdx=${ptIdx}&mId=${mId}`
+);
+const extractChilgokCandidates = makePortalBbsExtractor(
+  (bIdx, ptIdx, mId) => `view.do?bIdx=${bIdx}&ptIdx=${ptIdx}&mId=${mId}`
+);
+
+// 경상북도 의성군청(usc.go.kr) 보도자료: title 속성이 href보다 **앞**에 오는 변형
+// (page.do?...&bod_uid=NNN 계열) — 날짜는 <p class="date"><span>YYYY-MM-DD.
+const UISEONG_ITEM_RE =
+  /<a title=" ?([^"]{4,200})" href="([^"]*bod_uid=\d+[^"]*)">[\s\S]{0,500}?<p class="date"><span>\s*(\d{4}-\d{2}-\d{2})/g;
+function extractUiseongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(UISEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[1]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[2]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상북도 청송군청(cs.go.kr) 공지사항: 제목은 <strong class="t1">, 날짜는
+// <span class="t3">YYYY-MM-DD(쿼리스트링은 전부 &amp; 로 정상 인코딩됨).
+const CHEONGSONG_ITEM_RE =
+  /<a href="(\?gcode=\d+&amp;idx=\d+&amp;amode=view[^"]*)" class="a1">[\s\S]{0,60}?<strong class="t1">\s*([^\n<]{4,200})[\s\S]{0,900}?<span class="t3">(\d{4}-\d{2}-\d{2})/g;
+function extractCheongsongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHEONGSONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상남도 남해군청(namhae.go.kr) 보도자료: 목록 URL에 orderBy=wdate+desc를 반드시 붙여야
+// 최신글이 나옴(안 붙이면 2020년 글만 나옴 — 과거 "카테고리 필터" 탓으로 오판했던 원인).
+const NAMHAE_ITEM_RE =
+  /<a href="([^"]*View\.do[^"]*)" class="a1">[\s\S]{0,400}?<strong class="t1">([^<]{4,200})<\/strong>[\s\S]{0,400}?<span class="t3">(\d{4}-\d{2}-\d{2})/g;
+function extractNamhaeCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(NAMHAE_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상남도 거창군청(geochang.go.kr) 뉴스미디어포털: href의 news_epct_no가 리터럴 숫자로
+// 정상 렌더링됨(7단계 때는 {{news_epct_no}} 플레이스홀더였던 것과 달리 이번엔 실측
+// 정상값) — 날짜는 "등록일 : YYYY-MM-DD".
+const GEOCHANG_ITEM_RE =
+  /<a href="(\?amode=view&amp;news_epct_no=\d+&amp;)" class="a1">[\s\S]{0,60}?<strong class="t1">([\s\S]{4,200}?)<\/strong>[\s\S]{0,200}?등록일\s*:\s*(\d{4}-\d{2}-\d{2})/g;
+function extractGeochangCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GEOCHANG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 경상남도 창녕군청(cng.go.kr) 창녕소식 전체목록: 메인 페이지 위젯은 제목이 "..."로
+// 잘려서 못 쓰고, 01541/01552.web?gcode=1016 전체목록 페이지의 제목은 안 잘림.
+// href의 두 번째 "&"는 인코딩이 안 돼 있어(&amp;idx=.../&amode=view&) 그대로 매치.
+const CHANGNYEONG_ITEM_RE =
+  /<a href="(\?gcode=1016&amp;idx=\d+&amode=view&)" class="a1">[\s\S]{0,750}?<strong class="t1">[\s\S]{0,150}?\n\s*([^\n<]{4,200})\n[\s\S]{0,400}?<span class="t2">[\s\S]{0,100}?(\d{4}-\d{2}-\d{2})/g;
+function extractChangnyeongCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(CHANGNYEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE8_BOARDS = [
+  {
+    org: "경상북도 김천시청",
+    sourceOrg: "김천시청 통합자료실",
+    url: "https://www.gc.go.kr/portal/bbs/list.do?ptIdx=1519&mId=1206010000",
+    region: "경북",
+    city: "김천",
+    extractor: extractGimcheonCandidates,
+  },
+  {
+    org: "경상북도 의성군청",
+    sourceOrg: "의성군청 보도자료",
+    url: "https://www.usc.go.kr/ko/page.do?mnu_uid=186",
+    region: "경북",
+    city: "의성",
+    extractor: extractUiseongCandidates,
+  },
+  {
+    org: "경상북도 청송군청",
+    sourceOrg: "청송군청 공지사항",
+    url: "https://www.cs.go.kr/news/00002679/00002687.web",
+    region: "경북",
+    city: "청송",
+    extractor: extractCheongsongCandidates,
+  },
+  {
+    org: "경상북도 칠곡군청",
+    sourceOrg: "칠곡군청 공지사항",
+    url: "https://www.chilgok.go.kr/portal/bbs/list.do?ptIdx=111&mId=0201010000",
+    region: "경북",
+    city: "칠곡",
+    extractor: extractChilgokCandidates,
+  },
+  {
+    org: "경상남도 남해군청",
+    sourceOrg: "남해군청 보도자료",
+    url: "https://www.namhae.go.kr/news/pgnews/List.do?pageCd=NW0201000000&orderBy=wdate+desc",
+    region: "경남",
+    city: "남해",
+    extractor: extractNamhaeCandidates,
+  },
+  {
+    org: "경상남도 거창군청",
+    sourceOrg: "거창군청 뉴스미디어포털",
+    url: "https://www.geochang.go.kr/00445/00452.web",
+    region: "경남",
+    city: "거창",
+    extractor: extractGeochangCandidates,
+  },
+  {
+    org: "경상남도 창녕군청",
+    sourceOrg: "창녕군청 창녕소식",
+    url: "https://www.cng.go.kr/01541/01552.web?gcode=1016",
+    region: "경남",
+    city: "창녕",
+    extractor: extractChangnyeongCandidates,
+  },
+];
+
 // ---- 네이버 카페·밴드·인스타그램 공개 플리마켓 셀러모집 조사 (2026-10-20, 전부 SKIPPED) ----
 // 소규모 프리마켓/플리마켓 셀러 모집이 많이 올라오는 세 플랫폼을 "로그인 없이 fetch 가능한
 // 공개 글"만 등록한다는 전제로 조사했으나, 셋 다 구조적으로 이 수집기(순수 HTTP+정규식,
@@ -2048,6 +2296,7 @@ async function main() {
     ...NATIONWIDE_PHASE5_BOARDS,
     ...NATIONWIDE_PHASE6_BOARDS,
     ...NATIONWIDE_PHASE7_BOARDS,
+    ...NATIONWIDE_PHASE8_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

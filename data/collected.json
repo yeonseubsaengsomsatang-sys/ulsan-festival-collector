@@ -2250,5 +2250,32 @@
     "noticeType": "general",
     "recruitStatus": "unknown",
     "memo": "자동수집(GitHub Actions, 경상남도 산청군청 — 검증된 공식 URL). 제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨."
+  },
+  {
+    "id": "gh-ykrcJ4cYaHpGfap5",
+    "name": "2026년 중소기업 정규직 프로젝트 참여기업 및 인턴 참여자 모집 재공고",
+    "region": "경북",
+    "city": "성주",
+    "sourceOrg": "성주군청 고시공고",
+    "sourceUrl": "https://sj.go.kr/page.do?srchEnable=1&srchSDate=&srchKwd=&srchColumn=&srchEDate=&mnu_uid=1044&&srchBgpUid=&srchDept=&bod_uid=617475&pageNo=1&cmd=2",
+    "postedDate": "2026-07-30",
+    "applyStart": null,
+    "applyEnd": null,
+    "festivalStart": null,
+    "festivalEnd": null,
+    "applyLink": null,
+    "fee": null,
+    "boothType": null,
+    "eligibility": null,
+    "ulsanEligible": "unknown",
+    "linkStatus": "ok",
+    "linkCheckedAt": "2026-10-20T14:43:32.049Z",
+    "linkCheckDetail": null,
+    "collectedAt": "2026-10-20T14:43:32.427Z",
+    "status": "pending",
+    "organizerType": "official",
+    "noticeType": "general",
+    "recruitStatus": "unknown",
+    "memo": "자동수집(GitHub Actions, 경상북도 성주군청 — 검증된 공식 URL). 제목상 부스/셀러 모집이 아니라 일반 참가자·교육프로그램·자원봉사 등 모집으로 분류됨."
   }
 ]

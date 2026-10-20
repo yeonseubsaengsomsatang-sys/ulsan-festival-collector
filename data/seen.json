@@ -446,5 +446,9 @@
   "https://www.sancheong.go.kr/news/selectBbsNttView.do?key=1825&bbsNo=115&nttNo=166041&searchCtgry=&searchCnd=all&searchKrwd=&pageIndex=1&integrDeptCode=": {
     "firstSeen": "2026-10-20T14:19:32.546Z",
     "org": "경상남도 산청군청"
+  },
+  "https://sj.go.kr/page.do?srchEnable=1&srchSDate=&srchKwd=&srchColumn=&srchEDate=&mnu_uid=1044&&srchBgpUid=&srchDept=&bod_uid=617475&pageNo=1&cmd=2": {
+    "firstSeen": "2026-10-20T14:43:32.046Z",
+    "org": "경상북도 성주군청"
   }
 }

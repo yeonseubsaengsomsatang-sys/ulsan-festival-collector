@@ -1431,6 +1431,87 @@ const NATIONWIDE_PHASE7_BOARDS = [
 // (이 저장소 원칙상 금지된 방법들) SKIPPED 유지. 플랫폼이 공식 오픈 API를 제공하게 되거나
 // 운영자가 직접 RSS/공개 API 키를 주는 경우가 생기면 그때 재검토.
 
+// ---- 2026-10-21 8단계 보강: 광역단체만 연결돼 있던 부산·대구·광주·대전·세종의
+// 하위 구청·재단으로 확대. 실제 fetch로 검증. ----
+//   - 부산 해운대구청(board/list.do?boardId=BBS_0000039)은 응답은 오지만 이 특정
+//     menuCd 조합이 "2019년 2월 이전 자료" 고정 아카이브 뷰를 가리켜(검색 결과에도
+//     그렇게 표시됨) 최신 글이 전혀 없음(실제 글 날짜가 전부 2019년) — 최신 게시판의
+//     정확한 menuCd를 못 찾아 SKIPPED. 부산문화재단·부산관광공사는 이번에 시간 관계상
+//     미조사.
+//   - 대전 유성구청(bbs/BBSMSTR_000000000103/list.do)은 목록 서버 HTML은 정상이나,
+//     상세 링크가 `fn_search_detail(nttId)`로 숨겨진 폼을 **POST 제출**하는 구조라
+//     (view.do를 GET으로 직접 열면 응답이 멈춤 — 실측 확인) 이 수집기가 지원하는
+//     순수 GET fetch로는 상세 URL을 못 만든다 — SKIPPED(POST 세션 필요, 추측 등록 금지).
+//   - 대구 중구·광주 동구·서구 등 나머지 구청, 각 시도 문화재단/관광재단은 이번
+//     단계에서 시간 관계상 미조사 — 다음 확대 때 이어서 조사할 것.
+
+// 광주 광산구청(gwangsan.go.kr) 보도자료(REPORT_NEW): 제목은
+// <a href="/boardView.do?pageId=www3&amp;boardId=REPORT_NEW&amp;seq=NNNNN&amp;movePage=1">TITLE</a>
+// (새 글은 그 앞에 <span class="new">새글</span>이 붙지만 앵커 밖이라 무관), 날짜는 그 뒤
+// <td>YYYY-MM-DD</td>. 실제 "91억 원 광산사랑상품권 ‘조기 완판’"(2026-10-20) 등으로 검증.
+const GWANGSAN_ITEM_RE =
+  /<a href="(\/boardView\.do\?pageId=www3&amp;boardId=REPORT_NEW&amp;seq=\d+[^"]*)"[^>]*>\s*([^<]{4,200}?)\s*<\/a>[\s\S]{0,300}?<td>(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractGwangsanCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GWANGSAN_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 대구 수성구청(suseong.kr) 공지사항: 목록 행의 상세 링크가
+// onclick="fn_icms_navi_common('view', 'NNNNNN');return false;"라서 겉보기엔 JS
+// 네비게이션이지만, 안의 글 번호(nttId)가 리터럴 숫자라 고령군청과 같은 방식으로
+// index.do?menu_id=00000063&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=
+// BBSMSTR_000000000015&nttId=NNNNNN 상세 URL을 직접 조립할 수 있음(실제 글
+// "공동주택 전기자동차 충전시설 설치 현황 자료 제출"로 조립된 URL이 그대로 열리는 것을
+// fetch로 확인). 날짜는 그 뒤 <td>YYYY-MM-DD</td>.
+const SUSEONG_ITEM_RE =
+  /fn_icms_navi_common\('view',\s*'(\d+)'\);return false;">([^<]{4,200})<\/a>[\s\S]{0,250}?<td>(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractSuseongCandidates(html, _pageUrl) {
+  const out = [];
+  const re = new RegExp(SUSEONG_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    const absUrl = `https://www.suseong.kr/index.do?menu_id=00000063&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=BBSMSTR_000000000015&nttId=${m[1]}`;
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE8_BOARDS = [
+  {
+    org: "광주광역시 광산구청",
+    sourceOrg: "광산구청 보도자료",
+    url: "https://www.gwangsan.go.kr/boardList.do?pageId=www3&boardId=REPORT_NEW&movePage=1",
+    region: "광주",
+    city: "광산",
+    extractor: extractGwangsanCandidates,
+  },
+  {
+    org: "대구광역시 수성구청",
+    sourceOrg: "수성구청 공지사항",
+    url: "https://www.suseong.kr/index.do?menu_id=00000063",
+    region: "대구",
+    city: "수성",
+    extractor: extractSuseongCandidates,
+  },
+];
+
 const NATIONWIDE_PHASE1_BOARDS = [
   {
     org: "강원특별자치도청",
@@ -2043,6 +2124,7 @@ async function main() {
     ...NATIONWIDE_PHASE5_BOARDS,
     ...NATIONWIDE_PHASE6_BOARDS,
     ...NATIONWIDE_PHASE7_BOARDS,
+    ...NATIONWIDE_PHASE8_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

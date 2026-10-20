@@ -1744,7 +1744,7 @@ function extractSuseongCandidates(html, _pageUrl) {
   return out;
 }
 
-const NATIONWIDE_PHASE8_BOARDS = [
+const NATIONWIDE_PHASE9_BOARDS = [
   {
     org: "광주광역시 광산구청",
     sourceOrg: "광산구청 보도자료",
@@ -1762,6 +1762,57 @@ const NATIONWIDE_PHASE8_BOARDS = [
     extractor: extractSuseongCandidates,
   },
 ];
+
+// ---- 2026-10-21 10단계 보강: 광역단체 1곳만 연결돼 있던 인천·전북·제주·충남의 하위
+// 시·군·구 조사. 이번엔 충남 공주시청 1곳만 실제로 서버 HTML에서 글 목록+날짜를 뽑아낼
+// 수 있었음을 확인해 등록. 나머지는 전부 조사해봤지만 구조적으로 안 돼서 SKIPPED:
+//   - 인천 중구청(icjg.go.kr)은 2026-07-01부로 제물포구·영종구로 분리·폐지돼 더 이상
+//     존재하지 않는 기관임(검색으로 확인) — 등록 대상 자체가 아님.
+//   - 인천 서구(최근 "서해구"로 개칭, seohae.go.kr)·강화군(ganghwa.go.kr)은 둘 다
+//     bbsMsgList.do?bcd=report 게시판이 200 OK로 열리고 anchor도 많지만, pgno
+//     파라미터가 일반적인 "몇 페이지째"가 아니라 전체 글 수 기준 절대 인덱스라
+//     최신글이 있는 올바른 pgno 값을 알아낼 방법이 없었고(기본 호출은 항상 "오늘 올라온
+//     글"만 보여줘 키워드 매치 테스트 자체가 불가능), keyword= 검색 파라미터도 결과가
+//     0건이라 실제 축제/장터 글이 있는지 확인할 수 없어 보류.
+//   - 익산시청(iksan.go.kr/m.iksan.go.kr)의 board/list.iksan 엔드포인트는 검색으로 찾은
+//     모든 파라미터 조합이 404/502 — 정확한 엔드포인트를 못 찾음.
+//   - 천안시청(cheonan.go.kr)도 cop/bbs/selectBoardList.do가 404 — 동구청과 같은 CMS로
+//     보이나 정확한 엔드포인트 미확보.
+//   - 전주시청(jeonju.go.kr, "index.9is" 자체 CMS)·제주시청(jejusi.go.kr)은 이번 조사
+//     시간 안에 보도자료/공지사항 게시판의 정확한 목록 URL 자체를 못 찾음.
+// 전북·제주·인천·천안/익산은 전부 "미완료" — 다음 단계에서 이어서 조사할 것.
+
+// 충남 공주시청(gongju.go.kr) 보도자료: 상세 링크가
+// <a href="#view" onclick="javascript: fn_search_detail('ID'); return false;">제목</a>
+// 형태라 겉보기엔 JS 네비게이션이지만(폼 POST로 이동), ID 자체가 리터럴 문자열로 서버
+// HTML에 노출돼 있어 고령군청과 같은 방식으로 상세 URL(view.do?nttId=ID)을 직접 조립해
+// 등록 가능. 날짜는 그 뒤 <td class="regDate">YYYY-MM-DD</td> 계열로, 제목 뒤
+// 3000자 이내에 등장함(실측). 실제 5·8페이지에서 "바로마켓 백제금강점 하반기 장터
+// 9월 5일 개장", "제2회 공주야(夜)밤 맥주축제 성공 개최 총력" 등 실제 글 매치 확인.
+const GONGJU_ITEM_RE =
+  /fn_search_detail\('([^']+)'\);\s*return false;"\s*>\s*([\s\S]{4,200}?)<\/a>[\s\S]{0,3000}?(\d{4})-(\d{2})-(\d{2})/g;
+function extractGongjuCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(GONGJU_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    const absUrl = `https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=${encodeURIComponent(m[1])}`;
+    out.push({ title, url: absUrl, postedDate: `${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
+const NATIONWIDE_PHASE10_BOARDS = [1, 2, 3, 5, 8, 12, 16, 20].map((p) => ({
+  org: "충청남도 공주시청",
+  sourceOrg: "공주시청 보도자료",
+  url: `https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/list.do?pageIndex=${p}`,
+  region: "충남",
+  city: "공주",
+  extractor: extractGongjuCandidates,
+}));
 
 const NATIONWIDE_PHASE1_BOARDS = [
   {
@@ -2378,6 +2429,8 @@ async function main() {
     ...NATIONWIDE_PHASE6_BOARDS,
     ...NATIONWIDE_PHASE7_BOARDS,
     ...NATIONWIDE_PHASE8_BOARDS,
+    ...NATIONWIDE_PHASE9_BOARDS,
+    ...NATIONWIDE_PHASE10_BOARDS,
   ]) {
     try {
       const html = await fetchText(board.url);

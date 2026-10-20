@@ -390,5 +390,29 @@
   "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=1128085&movePage=1&recordCnt=10": {
     "firstSeen": "2026-10-19T10:10:46.162Z",
     "org": "전라남도 함평군청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9275": {
+    "firstSeen": "2026-10-20T05:32:36.806Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015787613&curPage=1": {
+    "firstSeen": "2026-10-20T05:32:50.358Z",
+    "org": "인천광역시청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075493/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-20T05:32:53.910Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549517&mode=view": {
+    "firstSeen": "2026-10-20T05:33:19.272Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=5060316&movePage=1&recordCnt=10": {
+    "firstSeen": "2026-10-20T05:34:22.591Z",
+    "org": "전라남도 함평군청"
+  },
+  "https://www.hampyeong.go.kr/boardView.do?pageId=www275&boardId=NEWS&seq=800414&movePage=1&recordCnt=10": {
+    "firstSeen": "2026-10-20T05:34:23.932Z",
+    "org": "전라남도 함평군청"
   }
 }

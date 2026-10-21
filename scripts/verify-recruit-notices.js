@@ -59,10 +59,14 @@ async function main() {
     console.log("  BEFORE:", JSON.stringify(before));
     console.log("  AFTER :", JSON.stringify(after));
 
+    // 이 스크립트를 여러 번 돌려도 memo가 "[... 재검증] ..."을 계속 겹쳐 쌓지 않도록,
+    // 이전 재검증 꼬리표가 있으면 떼어내고 새 꼬리표만 한 번 붙인다.
+    const baseMemo = item.memo.replace(/\s*\[\d{4}-\d{2}-\d{2} 재검증\][\s\S]*$/, "");
     patched.push({
       ...item,
       applyStart: fresh.applyStart,
       applyEnd: fresh.applyEnd,
+      applyLink: fresh.applyLink,
       festivalStart: fresh.festivalStart,
       festivalEnd: fresh.festivalEnd,
       venue: fresh.venue,
@@ -80,7 +84,7 @@ async function main() {
       linkStatus: fresh.linkStatus,
       linkCheckedAt: fresh.linkCheckedAt,
       linkCheckDetail: fresh.linkCheckDetail,
-      memo: `${item.memo} [2026-10-22 재검증] ${fresh.memo}`,
+      memo: `${baseMemo} [2026-10-22 재검증] ${fresh.memo}`,
     });
   }
 

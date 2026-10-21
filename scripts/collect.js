@@ -178,7 +178,7 @@ function extractMiryangCandidates(html, pageUrl) {
   const re = new RegExp(MIRYANG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     const rawHref = m[1].replace(/;jsessionid=[^?]*/, "");
@@ -232,7 +232,7 @@ function extractOpenContentCandidates(html, pageUrl) {
   const re = new RegExp(OPEN_CONTENT_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -441,7 +441,7 @@ function extractChungbukCandidates(html, pageUrl) {
   const re = new RegExp(CHUNGBUK_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -465,7 +465,7 @@ function extractSeogwipoCandidates(html, pageUrl) {
   const re = new RegExp(SEOGWIPO_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -489,7 +489,7 @@ function extractIncheonCandidates(html, pageUrl) {
   const re = new RegExp(INCHEON_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -513,7 +513,7 @@ function extractGangwonCandidates(html, pageUrl) {
   const re = new RegExp(GANGWON_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -542,7 +542,7 @@ function extractGangnamCandidates(html, pageUrl) {
   const re = new RegExp(GANGNAM_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -564,7 +564,7 @@ function extractSongpaCandidates(html, pageUrl) {
   const re = new RegExp(SONGPA_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -588,7 +588,7 @@ function extractMapoCandidates(html, pageUrl) {
   const re = new RegExp(MAPO_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -610,7 +610,7 @@ function extractYonginCandidates(html, pageUrl) {
   const re = new RegExp(YONGIN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -633,7 +633,7 @@ function extractHwaseongCandidates(html, pageUrl) {
   const re = new RegExp(HWASEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -656,7 +656,7 @@ function extractNamyangjuCandidates(html, pageUrl) {
   const re = new RegExp(NAMYANGJU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -680,7 +680,7 @@ function extractSejongCandidates(html, pageUrl) {
   const re = new RegExp(SEJONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -725,7 +725,7 @@ function extractGunsanCandidates(html, pageUrl) {
   const re = new RegExp(GUNSAN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -747,7 +747,7 @@ function extractMokpoCandidates(html, pageUrl) {
   const re = new RegExp(MOKPO_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -863,7 +863,7 @@ function extractBusanCandidates(html, pageUrl) {
   const re = new RegExp(BUSAN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -886,7 +886,7 @@ function extractDaeguCandidates(html, pageUrl) {
   const re = new RegExp(DAEGU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -910,7 +910,7 @@ function extractGwangjuCandidates(html, pageUrl) {
   const re = new RegExp(GWANGJU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -933,7 +933,7 @@ function extractDaejeonCandidates(html, pageUrl) {
   const re = new RegExp(DAEJEON_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1000,7 +1000,7 @@ function extractChuncheonCandidates(html, pageUrl) {
   const re = new RegExp(CHUNCHEON_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1023,7 +1023,7 @@ function extractCheongjuCandidates(html, pageUrl) {
   const re = new RegExp(CHEONGJU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1047,7 +1047,7 @@ function extractYeosuCandidates(html, pageUrl) {
   const re = new RegExp(YEOSU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1109,7 +1109,7 @@ function extractGeojeCandidates(html, pageUrl) {
   const re = new RegExp(GEOJE_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1133,7 +1133,7 @@ function extractGoseongGnCandidates(html, pageUrl) {
   const re = new RegExp(GOSEONG_GN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1156,7 +1156,7 @@ function extractHampyeongCandidates(html, pageUrl) {
   const re = new RegExp(HAMPYEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1222,7 +1222,7 @@ function extractGcafCandidates(html, pageUrl) {
   const re = new RegExp(GCAF_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1246,7 +1246,7 @@ function extractGntoCandidates(html, pageUrl) {
   const re = new RegExp(GNTO_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1271,7 +1271,7 @@ function extractSancheongCandidates(html, pageUrl) {
   const re = new RegExp(SANCHEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     const summary = decodeEntities(m[3]).replace(/\s+/g, " ").trim();
     if (title.length < 4 || title.length > 200) continue;
     const combined = `${title} ${summary}`;
@@ -1369,7 +1369,7 @@ function extractUljinCandidates(html, pageUrl) {
   const re = new RegExp(ULJIN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1397,7 +1397,7 @@ function extractGoryeongCandidates(html, pageUrl) {
   const re = new RegExp(GORYEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     const absUrl = `https://www.goryeong.go.kr/kor/boardView.do?BRD_ID=1062&BOARD_IDX=${m[1]}&IDX=157`;
@@ -1537,7 +1537,7 @@ function extractCheongsongCandidates(html, pageUrl) {
   const re = new RegExp(CHEONGSONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1560,7 +1560,7 @@ function extractNamhaeCandidates(html, pageUrl) {
   const re = new RegExp(NAMHAE_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1584,7 +1584,7 @@ function extractGeochangCandidates(html, pageUrl) {
   const re = new RegExp(GEOCHANG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1608,7 +1608,7 @@ function extractChangnyeongCandidates(html, pageUrl) {
   const re = new RegExp(CHANGNYEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1753,7 +1753,7 @@ function extractGwangsanCandidates(html, pageUrl) {
   const re = new RegExp(GWANGSAN_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     let absUrl;
@@ -1781,7 +1781,7 @@ function extractSuseongCandidates(html, _pageUrl) {
   const re = new RegExp(SUSEONG_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     const absUrl = `https://www.suseong.kr/index.do?menu_id=00000063&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=BBSMSTR_000000000015&nttId=${m[1]}`;
@@ -1842,7 +1842,7 @@ function extractGongjuCandidates(html, pageUrl) {
   const re = new RegExp(GONGJU_ITEM_RE.source, "g");
   let m;
   while ((m = re.exec(html))) {
-    const title = decodeEntities(m[2]).replace(/\s+/g, " ").trim();
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
     if (title.length < 4 || title.length > 200) continue;
     if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
     const absUrl = `https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=${encodeURIComponent(m[1])}`;
@@ -1895,6 +1895,21 @@ const NATIONWIDE_PHASE1_BOARDS = [
   },
 ];
 
+// 2026-10-22 신설: 목록 배너/위젯 링크의 보이는 텍스트 끝에 "자세히보기" 같은 버튼
+// 문구가 실제 제목과 함께 그대로 붙어 캡처되는 경우(김해 진영단감축제 메인 "알림판"
+// 배너 사례로 실측 확인)가 있어, 흔한 CTA 꼬리말만 제목 끝에서 제거한다 — 내용 자체는
+// 바꾸지 않고 UI 버튼 텍스트만 떼어낸다(여러 번 붙어 있어도 전부 제거).
+const TITLE_TRAILING_CTA_RE = /\s*(자세히\s*보기|더\s*보기|바로\s*가기|보러\s*가기)\s*$/;
+function cleanTitle(text) {
+  let t = text;
+  let prev;
+  do {
+    prev = t;
+    t = t.replace(TITLE_TRAILING_CTA_RE, "").trim();
+  } while (t !== prev);
+  return t;
+}
+
 function extractPostCandidates(html, pageUrl, keywordRe) {
   const out = [];
   let m;
@@ -1915,6 +1930,7 @@ function extractPostCandidates(html, pageUrl, keywordRe) {
     if (ellipsisIdx !== -1 && text.length - ellipsisIdx - 3 >= 4) {
       text = text.slice(ellipsisIdx + 3).trim();
     }
+    text = cleanTitle(text);
     if (text.length < 4 || text.length > 200) continue;
     if (!keywordRe.test(text) || NOISE_RE.test(text)) continue;
     if (!POST_LINK_RE.test(m[1])) continue;
@@ -1967,6 +1983,11 @@ const VENUE_RE = /(?:행\s*사\s*장\s*소|개\s*최\s*장\s*소|장\s*소)\s*[:
 const BOOTH_COUNT_RE = /(?:모\s*집\s*규\s*모|부스\s*수|참가\s*업체\s*수)\s*[:：]\s*([^\n]{1,40})/;
 const FEE_RE = /참\s*가\s*비\s*[:：]\s*([^\n]{1,40})/;
 const APPLY_METHOD_RE = /(?:접수\s*방법|신청\s*방법|제출\s*방법)\s*[:：]\s*([^\n]{1,60})/;
+// 2026-10-22 신설: 본문에 "신청링크/접수링크/신청서 작성/바로가기" 같은 라벨과 함께 별도
+// 신청 페이지(구글폼·네이버폼 등) URL이 적혀 있는 경우만 뽑는다 — 이메일 접수처럼 URL이
+// 아예 없는 경우는 매치되지 않아 null로 남고, 호출 쪽에서 원문 공고 링크로 대체한다.
+const APPLY_LINK_RE =
+  /(?:신청\s*링크|접수\s*링크|신청서?\s*(?:작성|바로가기|링크)|구글\s*폼|신청\s*페이지)\s*[:：]?\s*(https?:\/\/[^\s<>"'\n]+)/i;
 
 // "라벨: YYYY.M.D ~ (YYYY.)(M.)D" 형태를 라벨 종류 무관하게 전부 찾아서, 라벨 텍스트로
 // "모집/접수/신청 기간"(기존 extractDateRange가 이미 처리)과 "행사 기간"을 구분한다.
@@ -2006,6 +2027,15 @@ function extractFee(text) {
 function extractApplyMethod(text) {
   const m = text.match(APPLY_METHOD_RE);
   return m ? cleanValue(m[1]) : null;
+}
+function extractApplyLink(text) {
+  const m = text.match(APPLY_LINK_RE);
+  if (!m) return null;
+  try {
+    return new URL(m[1]).href;
+  } catch {
+    return null;
+  }
 }
 function extractEventName(text) {
   const m = text.match(EVENT_NAME_RE);
@@ -2176,6 +2206,19 @@ function normalizePostedDate(s) {
   return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
 }
 
+// 2026-10-22 신설: 게시판 목록에서 postedDate를 못 캡처했을 때, 공고문(PDF/본문) 자체에
+// 박힌 "공고일"을 대신 찾는다. 정부 공고문은 관례적으로 본문 끝·서명란(시장/군수 등)
+// 바로 위에 "YYYY년 M월 D일" 형태로 공고일을 단독으로 적어둔다(경주 윈터포차라이트
+// PDF를 실제로 받아 "2026년 10월 19일" 한 줄을 확인함). 문서에서 가장 먼저 나오는
+// 이 형태의 날짜 하나만 쓴다 — 본문 뒷부분의 다른 "YYYY년"(예: "2026년 행사 영업을
+// 위한")은 뒤에 "월...일"이 바로 이어지지 않아 매치되지 않으므로 오탐 위험이 낮다.
+const NOTICE_SELF_DATE_RE = /(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/;
+function extractSelfDeclaredNoticeDate(text) {
+  const m = text.match(NOTICE_SELF_DATE_RE);
+  if (!m) return null;
+  return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+}
+
 // 본문에서 신청기간을 뽑아내는 3단계 폴백 — 위에서 아래로 시도하며, 먼저 성공한 패턴을
 // 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
 // 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
@@ -2235,7 +2278,7 @@ function extractDateRange(bodyText, postedDate) {
     const endYear = endYearRaw || today.getFullYear();
     const end = parseKoMonthDay(endMonth, endDay, +endYear);
     if (end) {
-      out.applyStart = normalizePostedDate(postedDate);
+      out.applyStart = normalizePostedDate(postedDate) || extractSelfDeclaredNoticeDate(bodyText);
       out.applyEnd = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
       if (today > end) {
         out.recruitStatus = "closed";
@@ -2410,6 +2453,7 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
   const result = {
     applyStart: null,
     applyEnd: null,
+    applyLink: null,
     festivalStart: null,
     festivalEnd: null,
     venue: null,
@@ -2430,6 +2474,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
     linkCheckedAt: new Date().toISOString(),
     linkCheckDetail: null,
   };
+  // 2026-10-22: 별도 신청 페이지 링크를 찾지 못하면 공식 공고 원문(detailUrl) 자체를
+  // 신청 링크로 쓴다 — "링크 없음"으로 뜨는 대신 항상 누를 수 있는 링크를 보장하기 위함.
+  result.applyLink = detailUrl;
   let rawHtml = "";
   let bodyText = "";
   let fetchFailNote = "";
@@ -2482,6 +2529,7 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
   result.fee = extractFee(lineAwareText);
   result.facilities = extractFacilities(lineAwareText);
   result.applyMethod = extractApplyMethod(lineAwareText);
+  result.applyLink = extractApplyLink(combinedText) || result.applyLink;
 
   const eligInfo = detectEligibility(combinedText, region);
   result.eligibility = eligInfo.eligibility;
@@ -2665,30 +2713,75 @@ function extractCandidates(html, pageUrl) {
   return out;
 }
 
+// 2026-10-17: 같은 글이 리스트 페이지 번호가 바뀌거나(밀양 pageIndex 사례) 검색
+// 키워드가 달라져서 다른 URL로 다시 수집되는 걸 막기 위한 공용 중복 방지 키.
+// seen.json은 "전체 URL"을 키로 쓰지만, 그와 별도로 "진짜 글 식별자"(idx,
+// parm_bod_uid, nttId 등 게시판마다 쓰는 고유번호 파라미터)만 뽑아 비교하는 보조
+// 인덱스를 같이 두고, 기존에 이미 수집된 seen.json 전체에서도 미리 만들어 둔다 —
+// 이러면 과거에 다른 페이지 번호로 저장된 글도 오늘 다른 URL로 다시 안 잡힌다.
+// 이전엔 확장 보드(경주/김해 등)에서만 이번 실행 한정으로 썼는데, 이번에 울산
+// 보드까지 포함해 seen.json 전체 기준으로 범위를 넓혔다.
+// 2026-10-22: main() 바깥 모듈 스코프로 옮겨 module.exports로 테스트 가능하게 함
+// (동작은 그대로, require()해서 단독으로 검증할 수 있게 하기 위함).
+function canonicalDedupKey(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    const idParam = ["idx", "parm_bod_uid", "nttId", "bIdx", "article_seq", "dataId"]
+      .map((k) => u.searchParams.get(k))
+      .find((v) => v);
+    return idParam ? `${u.origin}${u.pathname}|${idParam}` : `${u.origin}${u.pathname}${u.search}`;
+  } catch {
+    return urlStr;
+  }
+}
+
+// 2026-10-22 신설: 같은 글이 서로 다른 URL(파라미터만 다름)로 두 번 등록된 경우를
+// 최종 저장 직전에 한 번 더 정리한다. seen.json 기반 사전 차단이 이미 있지만, 과거에
+// seen.json이 아직 커밋되기 전에 수동으로 두 번 실행했을 때 실제로 뚫린 사례가
+// 있었다(2026-10-15, 김해 단감축제 체험부스 모집 공고가 idx=21과
+// idx=21&cpage=1&gcode=1002 두 URL로 중복 등록됨) — 그래서 canonicalDedupKey가 같은
+// 항목들을 최종적으로 한 번 더 모아 하나만 남긴다. 사람이 이미 승인/거절한 항목이
+// 있으면 그 결정을 보존하고(approved/rejected가 섞여 있으면 먼저 수집된 쪽을 기준),
+// 전부 pending이면 그중 가장 먼저 수집된 것만 남긴다.
+// 데이터를 지우거나 status를 바꾸지 않고 "중복 표시"만 한다 — 전체 건수와 각 항목의
+// 승인 상태를 그대로 보존해야 하므로(요청사항), 같은 글의 나머지 항목을 배열에서
+// 빼거나 status를 내리는 대신 duplicateOf 필드에 대표 항목의 id만 추가로 적어둔다.
+// 홈페이지(web/index.html)는 이 필드가 있는 항목을 공개 목록에서만 건너뛴다 — 데이터
+// 자체(건수·status)는 전혀 건드리지 않는다(2026-10-22, "데이터 삭제·초기화 금지"와
+// "승인 건수 보존" 요청에 맞춰 삭제/status변경 방식에서 다시 변경).
+function dedupeByCanonicalUrl(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = canonicalDedupKey(item.sourceUrl);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  const out = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      out.push(group[0]);
+      continue;
+    }
+    const sorted = [...group].sort((a, b) => new Date(a.collectedAt) - new Date(b.collectedAt));
+    // 이미 승인된 게 있으면 그 결정을 대표로 삼고, 전부 미승인이면 가장 먼저 수집된
+    // 것을 대표로 삼는다.
+    const canonical = sorted.find((i) => i.status === "approved") || sorted[0];
+    for (const item of group) {
+      if (item.id === canonical.id || item.duplicateOf) {
+        out.push(item); // 대표 항목이거나 이미 중복 표시된 항목 — 그대로 둠.
+        continue;
+      }
+      out.push({ ...item, duplicateOf: canonical.id });
+    }
+  }
+  return out;
+}
+
 async function main() {
   const seen = fs.existsSync(SEEN_PATH) ? JSON.parse(fs.readFileSync(SEEN_PATH, "utf8")) : {};
   const existingCollected = fs.existsSync(OUT_PATH) ? JSON.parse(fs.readFileSync(OUT_PATH, "utf8")) : [];
   const stillPendingUrls = new Set(existingCollected.map((i) => i.url));
 
-  // 2026-10-17: 같은 글이 리스트 페이지 번호가 바뀌거나(밀양 pageIndex 사례) 검색
-  // 키워드가 달라져서 다른 URL로 다시 수집되는 걸 막기 위한 공용 중복 방지 키.
-  // seen.json은 "전체 URL"을 키로 쓰지만, 그와 별도로 "진짜 글 식별자"(idx,
-  // parm_bod_uid, nttId 등 게시판마다 쓰는 고유번호 파라미터)만 뽑아 비교하는 보조
-  // 인덱스를 같이 두고, 기존에 이미 수집된 seen.json 전체에서도 미리 만들어 둔다 —
-  // 이러면 과거에 다른 페이지 번호로 저장된 글도 오늘 다른 URL로 다시 안 잡힌다.
-  // 이전엔 확장 보드(경주/김해 등)에서만 이번 실행 한정으로 썼는데, 이번에 울산
-  // 보드까지 포함해 seen.json 전체 기준으로 범위를 넓혔다.
-  function canonicalDedupKey(urlStr) {
-    try {
-      const u = new URL(urlStr);
-      const idParam = ["idx", "parm_bod_uid", "nttId", "bIdx", "article_seq", "dataId"]
-        .map((k) => u.searchParams.get(k))
-        .find((v) => v);
-      return idParam ? `${u.origin}${u.pathname}|${idParam}` : `${u.origin}${u.pathname}${u.search}`;
-    } catch {
-      return urlStr;
-    }
-  }
   const seenCanonical = new Set(Object.keys(seen).map(canonicalDedupKey));
 
   const newItems = [];
@@ -2752,7 +2845,7 @@ async function main() {
           applyEnd: cls.applyEnd,
           festivalStart: cls.festivalStart,
           festivalEnd: cls.festivalEnd,
-          applyLink: null,
+          applyLink: cls.applyLink,
           venue: cls.venue,
           boothCount: cls.boothCount,
           fee: cls.fee,
@@ -2827,7 +2920,7 @@ async function main() {
           applyEnd: cls.applyEnd,
           festivalStart: cls.festivalStart,
           festivalEnd: cls.festivalEnd,
-          applyLink: null,
+          applyLink: cls.applyLink,
           venue: cls.venue,
           boothCount: cls.boothCount,
           fee: cls.fee,
@@ -2861,8 +2954,8 @@ async function main() {
   // so a pruned item never resurfaces as "new".
   const PRUNE_MS = 45 * 24 * 60 * 60 * 1000;
   const cutoff = Date.now() - PRUNE_MS;
-  const merged = [...existingCollected, ...newItems].filter(
-    (i) => new Date(i.collectedAt).getTime() >= cutoff
+  const merged = dedupeByCanonicalUrl(
+    [...existingCollected, ...newItems].filter((i) => new Date(i.collectedAt).getTime() >= cutoff)
   );
 
   // 기관 목록을 지역별로 보기 좋게 정렬 — 실패(ok=false)부터, 그다음 지역명 순.
@@ -2917,8 +3010,13 @@ module.exports = {
   extractFee,
   extractFacilities,
   extractApplyMethod,
+  extractApplyLink,
+  extractSelfDeclaredNoticeDate,
   classifyNotice,
   decideAutoPublishStatus,
+  canonicalDedupKey,
+  dedupeByCanonicalUrl,
+  cleanTitle,
   extractAttachmentPdfUrls,
   fetchPdfText,
   fetchText,

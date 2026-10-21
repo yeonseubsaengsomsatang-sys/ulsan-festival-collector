@@ -498,5 +498,25 @@
   "https://www.chuncheon.go.kr/mayor/newsroom/press-release/?bbsId=BBSMSTR_000000000335&nttId=530868&flag=view": {
     "firstSeen": "2026-10-21T05:47:30.750Z",
     "org": "강원특별자치도 춘천시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163448Qr1zZ8b&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-21T17:17:20.182Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.brcn.go.kr/cop/bbs/BBSMSTR_000000000263/selectBoardArticle.do;jsessionid=pekT8rwY3Stqa1OuI0z7jO5H1GcLHPPagbpFpa7VlARELZvyT07Vj0TQDUyIDazx.brwas2_servlet_engine1?bbsId=BBSMSTR_000000000289&nttId=198977&kind=&mno=sitemap_02&pageIndex=1&searchCnd=&searchWrd=&isExpired=N&moveBbsId=": {
+    "firstSeen": "2026-10-21T17:17:21.793Z",
+    "org": "충청남도 보령시청"
+  },
+  "https://www.gunsan.go.kr/main/m140/view/9835688?": {
+    "firstSeen": "2026-10-21T17:17:24.242Z",
+    "org": "전라북도 군산시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549564&mode=view": {
+    "firstSeen": "2026-10-21T17:17:26.046Z",
+    "org": "전라남도 목포시청"
+  },
+  "https://www.namhae.go.kr/news/pgnews/View.do?seq=34734&pageCd=NW0201000000&orderBy=wdate+desc": {
+    "firstSeen": "2026-10-21T17:18:41.214Z",
+    "org": "경상남도 남해군청"
   }
 }

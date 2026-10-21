@@ -474,5 +474,29 @@
   "https://www.gongju.go.kr/prog/saeolNews/sub04_02_01/view.do?nttId=21105": {
     "firstSeen": "2026-10-20T17:23:41.064Z",
     "org": "충청남도 공주시청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9290": {
+    "firstSeen": "2026-10-21T05:44:57.814Z",
+    "org": "강원특별자치도청"
+  },
+  "https://state.gwd.go.kr/portal/briefing/pressRelease?seq=9292": {
+    "firstSeen": "2026-10-21T05:44:59.870Z",
+    "org": "강원특별자치도청"
+  },
+  "https://www.incheon.go.kr/IC010205/view?repSeq=DOM_0000000015795855&curPage=1": {
+    "firstSeen": "2026-10-21T05:45:13.304Z",
+    "org": "인천광역시청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075501/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-21T05:45:17.106Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075498/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-21T05:45:18.947Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.chuncheon.go.kr/mayor/newsroom/press-release/?bbsId=BBSMSTR_000000000335&nttId=530868&flag=view": {
+    "firstSeen": "2026-10-21T05:47:30.750Z",
+    "org": "강원특별자치도 춘천시청"
   }
 }

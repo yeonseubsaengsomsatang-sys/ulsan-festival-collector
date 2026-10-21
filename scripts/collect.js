@@ -1968,9 +1968,16 @@ const DATE_RANGE_RE =
 // 연도 없이 "O월 O일부터 O월 O일까지"만 적힌 경우 — 수집 시점(올해)을 연도로 가정
 const KOREAN_MONTH_DAY_RANGE_RE =
   /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:\([^)]{1,4}\))?\s*(?:~|-|부터)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/;
-// 마감일만 언급된 경우(시작일 없음)
+// 마감일만 언급된 경우(시작일 없음). 2026-10-22 수정: "모집기간 : 2026. 8. 30.(일) 까지"
+// 처럼 날짜와 "까지" 사이에 요일 괄호가 끼는 표현(덕신온마켓 셀러모집 실측 사례)을
+// 날짜 끝의 "."과 "(요일)"을 선택적으로 허용해 잡는다.
 const DATE_DEADLINE_ONLY_RE =
-  /(?:신청|접수|모집)\s*(?:기간|기한)?\s*(?:마감|종료)\s*[:：]?\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})|(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})\s*까지/;
+  /(?:신청|접수|모집)\s*(?:기간|기한)?\s*(?:마감|종료)\s*[:：]?\s*(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})|(\d{4}[.\-/]\s?\d{1,2}[.\-/]\s?\d{1,2})\.?\s*(?:\([^)]{1,4}\))?\s*까지/;
+// 2026-10-22 신설: "모집기간 : ~5월 31일까지"처럼 연도 없이 한글 월/일로만 마감일을
+// 적은 경우(울주군 덕신온마켓 셀러모집 실측 사례) — KOREAN_MONTH_DAY_RANGE_RE와 같은
+// 전제(연도 없으면 수집 시점의 연도로 가정)로 마감일만 뽑는다.
+const KOREAN_MONTH_DAY_DEADLINE_RE =
+  /(?:신청|접수|모집)\s*(?:기간|기한)?\s*[:：]?\s*~?\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*까지/;
 const ATTACHMENT_RE = /([^\s]+\.(?:hwp|pdf|jpg|jpeg|png))\s*다운로드/gi;
 
 // ---- 2026-10-21 신설: 모집공고 상세정보(행사명/장소/기간/모집규모/참가비/신청방법) 자동
@@ -1986,8 +1993,11 @@ const APPLY_METHOD_RE = /(?:접수\s*방법|신청\s*방법|제출\s*방법)\s*[
 // 2026-10-22 신설: 본문에 "신청링크/접수링크/신청서 작성/바로가기" 같은 라벨과 함께 별도
 // 신청 페이지(구글폼·네이버폼 등) URL이 적혀 있는 경우만 뽑는다 — 이메일 접수처럼 URL이
 // 아예 없는 경우는 매치되지 않아 null로 남고, 호출 쪽에서 원문 공고 링크로 대체한다.
+// 라벨과 URL 사이에 "(구글폼 작성 후 제출)"처럼 부가설명과 "→" 화살표가 끼는 경우가
+// 실제로 많아(울주군 덕신온마켓 셀러모집 실측 사례), 괄호 설명과 화살표/콜론을 전부
+// 선택적으로 허용한다.
 const APPLY_LINK_RE =
-  /(?:신청\s*링크|접수\s*링크|신청서?\s*(?:작성|바로가기|링크)|구글\s*폼|신청\s*페이지)\s*[:：]?\s*(https?:\/\/[^\s<>"'\n]+)/i;
+  /(?:신청\s*링크|접수\s*링크|신청서?\s*(?:작성|바로가기|링크)|구글\s*폼|신청\s*페이지)\s*(?:\([^)]{0,40}\))?\s*(?:[:：]|→|->)?\s*(https?:\/\/[^\s<>"'\n]+)/i;
 
 // "라벨: YYYY.M.D ~ (YYYY.)(M.)D" 형태를 라벨 종류 무관하게 전부 찾아서, 라벨 텍스트로
 // "모집/접수/신청 기간"(기존 extractDateRange가 이미 처리)과 "행사 기간"을 구분한다.
@@ -2006,7 +2016,13 @@ const APPLY_PERIOD_ANNOUNCE_RE =
 // "OO시/군/구에 사업장을 둔(두고)" 식으로 특정 지자체를 참가 전제조건으로 못박는 표현은
 // "만"/"한정" 같은 명시적 단어가 없어도 사실상 관내 한정이다(경주 사례로 실측 확인 —
 // 기존 ELIGIBILITY_OUTSIDE_NO_RE는 "만/한정" 트레일링을 요구해 이 표현을 놓쳤음).
-const ELIGIBILITY_LOCAL_BIZ_RE = /([가-힣]{2,6}(?:시|군|구))에\s*사업장을\s*(?:둔|두고|두거나)/;
+// 2026-10-22 추가(둘째·셋째 대안): "OO시 거주자 및 사업자"/"OO 지역 거주자"처럼
+// "~에 사업장을 둔" 표현이 아니라 "거주(자)"로만 지역을 못박는 경우도 실제로 흔함
+// (울주군 덕신온마켓 셀러모집 실측 사례 2건: "울산광역시 거주자 및 사업자",
+// "울산 지역 거주자 및 사업자") — 셋 중 region은 group 1/2/3 중 하나에 잡히므로
+// 호출부에서 전부 확인한다.
+const ELIGIBILITY_LOCAL_BIZ_RE =
+  /([가-힣]{2,6}(?:시|군|구))에\s*사업장을\s*(?:둔|두고|두거나)|([가-힣]{2,6}(?:특별시|광역시|시|군|구))\s*거주(?:자|하는)?\s*(?:및\s*사업자)?|([가-힣]{2,6})\s*지역\s*거주(?:자|하는)?/;
 
 function cleanValue(s) {
   return s ? s.replace(/\s+/g, " ").trim() : null;
@@ -2232,8 +2248,11 @@ function extractDateRange(bodyText, postedDate) {
     const start = parseKoDate(rangeMatch[1]);
     const end = parseKoDate(rangeMatch[2]);
     if (start && end) {
-      out.applyStart = rangeMatch[1].replace(/\s/g, "");
-      out.applyEnd = rangeMatch[2].replace(/\s/g, "");
+      // 2026-10-22 수정: 원문 구분자("." 등)를 그대로 두면 "2026.8.30" 같은 값이 나와
+      // 프런트엔드의 new Date(s+"T00:00:00") 파싱이 깨짐(Invalid Date -> 조용히 "확인
+      // 필요"로만 보임, 실측으로 발견) — 항상 YYYY-MM-DD로 통일한다.
+      out.applyStart = normalizePostedDate(rangeMatch[1]);
+      out.applyEnd = normalizePostedDate(rangeMatch[2]);
       out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
       return out;
     }
@@ -2257,9 +2276,20 @@ function extractDateRange(bodyText, postedDate) {
     const raw = deadlineMatch[1] || deadlineMatch[2];
     const end = parseKoDate(raw);
     if (end) {
-      out.applyEnd = raw.replace(/\s/g, "");
+      out.applyEnd = normalizePostedDate(raw); // 형식 통일(위 DATE_RANGE_RE와 같은 이유)
       // 시작일을 모르므로 "이미 마감됐는지"만 확정하고, 안 지났으면 모집중이라 단정하지
       // 않고 unknown 유지.
+      out.recruitStatus = today > end ? "closed" : "unknown";
+      return out;
+    }
+  }
+
+  const kmdDeadlineMatch = bodyText.match(KOREAN_MONTH_DAY_DEADLINE_RE);
+  if (kmdDeadlineMatch) {
+    const year = today.getFullYear();
+    const end = parseKoMonthDay(kmdDeadlineMatch[1], kmdDeadlineMatch[2], year);
+    if (end) {
+      out.applyEnd = `${year}-${String(kmdDeadlineMatch[1]).padStart(2, "0")}-${String(kmdDeadlineMatch[2]).padStart(2, "0")}`;
       out.recruitStatus = today > end ? "closed" : "unknown";
       return out;
     }
@@ -2332,10 +2362,10 @@ function detectEligibility(bodyText, boardRegion) {
   // 확인). outsideOk/outsideNo가 둘 다 안 걸렸을 때만 보는 마지막 폴백.
   if (localBiz && !outsideOk) {
     return {
-      eligibility: localBiz[0].replace(/\s+/g, " "),
+      eligibility: localBiz[0].replace(/\s+/g, " ").trim(),
       ulsanEligible: boardRegion === "울산" ? "yes" : "no",
       eligibilityCategory: "local_only",
-      restrictedRegion: localBiz[1],
+      restrictedRegion: localBiz[1] || localBiz[2] || localBiz[3],
     };
   }
   // 근거 문구가 없거나 모순되게 여러 패턴이 동시에 매치되면 — 추측하지 않고 unknown 유지
@@ -2389,8 +2419,20 @@ const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,
 function extractAttachmentPdfUrls(html, pageUrl) {
   const out = [];
   let m;
+  // 2026-10-22 수정: 본문과 무관한 사이드바/메뉴의 .pdf 링크(실측 사례: 울주군청
+  // 통합검색 게시판에서 "덕신온마켓 셀러모집" 글을 열었는데, 사이드바 메뉴의 "사회
+  // 복지시설현황" PDF가 첨부파일로 잘못 잡힘 — 그 글에는 실제로 PDF 첨부가 없고 포스터
+  // 이미지(.png)만 있었음)를 막기 위해, "첨부"라는 글자가 있으면 그 지점 이후에서만
+  // PDF 링크를 찾는다("첨부파일" 영역은 보통 본문 뒤쪽에 있고, 사이드바/메뉴는 그 앞에
+  // 있는 경우가 많음). "첨부" 글자 자체가 없는 페이지(예: eminwon 계열)는 기존처럼
+  // 전체 HTML에서 찾아 기존 동작을 그대로 유지한다.
+  // "첨부"가 여러 번 나올 수 있어(실측: 울주군청 페이지는 본문 첨부파일 영역과 전혀
+  // 무관한 꼬리말/위젯에도 같은 글자가 또 나옴) 첫 등장 지점부터 끝까지가 아니라, 실제
+  // 첨부파일 목록이 보통 들어가는 2000자 이내로만 범위를 좁힌다.
+  const attachIdx = html.indexOf("첨부");
+  const searchHtml = attachIdx !== -1 ? html.slice(attachIdx, attachIdx + 2000) : html;
   const direct = new RegExp(DIRECT_PDF_LINK_RE.source, "gi");
-  while ((m = direct.exec(html))) {
+  while ((m = direct.exec(searchHtml))) {
     try {
       out.push(new URL(decodeEntities(m[1]), pageUrl).href);
     } catch {
@@ -2400,7 +2442,7 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   if (out.length) return out.slice(0, 2);
 
   const godown = new RegExp(GODOWNLOAD_RE.source, "g");
-  while ((m = godown.exec(html))) {
+  while ((m = godown.exec(searchHtml))) {
     const [, userFileNm, sysFileNm, filePath] = m;
     if (!/\.pdf$/i.test(userFileNm)) continue; // .hwp/.hwpx/이미지는 지원 안 함 — 확인 필요로 남김
     try {

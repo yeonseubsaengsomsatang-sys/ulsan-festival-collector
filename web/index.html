@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>축제 신청 캘린더</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F4F6;
+    --surface: #FFFFFF;
+    --surface-2: #E7EAEF;
+    --ink: #1E2430;
+    --ink-muted: #5B6472;
+    --accent: #C7407A;
+    --accent-soft: #F6DCE8;
+    --line: #DADFE5;
+    --shadow: 0 1px 2px rgba(30,36,48,0.06), 0 8px 24px -12px rgba(30,36,48,0.18);
+
+    --status-open-bg: #E1F3E9;
+    --status-open-fg: #1B7A4A;
+    --status-upcoming-bg: #FCEFD6;
+    --status-upcoming-fg: #92600A;
+    --status-closed-bg: #EAEBEE;
+    --status-closed-fg: #6B7280;
+    --status-unknown-bg: #EDE7F7;
+    --status-unknown-fg: #6B4FA0;
+    --status-rejected-bg: #FBE1E4;
+    --status-rejected-fg: #B23A4A;
+
+    --group-capital: #2F68B5;
+    --group-capital-bg: #DCEBFB;
+    --group-gangwon: #0E8A78;
+    --group-gangwon-bg: #D7F2EA;
+    --group-chungcheong: #9C6B08;
+    --group-chungcheong-bg: #FBEACB;
+    --group-honam: #2E7D46;
+    --group-honam-bg: #DDF2E2;
+    --group-yeongnam: #C1502E;
+    --group-yeongnam-bg: #FBE1D3;
+    --group-jeju: #7A4FB0;
+    --group-jeju-bg: #ECE1F8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151B;
+      --surface: #1B2028;
+      --surface-2: #232A34;
+      --ink: #ECEEF2;
+      --ink-muted: #98A2B2;
+      --accent: #FF8FB3;
+      --accent-soft: #3A2431;
+      --line: #2E3642;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+
+      --status-open-bg: rgba(56,180,120,0.16);
+      --status-open-fg: #6FDBA0;
+      --status-upcoming-bg: rgba(230,170,60,0.16);
+      --status-upcoming-fg: #F4C463;
+      --status-closed-bg: rgba(255,255,255,0.06);
+      --status-closed-fg: #9AA4B2;
+      --status-unknown-bg: rgba(160,120,230,0.18);
+      --status-unknown-fg: #C6A9F0;
+      --status-rejected-bg: rgba(220,60,80,0.18);
+      --status-rejected-fg: #F08FA0;
+
+      --group-capital: #8AB9EC;
+      --group-capital-bg: rgba(70,140,220,0.16);
+      --group-gangwon: #6FD9C7;
+      --group-gangwon-bg: rgba(50,190,170,0.16);
+      --group-chungcheong: #F0C36B;
+      --group-chungcheong-bg: rgba(220,170,60,0.16);
+      --group-honam: #7FD69B;
+      --group-honam-bg: rgba(60,180,110,0.16);
+      --group-yeongnam: #F0916B;
+      --group-yeongnam-bg: rgba(220,110,60,0.16);
+      --group-jeju: #C7A6F0;
+      --group-jeju-bg: rgba(150,100,220,0.16);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #12151B;
+    --surface: #1B2028;
+    --surface-2: #232A34;
+    --ink: #ECEEF2;
+    --ink-muted: #98A2B2;
+    --accent: #FF8FB3;
+    --accent-soft: #3A2431;
+    --line: #2E3642;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+
+    --status-open-bg: rgba(56,180,120,0.16);
+    --status-open-fg: #6FDBA0;
+    --status-upcoming-bg: rgba(230,170,60,0.16);
+    --status-upcoming-fg: #F4C463;
+    --status-closed-bg: rgba(255,255,255,0.06);
+    --status-closed-fg: #9AA4B2;
+    --status-unknown-bg: rgba(160,120,230,0.18);
+    --status-unknown-fg: #C6A9F0;
+    --status-rejected-bg: rgba(220,60,80,0.18);
+    --status-rejected-fg: #F08FA0;
+
+    --group-capital: #8AB9EC;
+    --group-capital-bg: rgba(70,140,220,0.16);
+    --group-gangwon: #6FD9C7;
+    --group-gangwon-bg: rgba(50,190,170,0.16);
+    --group-chungcheong: #F0C36B;
+    --group-chungcheong-bg: rgba(220,170,60,0.16);
+    --group-honam: #7FD69B;
+    --group-honam-bg: rgba(60,180,110,0.16);
+    --group-yeongnam: #F0916B;
+    --group-yeongnam-bg: rgba(220,110,60,0.16);
+    --group-jeju: #C7A6F0;
+    --group-jeju-bg: rgba(150,100,220,0.16);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans KR", "Malgun Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display {
+    font-family: "Noto Serif KR", "Batang", serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  a { color: inherit; }
+  button { font: inherit; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------- sidebar ---------- */
+  .sidebar {
+    border-right: 1px solid var(--line);
+    padding: 24px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0 8px;
+  }
+  .brand .mark {
+    font-size: 20px;
+  }
+  .brand .name {
+    font-family: "Noto Serif KR", serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  .nav-group { display: flex; flex-direction: column; gap: 3px; }
+  .nav-group-label {
+    display: inline-block;
+    width: fit-content;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    padding: 4px 11px;
+    margin: 2px 4px 10px;
+    border-radius: 999px;
+  }
+  .nav-group-label.group-capital,
+  .nav-group-label.group-gangwon,
+  .nav-group-label.group-chungcheong,
+  .nav-group-label.group-honam,
+  .nav-group-label.group-yeongnam,
+  .nav-group-label.group-jeju {
+    color: var(--group-capital);
+    background: var(--group-capital-bg);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 16px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .nav-item.group-capital:hover { background: var(--group-capital-bg); }
+  .nav-item.group-gangwon:hover { background: var(--group-gangwon-bg); }
+  .nav-item.group-chungcheong:hover { background: var(--group-chungcheong-bg); }
+  .nav-item.group-honam:hover { background: var(--group-honam-bg); }
+  .nav-item.group-yeongnam:hover { background: var(--group-yeongnam-bg); }
+  .nav-item.group-jeju:hover { background: var(--group-jeju-bg); }
+  .nav-item:hover { background: var(--surface-2); }
+  .nav-item.active,
+  .nav-item.active:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 800;
+    border: 1px solid var(--accent);
+  }
+  .nav-item .count {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--status-open-bg);
+    color: var(--status-open-fg);
+    min-width: 18px;
+    text-align: center;
+  }
+  .nav-item.active .count { background: var(--surface); }
+
+  /* ---------- main ---------- */
+  main {
+    padding: 32px 40px 64px;
+    max-width: 1080px;
+    width: 100%;
+  }
+  .page-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .breadcrumb .sep { margin: 0 6px; opacity: 0.6; }
+  .page-title { font-size: 26px; font-weight: 700; }
+  .page-sub {
+    color: var(--ink-muted);
+    font-size: 14px;
+    margin-top: 6px;
+    margin-bottom: 28px;
+  }
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .filter-bar label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-muted);
+  }
+  .filter-bar select {
+    font: inherit;
+    font-size: 14px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .filter-bar select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: none;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .view-all-btn:hover { opacity: 0.88; }
+  .page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* ---------- stat cards ---------- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-muted);
+  }
+  .stat-card .stat-value {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-card .stat-value.accent { color: var(--accent); }
+
+  /* ---------- home cards ---------- */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .apply-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 220px;
+  }
+  .apply-card .region-tag {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .card-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .org-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .org-badge.official { background: var(--group-capital-bg); color: var(--group-capital); }
+  .org-badge.private { background: var(--status-closed-bg); color: var(--status-closed-fg); }
+  .org-badge.review { background: var(--status-unknown-bg); color: var(--status-unknown-fg); }
+  .link-warn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--status-rejected-bg);
+    color: var(--status-rejected-fg);
+    cursor: help;
+  }
+  .booth-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .fest-name-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+  }
+  .fest-name-link:hover { text-decoration-color: currentColor; }
+  .filter-bar { flex-wrap: wrap; row-gap: 8px; }
+  .filter-bar input[type="text"],
+  .filter-bar input[type="date"] {
+    font: inherit;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .filter-bar input[type="text"]:focus,
+  .filter-bar input[type="date"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .filter-bar .filter-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin: 16px 0; }
+  .detail-grid .full { grid-column: 1 / -1; }
+  .detail-grid dt { font-size: 12px; font-weight: 700; color: var(--ink-muted); margin-bottom: 3px; }
+  .detail-grid dd { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .apply-card .fest-name {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .apply-card .fest-period {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .apply-card .dday-row {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .status-pill.open { background: var(--status-open-bg); color: var(--status-open-fg); }
+  .status-pill.upcoming { background: var(--status-upcoming-bg); color: var(--status-upcoming-fg); }
+  .status-pill.closed { background: var(--status-closed-bg); color: var(--status-closed-fg); }
+  .status-pill.unknown { background: var(--status-unknown-bg); color: var(--status-unknown-fg); }
+  .status-pill.rejected { background: var(--status-rejected-bg); color: var(--status-rejected-fg); }
+  .status-pill.capital { background: var(--group-capital-bg); color: var(--group-capital); }
+  .dday {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .dday.warn { color: var(--status-upcoming-fg); }
+  .dday.urgent { color: var(--status-rejected-fg); font-weight: 700; }
+  .apply-card .memo {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .apply-card .apply-link {
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .apply-card .apply-link.disabled { color: var(--ink-muted); pointer-events: none; }
+
+  .empty-slot {
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+    padding: 20px;
+  }
+
+  /* ---------- tabs + table ---------- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn .count {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+  .tab-btn.active .count { background: var(--accent-soft); color: var(--accent); }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.fest-name-cell { font-weight: 700; min-width: 150px; }
+  td.memo-cell { color: var(--ink-muted); max-width: 260px; }
+  td.period-cell, td.recruit-cell { white-space: nowrap; color: var(--ink-muted); }
+  th.num-head { text-align: right; }
+  td.num-cell {
+    font-family: "JetBrains Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+  td.num-cell.profit-positive { color: var(--status-open-fg); font-weight: 700; }
+  td.num-cell.profit-negative { color: var(--status-rejected-fg); font-weight: 700; }
+  .stars-display { color: var(--accent); letter-spacing: 1px; font-size: 14px; white-space: nowrap; }
+  .stars-display .empty { color: var(--line); }
+  .row-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--ink); border-color: var(--ink-muted); }
+  .icon-btn.danger:hover { color: var(--status-rejected-fg); border-color: var(--status-rejected-fg); }
+  .apply-btn {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+    background: var(--accent-soft);
+    padding: 5px 11px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .apply-btn.disabled {
+    color: var(--ink-muted);
+    background: var(--surface-2);
+    border-color: var(--line);
+    pointer-events: none;
+  }
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+  .empty-state code {
+    font-family: "JetBrains Mono", monospace;
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  .about-list {
+    margin: 10px 0 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+  .about-list li { margin-bottom: 10px; }
+  .about-list b { color: var(--accent); }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+  }
+
+  /* ---------- event form modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 16, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 50;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 560px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px;
+  }
+  .modal-card h2 { font-size: 20px; margin-bottom: 18px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-field label { font-size: 12.5px; font-weight: 700; color: var(--ink-muted); }
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .form-field textarea { resize: vertical; min-height: 64px; }
+  .net-profit-display {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .star-picker { display: flex; gap: 4px; }
+  .star-picker button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--line);
+    line-height: 1;
+    padding: 2px;
+  }
+  .star-picker button.filled { color: var(--accent); }
+  .star-picker button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 12px;
+      gap: 8px;
+      align-items: center;
+    }
+    .brand { padding: 0 8px 0 0; flex: 0 0 auto; }
+    .nav-group { flex-direction: row; flex: 0 0 auto; }
+    .nav-group-label { display: none; }
+    .nav-item { flex: 0 0 auto; }
+    main { padding: 20px 18px 48px; }
+    .card-grid, .stat-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 861px) and (max-width: 1100px) {
+    .card-grid, .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main id="main"></main>
+</div>
+
+<div class="modal-overlay hidden" id="festivalModalOverlay">
+  <div class="modal-card">
+    <h2 id="festivalModalTitle">축제 추가</h2>
+    <form id="festivalForm">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label for="fm-name">축제명</label>
+          <input type="text" id="fm-name" required>
+        </div>
+        <div class="form-field">
+          <label for="fm-region">지역(시·도)</label>
+          <select id="fm-region" required></select>
+        </div>
+        <div class="form-field">
+          <label for="fm-city">시·군·구</label>
+          <input type="text" id="fm-city" placeholder="예: 경주시">
+        </div>
+        <div class="form-field">
+          <label for="fm-orgtype">모집 유형</label>
+          <select id="fm-orgtype"></select>
+        </div>
+        <div class="form-field">
+          <label for="fm-booth">부스 유형</label>
+          <input type="text" id="fm-booth" placeholder="예: 판매부스, 체험부스, 푸드트럭, 프리마켓">
+        </div>
+        <div class="form-field">
+          <label for="fm-astart">모집 시작일</label>
+          <input type="date" id="fm-astart">
+        </div>
+        <div class="form-field">
+          <label for="fm-aend">모집 마감일</label>
+          <input type="date" id="fm-aend">
+        </div>
+        <div class="form-field">
+          <label for="fm-fstart">행사 시작일</label>
+          <input type="date" id="fm-fstart">
+        </div>
+        <div class="form-field">
+          <label for="fm-fend">행사 종료일</label>
+          <input type="date" id="fm-fend">
+        </div>
+        <div class="form-field full">
+          <label for="fm-location">장소</label>
+          <input type="text" id="fm-location" placeholder="예: 경주 황성공원 일원">
+        </div>
+        <div class="form-field full">
+          <label for="fm-organizer">주최·주관기관</label>
+          <input type="text" id="fm-organizer">
+        </div>
+        <div class="form-field">
+          <label for="fm-fee">참가비</label>
+          <input type="text" id="fm-fee" placeholder="예: 10만원, 무료">
+        </div>
+        <div class="form-field">
+          <label for="fm-eligibility">참가 자격</label>
+          <input type="text" id="fm-eligibility" placeholder="예: 사업자등록증 소지자, 관외 가능">
+        </div>
+        <div class="form-field full">
+          <label for="fm-link">신청 링크</label>
+          <input type="url" id="fm-link" placeholder="https://">
+        </div>
+        <div class="form-field full">
+          <label for="fm-memo">메모</label>
+          <textarea id="fm-memo"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="festivalModalCancel">취소</button>
+        <button type="submit" class="btn-primary">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="detailModalOverlay">
+  <div class="modal-card" id="detailModalCard">
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // DATA — 축제를 추가하려면 아래 배열에 객체를 하나 더 넣으면 됩니다.
+  // region        : 17개 시도 중 하나 (예: "경북", "서울", "제주")
+  // name          : 축제명
+  // festivalStart / festivalEnd : 축제 개최 기간 (YYYY-MM-DD), 하루짜리면 동일하게
+  // applyStart / applyEnd       : 참가 신청(모집) 기간 (YYYY-MM-DD). 모르면 null
+  //                               -> 모집 시작일이 지나지 않았으면 "모집예정",
+  //                                  기간 안이면 "모집중", 지났으면 "마감"으로
+  //                                  자동 계산됩니다. 둘 다 null이면 "미정".
+  // applyLink     : 신청 페이지 URL. 없으면 null
+  // organizer     : 주최(주관) 기관
+  // organizerType : "official"(시청·군청·구청·문화재단·관광재단·공공기관·축제 조직위 등
+  //                  주최 측이 직접 모집 → 파란색 "공식 모집" 배지) 또는
+  //                  "private"(민간 업체·플리마켓 운영사 등이 모집 → 회색 "민간 모집" 배지).
+  //                  생략하면 "official"로 취급됨.
+  // memo          : 자유 메모 (참가비, 경쟁률, 준비물 등)
+  // =====================================================================
+  const DATA = [
+    {
+      region: "경남",
+      name: "진주남강유등축제",
+      festivalStart: "2026-10-01",
+      festivalEnd: "2026-10-14",
+      applyStart: "2026-08-01",
+      applyEnd: "2026-09-20",
+      applyLink: "https://namgang.or.kr",
+      organizer: "진주시청 축제기획단",
+      organizerType: "official",
+      memo: "체험부스 참가비 유료. 작년 경쟁률 높았음 — 서류 미리 준비."
+    },
+    {
+      region: "강원",
+      name: "화천산천어축제",
+      festivalStart: "2027-01-09",
+      festivalEnd: "2027-01-31",
+      applyStart: "2026-09-01",
+      applyEnd: "2026-10-15",
+      applyLink: "https://narafestival.com",
+      organizer: "화천군 축제위원회",
+      organizerType: "official",
+      memo: "겨울 먹거리부스 최고 매출 구간. 자리 선점 위해 접수 첫 주 신청 권장."
+    },
+    {
+      region: "부산",
+      name: "부산불꽃축제",
+      festivalStart: "2026-11-07",
+      festivalEnd: "2026-11-07",
+      applyStart: "2026-09-20",
+      applyEnd: "2026-10-15",
+      applyLink: null,
+      organizer: "부산광역시",
+      organizerType: "official",
+      memo: "노점 구역 추첨제. 공고문 확인 필요."
+    },
+    {
+      region: "경북",
+      name: "안동국제탈춤페스티벌",
+      festivalStart: "2026-09-25",
+      festivalEnd: "2026-10-04",
+      applyStart: "2026-07-01",
+      applyEnd: "2026-08-31",
+      applyLink: "https://tour.andong.go.kr",
+      organizer: "안동축제관광재단",
+      organizerType: "official",
+      memo: "내년 일정 나오면 갱신할 것."
+    },
+    {
+      region: "경기",
+      name: "여주오곡나루축제",
+      festivalStart: null,
+      festivalEnd: null,
+      applyStart: null,
+      applyEnd: null,
+      applyLink: null,
+      organizer: "여주시청",
+      organizerType: "official",
+      memo: "작년 기준 모집 10월 초 시작 추정 — 공고 나오면 날짜 채우기."
+    }
+  ];
+
+  const REGION_GROUPS = [
+    { label: "수도권", color: "capital", regions: ["서울", "인천", "경기"] },
+    { label: "강원권", color: "gangwon", regions: ["강원"] },
+    { label: "충청권", color: "chungcheong", regions: ["대전", "세종", "충북", "충남"] },
+    { label: "호남권", color: "honam", regions: ["광주", "전북", "전남"] },
+    { label: "영남권", color: "yeongnam", regions: ["부산", "대구", "울산", "경북", "경남"] },
+    { label: "제주권", color: "jeju", regions: ["제주"] }
+  ];
+
+  const STATUS_LABEL = { open: "모집중", upcoming: "모집예정", closed: "마감", unknown: "미정" };
+
+  // ---- 내 행사 관리 ----
+  const ALL_REGIONS = REGION_GROUPS.flatMap(g => g.regions);
+  const MYEVENT_STATUS = [
+    { key: "reviewing", label: "검토 중", cls: "unknown" },
+    { key: "applied", label: "신청 완료", cls: "upcoming" },
+    { key: "selected", label: "선정", cls: "open" },
+    { key: "rejected", label: "탈락", cls: "rejected" },
+    { key: "done", label: "참가 완료", cls: "capital" }
+  ];
+  const MYEVENT_STATUS_MAP = Object.fromEntries(MYEVENT_STATUS.map(s => [s.key, s]));
+  const REPARTICIPATE = [
+    { key: "yes", label: "참가", cls: "open" },
+    { key: "maybe", label: "고민", cls: "upcoming" },
+    { key: "no", label: "불참", cls: "closed" }
+  ];
+  const REPARTICIPATE_MAP = Object.fromEntries(REPARTICIPATE.map(s => [s.key, s]));
+  const MYEVENTS_KEY = "festivalTracker.myEvents.v1";
+
+  function loadMyEvents() {
+    try {
+      const raw = localStorage.getItem(MYEVENTS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveMyEvents(list) {
+    try {
+      localStorage.setItem(MYEVENTS_KEY, JSON.stringify(list));
+    } catch (e) {
+      // 저장 실패 시(사생활 보호 모드 등) 조용히 무시
+    }
+  }
+
+  function upsertMyEvent(data, id) {
+    const list = loadMyEvents();
+    if (id) {
+      const idx = list.findIndex(e => e.id === id);
+      if (idx !== -1) list[idx] = { ...list[idx], ...data };
+    } else {
+      list.push({ id: `ev_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, ...data });
+    }
+    saveMyEvents(list);
+  }
+
+  function deleteMyEvent(id) {
+    saveMyEvents(loadMyEvents().filter(e => e.id !== id));
+  }
+
+  function calcNetProfit(ev) {
+    return (Number(ev.revenue) || 0) - (Number(ev.fee) || 0) - (Number(ev.otherCost) || 0);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function renderStars(rating) {
+    const r = Number(rating) || 0;
+    let out = '<span class="stars-display">';
+    for (let i = 1; i <= 5; i++) out += i <= r ? "★" : '<span class="empty">★</span>';
+    out += "</span>";
+    return out;
+  }
+
+  function fmtWon(n) {
+    return `${Math.round(n).toLocaleString("ko-KR")}원`;
+  }
+
+  function parseDate(s) {
+    if (!s) return null;
+    const d = new Date(s + "T00:00:00");
+    return isNaN(d) ? null : d;
+  }
+
+  function today0() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function dayDiff(a, b) {
+    return Math.round((a - b) / 86400000);
+  }
+
+  function getStatus(f) {
+    const start = parseDate(f.applyStart);
+    const end = parseDate(f.applyEnd);
+    if (!start || !end) return "unknown";
+    const t = today0();
+    if (t < start) return "upcoming";
+    if (t > end) return "closed";
+    return "open";
+  }
+
+  function fmtDate(s) {
+    if (!s) return "미정";
+    const [y, m, d] = s.split("-");
+    return `${y}.${m}.${d}`;
+  }
+
+  function periodText(start, end) {
+    if (!start && !end) return "미정";
+    if (start === end) return fmtDate(start);
+    return `${fmtDate(start)} ~ ${fmtDate(end)}`;
+  }
+
+  function isOfficial(f) {
+    return f.organizerType !== "private";
+  }
+
+  // "공식 모집" 표시는 noticeType(실제 판매부스·체험부스·프리마켓·푸드트럭 등 부스 모집으로
+  // 자동수집기가 분류한 결과)을 기준으로 삼는다 — 예전엔 organizerType(주최가 공공기관인지
+  // 민간인지)만 보고 "공식 모집"을 붙여서, 자동수집된 단순 축제 개최 소식이나 아직 확인 안 된
+  // 항목까지도 "공식 모집"으로 잘못 표시되는 문제가 있었음(2026-10-16 수정).
+  //   - noticeType === "general"(단순 축제 소식) → "공식 모집"에서 제외, "일반 소식"으로 표시
+  //   - noticeType이 있는 항목(recruit/review)은 신청기간으로 마감 여부부터 확인 → 마감이면
+  //     "마감" 우선 표시
+  //   - noticeType === "recruit"이고 모집중/모집예정으로 확인되면 "공식 모집"
+  //   - 그 외(모집 여부가 불확실한 경우)는 "확인 필요"
+  //   - noticeType 필드 자체가 없는 항목(DATA 예시 축제, 직접 추가한 축제)은 자동수집
+  //     분류 대상이 아니므로 기존처럼 organizerType(주최 기관 유형) 기준으로 공식/민간 표시
+  function orgBadge(f) {
+    // "예시"(DATA 배열의 샘플 데이터)는 실제 공고가 아니므로 항상 구분되게 표시한다.
+    if (f.source === "demo") {
+      return `<span class="org-badge review">예시 데이터</span>`;
+    }
+    const nt = f.noticeType;
+    if (nt === undefined) {
+      return isOfficial(f)
+        ? `<span class="org-badge official">공식 모집</span>`
+        : `<span class="org-badge private">민간 모집</span>`;
+    }
+    if (nt === "general") {
+      return `<span class="org-badge private">일반 소식</span>`;
+    }
+    // recruit 또는 review: 날짜 정보가 있으면 getStatus()로, 없으면 자동수집기가 본문에서
+    // 판단해둔 recruitStatus 필드로 마감 여부를 확인한다.
+    const dateStatus = (f.applyStart || f.applyEnd) ? getStatus(f) : (f.recruitStatus || "unknown");
+    if (dateStatus === "closed") {
+      return `<span class="org-badge private">마감</span>`;
+    }
+    if (nt === "recruit" && (dateStatus === "open" || dateStatus === "upcoming")) {
+      return `<span class="org-badge official">공식 모집</span>`;
+    }
+    return `<span class="org-badge review">확인 필요</span>`;
+  }
+
+  // 판매부스·체험부스·프리마켓·푸드트럭 분류 — 자동수집기가 채운 boothType(자유 텍스트,
+  // scripts/collect.js의 BOOTH_TYPE_PATTERNS 참고) 또는 수기로 입력한 boothType 값을
+  // 4가지 공통 카테고리로 묶어서 배지 표시·필터에 함께 쓴다. 매칭되는 패턴이 없으면
+  // "기타"로, boothType 자체가 없으면 배지를 아예 표시하지 않는다(추측하지 않음).
+  const BOOTH_CATEGORY_DEFS = [
+    { key: "sale", label: "판매부스", re: /판매|셀러|나눔장터|입점/ },
+    { key: "experience", label: "체험부스", re: /체험/ },
+    { key: "market", label: "프리마켓", re: /프리마켓|플리마켓/ },
+    { key: "foodtruck", label: "푸드트럭", re: /푸드트럭|먹거리/ }
+  ];
+  function boothCategory(f) {
+    const raw = f.boothType || "";
+    if (!raw) return null;
+    for (const d of BOOTH_CATEGORY_DEFS) {
+      if (d.re.test(raw)) return d;
+    }
+    return { key: "other", label: raw };
+  }
+  function boothBadge(f) {
+    const cat = boothCategory(f);
+    return cat ? `<span class="booth-badge">${escapeHtml(cat.label)}</span>` : "";
+  }
+
+  // ---- 상세정보 보기 ----
+  // DATA 배열 항목은 고유 id가 없으므로 getAllFestivals() 안에서의 위치를 임시 id로 쓴다.
+  // DETAIL_LOOKUP은 매 렌더링마다 새로 채워지므로, 화면에 보이는 목록과 항상 일치한다.
+  let DETAIL_LOOKUP = {};
+  function festId(f) {
+    return f.id || `idx-${getAllFestivals().indexOf(f)}`;
+  }
+  function registerDetail(f) {
+    const id = festId(f);
+    DETAIL_LOOKUP[id] = f;
+    return id;
+  }
+  function detailTrigger(f, label) {
+    return `<button type="button" class="fest-name-link" data-detail-id="${registerDetail(f)}">${escapeHtml(label)}</button>`;
+  }
+  function bindDetailClicks() {
+    document.querySelectorAll("[data-detail-id]").forEach(el => {
+      el.addEventListener("click", () => {
+        const f = DETAIL_LOOKUP[el.dataset.detailId];
+        if (f) openDetailModal(f);
+      });
+    });
+  }
+  function detailField(label, value) {
+    return value ? `<div><dt>${label}</dt><dd>${value}</dd></div>` : "";
+  }
+  function openDetailModal(f) {
+    const status = getStatus(f);
+    const badges = `
+      <div class="detail-badges">
+        <span class="region-tag">${f.region || "-"}${f.city ? ` · ${escapeHtml(f.city)}` : ""}</span>
+        ${orgBadge(f)}
+        ${boothBadge(f)}
+        <span class="status-pill ${status}">${STATUS_LABEL[status]}</span>
+      </div>`;
+    const grid = `
+      <dl class="detail-grid">
+        ${detailField("축제 기간", escapeHtml(periodText(f.festivalStart, f.festivalEnd)))}
+        ${detailField("모집 기간", escapeHtml(periodText(f.applyStart, f.applyEnd)))}
+        ${detailField("신청 마감일", f.applyEnd ? escapeHtml(fmtDate(f.applyEnd)) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
+        ${detailField("장소", f.location ? escapeHtml(f.location) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
+        ${detailField("주최·주관", f.organizer ? escapeHtml(f.organizer) : (f.sourceOrg ? escapeHtml(f.sourceOrg) : ""))}
+        ${detailField("참가 자격", f.eligibility ? escapeHtml(f.eligibility) : (f.ulsanEligible ? `울산 사업자 참가: ${escapeHtml(f.ulsanEligible)}` : ""))}
+        ${detailField("참가비", f.fee ? escapeHtml(String(f.fee)) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
+        <div class="full">${detailField("메모", f.memo ? escapeHtml(f.memo) : "")}</div>
+        <div class="full">${detailField("원문 출처", f.sourceUrl ? `<a href="${f.sourceUrl}" target="_blank" rel="noopener noreferrer">${escapeHtml(f.sourceOrg || "원문 보기")} ↗</a>${linkStatusWarning(f)}` : "")}</div>
+      </dl>`;
+    document.getElementById("detailModalCard").innerHTML = `
+      <h2>${escapeHtml(f.name)}</h2>
+      ${badges}
+      ${grid}
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="detailModalClose">닫기</button>
+        ${applyBtn(f, false)}
+      </div>
+    `;
+    document.getElementById("detailModalOverlay").classList.remove("hidden");
+    document.getElementById("detailModalClose").addEventListener("click", closeDetailModal);
+  }
+  function closeDetailModal() {
+    document.getElementById("detailModalOverlay").classList.add("hidden");
+  }
+
+  function ddayInfo(f, status) {
+    if (status === "open") {
+      const n = dayDiff(parseDate(f.applyEnd), today0());
+      if (n <= 3) return { text: n === 0 ? "D-DAY" : `D-${n}`, cls: "urgent" };
+      if (n <= 7) return { text: `D-${n}`, cls: "warn" };
+      return { text: `D-${n}`, cls: "" };
+    }
+    if (status === "upcoming") return { text: "모집예정", cls: "" };
+    if (status === "closed") return { text: "마감", cls: "" };
+    return { text: "일정 미정 · 확인 필요", cls: "" };
+  }
+
+  // 자동수집기(scripts/collect.js)가 원문 URL 접속 시도 결과를 linkStatus에 남겨둔다
+  // ("ok" 또는 "needs_review" — HTTPS 인증서 오류 포함). 링크 자체는 절대 지우거나
+  // 임의로 바꾸지 않고, 문제가 있으면 경고 배지만 옆에 덧붙인다(2026-10-17 추가 —
+  // 사용자가 ulsanwhale.com에서 NET::ERR_CERT_COMMON_NAME_INVALID를 직접 겪은 것을
+  // 계기로 추가됨).
+  function linkStatusWarning(f) {
+    if (f.linkStatus !== "needs_review") return "";
+    const title = f.linkCheckDetail ? escapeHtml(f.linkCheckDetail) : "접속 오류가 확인되었습니다";
+    return ` <span class="link-warn" title="${title}">⚠ 링크 확인 필요</span>`;
+  }
+
+  function applyBtn(f, small) {
+    const cls = small ? "apply-btn" : "apply-link";
+    if (!f.applyLink) {
+      return small
+        ? `<span class="${cls} disabled">링크 없음</span>`
+        : `<span class="${cls} disabled">링크 없음</span>`;
+    }
+    return `<a class="${cls}" href="${f.applyLink}" target="_blank" rel="noopener noreferrer">신청 페이지 ↗</a>${linkStatusWarning(f)}`;
+  }
+
+  // ---- 직접 추가한 축제(브라우저 저장) ----
+  const CUSTOM_FESTIVALS_KEY = "festivalTracker.customFestivals.v1";
+
+  function loadCustomFestivals() {
+    try {
+      const raw = localStorage.getItem(CUSTOM_FESTIVALS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCustomFestivals(list) {
+    try {
+      localStorage.setItem(CUSTOM_FESTIVALS_KEY, JSON.stringify(list));
+    } catch (e) {
+      // 저장 실패 시(사생활 보호 모드 등) 조용히 무시
+    }
+  }
+
+  // DATA는 코드에 포함된 예시 데이터이므로 "demo" 출처로 표시해, 실제 자동수집·수동등록
+  // 공고와 섞여 보여도 셀러가 진짜 공고로 오해하지 않도록 한다(2026-10-21).
+  function getAllFestivals() {
+    return [...DATA.map(f => ({ ...f, source: f.source || "demo" })), ...loadCustomFestivals(), ...approvedAutoCache];
+  }
+
+  function upsertCustomFestival(data, id) {
+    const list = loadCustomFestivals();
+    if (id) {
+      const idx = list.findIndex(f => f.id === id);
+      if (idx !== -1) list[idx] = { ...list[idx], ...data };
+    } else {
+      list.push({ id: `cf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, ...data });
+    }
+    saveCustomFestivals(list);
+  }
+
+  function deleteCustomFestival(id) {
+    saveCustomFestivals(loadCustomFestivals().filter(f => f.id !== id));
+  }
+
+  // ---- 자동수집(구·군청 게시판) 축제: 독립 웹사이트 버전 ----
+  // Claude Artifact의 공용 DB(window.claude.use("db"))가 없는 환경이라, 자동수집
+  // 데이터는 GitHub 저장소의 data/collected.json을 브라우저에서 직접 fetch해서 읽는다.
+  // 관리자의 승인·거절·수동등록 "결정"은 이 브라우저의 localStorage에만 저장되고
+  // GitHub에는 반영되지 않는다 — 다른 사람·다른 기기에는 보이지 않는 임시 조치다.
+  // 여러 사람이 같은 결정을 보게 하려면, 관리자가 이 localStorage 내용을 참고해
+  // data/collected.json의 status 필드를 직접 고치고 깃허브에 커밋하는 것이 지금 구조
+  // 에서 유일하게 안전한(=서버·로그인 없이도 사실관계가 꼬이지 않는) 운영 방법이다.
+  const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/yeonseubsaengsomsatang-sys/ulsan-festival-collector/main";
+  const ADMIN_OVERRIDES_KEY = "festivalTracker.adminOverrides.v1";
+
+  function loadAdminOverrides() {
+    try {
+      const raw = localStorage.getItem(ADMIN_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveAdminOverrides(map) {
+    try {
+      localStorage.setItem(ADMIN_OVERRIDES_KEY, JSON.stringify(map));
+    } catch (e) {}
+  }
+  function setAdminOverride(id, patch) {
+    const map = loadAdminOverrides();
+    map[id] = { ...map[id], ...patch };
+    saveAdminOverrides(map);
+  }
+
+  let autoRawItems = [];
+  let approvedAutoCache = [];
+  let pendingAutoCache = [];
+  // 2026-10-19: "실제 수집에 성공한 기관과 실패한 기관을 구분" — scripts/collect.js가
+  // 매일 실행 후 기관(게시판) 단위로 기록하는 data/board_status.json을 화면에 보여준다.
+  // 화면에는 "자동수집 대기" 페이지 맨 위에 작은 요약(정상 N / 실패 N)만 노출 — 실패가
+  // 있을 때만 기관명을 펼쳐 보여준다.
+  let boardStatusCache = [];
+
+  // 자동수집 원본(JSON) + 이 브라우저의 로컬 승인/거절 오버레이를 합쳐
+  // approvedAutoCache/pendingAutoCache를 다시 계산한다. 오버레이가 없으면 JSON의
+  // status(거의 전부 "pending")가 그대로 쓰인다 — 즉 아무도 승인하지 않은 공고를
+  // 임의로 "모집중"/"승인됨"으로 바꾸지 않는다.
+  function recomputeAutoCaches() {
+    const overrides = loadAdminOverrides();
+    const merged = autoRawItems.map(item => {
+      const ov = overrides[item.id];
+      const base = { ...item, source: item.source || "auto" };
+      return ov ? { ...base, ...ov } : base;
+    });
+    approvedAutoCache = merged.filter(f => f.status === "approved");
+    pendingAutoCache = merged.filter(f => f.status !== "approved" && f.status !== "rejected");
+  }
+
+  async function initAutoCollectData() {
+    try {
+      const res = await fetch(GITHUB_RAW_BASE + "/data/collected.json", { cache: "no-store" });
+      autoRawItems = res.ok ? await res.json() : [];
+    } catch (e) {
+      autoRawItems = [];
+    }
+    recomputeAutoCaches();
+    route();
+    try {
+      const res2 = await fetch(GITHUB_RAW_BASE + "/data/board_status.json", { cache: "no-store" });
+      const arr = res2.ok ? await res2.json() : [];
+      boardStatusCache = Array.isArray(arr) ? arr.map((o, i) => ({ ...o, id: o.org || String(i) })) : [];
+    } catch (e) {
+      boardStatusCache = [];
+    }
+    route();
+  }
+
+  function renderBoardStatusPanel() {
+    if (boardStatusCache.length === 0) return "";
+    const failed = boardStatusCache.filter(o => o.status === "fetch_failed");
+    const okCount = boardStatusCache.length - failed.length;
+    const latest = boardStatusCache.reduce((max, o) => (o.checkedAt || "") > max ? o.checkedAt : max, "");
+    const summary = `전국 ${boardStatusCache.length}개 기관 중 수집 정상 ${okCount}개${failed.length > 0 ? `, 실패 ${failed.length}개` : ""} (${(latest || "").slice(0, 10) || "-"} 기준)`;
+    const failedListHtml = failed.length > 0
+      ? `<ul style="margin:6px 0 0; padding-left:18px;">${failed.map(o => `<li>${escapeHtml(o.region || "")} ${escapeHtml(o.org || "")}${o.lastError ? ` — ${escapeHtml(o.lastError)}` : ""}</li>`).join("")}</ul>`
+      : "";
+    return `<div class="page-sub" style="opacity:0.8;">${summary}</div>${failedListHtml}`;
+  }
+
+  function festivalManageCell(f) {
+    if (f.source === "auto") {
+      return `<div class="row-actions">
+        ${f.sourceUrl ? `<a class="icon-btn" href="${f.sourceUrl}" target="_blank" rel="noopener noreferrer">원문</a>${linkStatusWarning(f)}` : ""}
+        <button class="icon-btn danger" data-auto-reject="${f.id}">제외</button>
+      </div>`;
+    }
+    if (f.source === "manual" || f.source === "manual-local") {
+      return `<div class="row-actions">
+        <button class="icon-btn" data-manual-edit="${f.id}">수정</button>
+        <button class="icon-btn danger" data-manual-delete="${f.id}">삭제</button>
+      </div>`;
+    }
+    if (!f.id) return "-";
+    return `<div class="row-actions">
+      <button class="icon-btn" data-fest-edit="${f.id}">수정</button>
+      <button class="icon-btn danger" data-fest-delete="${f.id}">삭제</button>
+    </div>`;
+  }
+
+  function bindFestivalManageButtons() {
+    document.querySelectorAll("[data-fest-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openFestivalModal(btn.dataset.festEdit));
+    });
+    document.querySelectorAll("[data-fest-delete]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (confirm("이 축제를 삭제할까요?")) {
+          deleteCustomFestival(btn.dataset.festDelete);
+          route();
+        }
+      });
+    });
+    document.querySelectorAll("[data-manual-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openManualModal(btn.dataset.manualEdit));
+    });
+    document.querySelectorAll("[data-manual-delete]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (!confirm("이 공고를 삭제할까요? (이 브라우저에만 저장된 공고입니다)")) return;
+        deleteCustomFestival(btn.dataset.manualDelete);
+        route();
+      });
+    });
+    document.querySelectorAll("[data-auto-reject]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (!confirm("이 항목을 목록에서 제외할까요? (이 결정은 이 브라우저에만 저장됩니다)")) return;
+        setAdminOverride(btn.dataset.autoReject, { status: "rejected" });
+        recomputeAutoCaches();
+        route();
+      });
+    });
+  }
+
+  // ---------------- rendering ----------------
+
+  function renderSidebar(activeKey) {
+    const counts = {};
+    getAllFestivals().forEach(f => {
+      if (getStatus(f) === "open") counts[f.region] = (counts[f.region] || 0) + 1;
+    });
+
+    let html = `
+      <div class="brand"><span class="mark">🎪</span><span class="name">축제 신청 캘린더</span></div>
+      <div class="nav-group">
+        <a class="nav-item ${activeKey === "home" ? "active" : ""}" href="#home">홈</a>
+        <a class="nav-item ${activeKey === "browse" ? "active" : ""}" href="#browse">전국 모집공고</a>
+        <a class="nav-item ${activeKey === "myevents" ? "active" : ""}" href="#myevents">내 행사 관리</a>
+        <a class="nav-item ${activeKey === "collect-review" ? "active" : ""}" href="#collect-review">
+          <span>관리자 · 자동수집 대기</span>${pendingAutoCache.length > 0 ? `<span class="count">${pendingAutoCache.length}</span>` : ""}
+        </a>
+        <a class="nav-item ${activeKey === "about" ? "active" : ""}" href="#about">서비스 안내</a>
+      </div>`;
+
+    REGION_GROUPS.forEach(group => {
+      html += `<div class="nav-group"><div class="nav-group-label group-${group.color}">${group.label}</div>`;
+      group.regions.forEach(r => {
+        const c = counts[r] || 0;
+        html += `<a class="nav-item region-item group-${group.color} ${activeKey === r ? "active" : ""}" href="#region-${encodeURIComponent(r)}">
+          <span>${r}</span>${c > 0 ? `<span class="count">${c}</span>` : ""}
+        </a>`;
+      });
+      html += `</div>`;
+    });
+
+    document.getElementById("sidebar").innerHTML = html;
+  }
+
+  // 2026-10-17: 홈 화면 추천은 noticeType이 "일반 축제 소식"이나 "확인 필요"로 분류된
+  // 자동수집 항목은 제외한다. noticeType 필드 자체가 없는 항목(DATA 예시·직접 추가한
+  // 축제)은 자동분류 대상이 아니라서 그대로 추천 후보로 둔다(사람이 직접 등록/검증한 데이터).
+  function isRecommendable(f) {
+    return f.noticeType !== "general" && f.noticeType !== "review";
+  }
+
+  // 실제로 신청 기간이 진행 중("open")이고 noticeType상 확인된 모집인 것만, 마감 임박순으로
+  // 최대 8개. 예전 방식(마감/미정도 같이 정렬 후 자르기)은 모집중이 8개를 못 채우면 마감된
+  // 축제가 "지금 접수해야 할 축제"에 섞여 보이는 문제가 있었음 — 아예 open만 걸러낸다.
+  function pickHomeOpen() {
+    return getAllFestivals()
+      .filter(f => isRecommendable(f) && getStatus(f) === "open")
+      .sort((a, b) => parseDate(a.applyEnd) - parseDate(b.applyEnd))
+      .slice(0, 8)
+      .map(f => ({ f, status: "open" }));
+  }
+
+  // "모집 예정"은 모집중과 분리된 별도 영역에 보여주기 위한 목록 — 시작 임박순.
+  function pickHomeUpcoming(limit) {
+    return getAllFestivals()
+      .filter(f => isRecommendable(f) && getStatus(f) === "upcoming")
+      .sort((a, b) => (parseDate(a.applyStart) || 0) - (parseDate(b.applyStart) || 0))
+      .slice(0, limit || 8)
+      .map(f => ({ f, status: "upcoming" }));
+  }
+
+  // 2026-10-17 추가: 모집중인 공고가 0건일 때도 홈 화면 전체 기능을 확인할 수 있도록,
+  // 최근에 마감된 확인된 모집공고를 보여준다(마감일이 최근인 순). general/review는
+  // isRecommendable()에서 이미 제외되므로, 여기서도 실제 모집공고로 확인된 것만 노출된다.
+  function pickHomeClosedRecent(limit) {
+    return getAllFestivals()
+      .filter(f => isRecommendable(f) && getStatus(f) === "closed")
+      .sort((a, b) => parseDate(b.applyEnd) - parseDate(a.applyEnd))
+      .slice(0, limit || 6)
+      .map(f => ({ f, status: "closed" }));
+  }
+
+  // 2026-10-21 추가: "마감임박" — 모집중인 공고 중 마감 D-7 이내인 것만 따로 모아 맨 위에
+  // 보여준다(모집중 전체 목록에도 그대로 포함되며, 여기서는 눈에 띄게 미리보기만 한다).
+  function pickHomeUrgent(limit) {
+    return getAllFestivals()
+      .filter(f => isRecommendable(f) && getStatus(f) === "open" && dayDiff(parseDate(f.applyEnd), today0()) <= 7)
+      .sort((a, b) => parseDate(a.applyEnd) - parseDate(b.applyEnd))
+      .slice(0, limit || 4)
+      .map(f => ({ f, status: "open" }));
+  }
+
+  // 2026-10-21 추가: "최신 공고" — 상태와 무관하게 가장 최근에 발견/등록된 공고를 보여준다.
+  // 아직 "확인 필요"/"일반소식"으로 분류된 자동수집 항목도 포함해, 새로 들어온 공고를
+  // 놓치지 않도록 한다(모집중이라고 단정하지 않고 실제 orgBadge/상태를 그대로 노출).
+  function pickHomeLatest(limit) {
+    const recencyOf = f => parseDate(f.collectedAt ? f.collectedAt.slice(0, 10) : null) || parseDate(f.postedDate) || null;
+    return getAllFestivals()
+      .filter(f => recencyOf(f))
+      .sort((a, b) => recencyOf(b) - recencyOf(a))
+      .slice(0, limit || 8)
+      .map(f => ({ f, status: getStatus(f) }));
+  }
+
+  function festivalCardHtml(f, status, showApply) {
+    const info = ddayInfo(f, status);
+    return `
+      <div class="apply-card">
+        <div class="card-tags">
+          <span class="region-tag">${f.region}</span>
+          ${orgBadge(f)}
+          ${boothBadge(f)}
+        </div>
+        <div class="fest-name">${detailTrigger(f, f.name)}</div>
+        <div class="fest-period">축제 ${periodText(f.festivalStart, f.festivalEnd)}</div>
+        <div class="memo">${f.memo || ""}</div>
+        <div class="dday-row">
+          <span class="status-pill ${status}">${STATUS_LABEL[status]}</span>
+          <span class="dday ${info.cls}">${info.text}</span>
+        </div>
+        ${showApply === false ? "" : applyBtn(f, false)}
+      </div>
+    `;
+  }
+
+  // ---- 서비스 안내 ----
+  function renderAbout() {
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>서비스 안내</div>
+      <div class="page-head"><h1 class="page-title">서비스 안내</h1></div>
+      <p class="page-sub">전국 축제·플리마켓·먹거리부스·체험부스 모집정보를 한곳에서 확인하고 신청까지 이어가는 셀러용 서비스입니다.</p>
+
+      <div class="page-head" style="margin-top:28px;"><h2 class="page-title" style="font-size:20px;">지금 바로 쓸 수 있는 기능</h2></div>
+      <ul class="about-list">
+        <li><b>홈</b> — 모집중 · 모집예정 · 마감임박 · 최신 공고를 한 화면에서 확인합니다. 실제로 신청 기간이 확인된 공고만 "모집중"으로 표시하며, 확인되지 않은 공고는 "확인 필요"로 남겨둡니다.</li>
+        <li><b>전국 모집공고</b> — 17개 시·도, 시·군·구, 부스 유형(판매·체험·프리마켓·푸드트럭), 키워드로 전체 공고를 검색합니다.</li>
+        <li><b>모집공고 상세</b> — 공고명을 누르면 일정·장소·신청 마감일·참가비·참가 자격·공식 신청 링크를 모아서 보여줍니다.</li>
+        <li><b>내 행사 관리</b> — 관심 있는 행사를 등록하고, 신청·선정·참가 완료 상태와 매출·비용을 기록해 순수익을 자동 계산합니다.</li>
+        <li><b>관리자</b> — 자동수집된 공고를 검토해 승인·거절하고, 원문에 없는 공고를 직접 등록·수정할 수 있습니다. 로그인 기능이 없어 공개된 주소에서는 비활성화되어 있고, 로컬(개발자 PC) 환경에서만 사용할 수 있습니다.</li>
+      </ul>
+
+      <div class="page-head" style="margin-top:28px;"><h2 class="page-title" style="font-size:20px;">저장 방식 — 지금의 한계와 안전한 운영 방법</h2></div>
+      <ul class="about-list">
+        <li><b>자동수집 공고(모두에게 동일하게 보임)</b> — GitHub 저장소의 <code>data/collected.json</code>을 이 페이지가 직접 읽어옵니다. GitHub Actions가 매일 수집한 내용이 그대로 반영되며, 별도 서버나 로그인이 필요 없습니다.</li>
+        <li><b>관리자 승인·거절·수동등록(이 브라우저에만 저장, 공유 안 됨)</b> — 이 사이트는 공용 데이터베이스나 서버가 없는 "정적 웹사이트"라서, 관리자가 누른 승인·거절과 직접 등록한 공고는 <u>이 브라우저(기기)에만</u> 저장됩니다. 새로고침해도 유지되지만, 다른 관리자·다른 방문자에게는 보이지 않습니다. <b>즉 지금은 "실제로 여러 사람이 같이 쓰는 승인 목록"이 아니라 "개인용 검토 메모장"입니다.</b></li>
+        <li><b>내 행사 관리 / + 축제 추가</b> — 기존과 동일하게 이 브라우저(기기)에만 저장됩니다. 로그인 기능이 없는 한 구조적으로 동일한 한계입니다.</li>
+        <li><b>권장 운영 방법(지금 구조에서 가장 안전한 방법)</b> — 관리자가 이 화면에서 검토한 뒤, 실제로 모든 방문자에게 반영하고 싶은 공고는 <code>data/collected.json</code>의 해당 항목 <code>status</code>를 <code>"approved"</code>(또는 <code>"rejected"</code>)로 직접 수정해 저장소에 커밋·배포하세요. 자동수집 스크립트(<code>scripts/collect.js</code>)와 GitHub Actions는 이 값을 건드리지 않으므로 사람이 승인한 내용이 다음 수집에서도 보존됩니다. 더 편한 운영이 필요해지면(여러 관리자가 동시에 승인하는 등) 그때 작은 서버리스 함수나 로그인 기능 추가를 검토하세요 — 지금은 범위에 넣지 않았습니다.</li>
+      </ul>
+
+      <div class="page-head" style="margin-top:28px;"><h2 class="page-title" style="font-size:20px;">관리자 화면 접근 제한에 대한 안내</h2></div>
+      <ul class="about-list">
+        <li>이 사이트에는 아직 로그인 기능이 없습니다. 비밀번호를 코드에 심어두는 방식은 소스를 열어보면 그대로 드러나는 "가짜 보안"이라 쓰지 않았습니다 — 대신 <b>공개 배포된 주소(Netlify 등)에서는 관리자 화면 자체를 아예 렌더링하지 않도록</b> 꺼두었습니다. 관리자 검토는 지금은 로컬(개발자 PC)에서 이 파일을 직접 열었을 때만 사용할 수 있습니다.</li>
+        <li>여러 관리자가 함께 쓰는 승인 기능이 실제로 필요해지면, 그때 Netlify Identity나 서버리스 함수 기반의 진짜 로그인을 추가하고 이 제한을 풀어야 합니다.</li>
+      </ul>
+
+      <div class="page-head" style="margin-top:28px;"><h2 class="page-title" style="font-size:20px;">향후 확장 예정 (이번 작업에는 포함되지 않음)</h2></div>
+      <ul class="about-list">
+        <li>로그인·계정 연동 — 내 행사 기록과 관리자 승인 내역을 기기와 무관하게 동기화</li>
+        <li>네이버 카페 등 추가 수집 경로 조사 및 수집 기관 확대</li>
+        <li>개별 게시판 자동수집 오류 세부 수정, PDF 첨부파일 인식 고도화</li>
+        <li>부스비 결제 등 쇼핑몰형 결제 연동</li>
+        <li>외부 공개 배포(Netlify 등) — 사용자 승인 후에만 진행합니다</li>
+      </ul>
+      <footer>이 서비스는 <code>ulsan-festival-collector</code> 저장소의 자동수집 데이터(매일 GitHub Actions로 수집한 <code>data/collected.json</code>)를 GitHub에서 직접 불러와 사용하는 독립 웹사이트입니다.</footer>
+    `;
+  }
+
+  function renderHome() {
+    DETAIL_LOOKUP = {};
+    const urgentFeatured = pickHomeUrgent(4);
+    const openFeatured = pickHomeOpen();
+    const upcomingFeatured = pickHomeUpcoming(4);
+    const closedRecentFeatured = pickHomeClosedRecent(6);
+    const latestFeatured = pickHomeLatest(8);
+    const openCount = getAllFestivals().filter(f => isRecommendable(f) && getStatus(f) === "open").length;
+    const closedCount = getAllFestivals().filter(f => getStatus(f) === "closed").length;
+
+    // 모집중 공고가 0건이어도 사용자가 홈 화면에서 전체 기능(검색·필터·상세정보·내 행사
+    // 관리 등)을 바로 확인할 수 있도록, 모집중/모집예정/최근마감 3개 구간을 항상 각자의
+    // 안내문과 함께 보여준다(2026-10-17, "모집 중인 축제가 없습니다"만 덩그러니 뜨는
+    // 문제 개선 요청에 따라 수정).
+    const openCards = openFeatured.length > 0
+      ? openFeatured.map(({ f, status }) => festivalCardHtml(f, status)).join("")
+      : `<div class="empty-slot">현재 모집 중으로 확인된 축제가 없습니다.<br>아래 "모집 예정"과 "최근 마감된 공고"를 확인하거나, "+ 축제 추가"로 직접 등록해보세요.</div>`;
+
+    const upcomingSection = `
+      <div class="page-head" style="margin-top:32px;">
+        <h2 class="page-title" style="font-size:20px;">모집 예정 — 곧 접수가 시작됩니다</h2>
+      </div>
+      ${upcomingFeatured.length > 0
+        ? `<div class="card-grid">${upcomingFeatured.map(({ f, status }) => festivalCardHtml(f, status)).join("")}</div>`
+        : `<div class="empty-slot">모집 예정으로 확인된 축제가 없습니다.</div>`}
+    `;
+
+    const closedRecentSection = `
+      <div class="page-head" style="margin-top:32px;">
+        <h2 class="page-title" style="font-size:20px;">최근 마감된 공고</h2>
+        <a class="view-all-btn" href="#closed-all">마감 전체 보기${closedCount > 0 ? ` (${closedCount})` : ""} →</a>
+      </div>
+      ${closedRecentFeatured.length > 0
+        ? `<div class="card-grid">${closedRecentFeatured.map(({ f, status }) => festivalCardHtml(f, status, false)).join("")}</div>`
+        : `<div class="empty-slot">최근 마감된 공고가 없습니다.</div>`}
+    `;
+
+    const urgentSection = urgentFeatured.length > 0 ? `
+      <div class="page-head" style="margin-top:4px;">
+        <h2 class="page-title" style="font-size:20px; color:var(--accent);">⏰ 마감임박 — 7일 이내 마감</h2>
+      </div>
+      <div class="card-grid">${urgentFeatured.map(({ f, status }) => festivalCardHtml(f, status)).join("")}</div>
+    ` : "";
+
+    const latestSection = `
+      <div class="page-head" style="margin-top:32px;">
+        <h2 class="page-title" style="font-size:20px;">최신 공고</h2>
+        <a class="view-all-btn" href="#browse">전국 모집공고 전체 보기 →</a>
+      </div>
+      <p class="page-sub" style="margin-top:0;">자동수집·수동등록된 공고 중 가장 최근에 들어온 순서입니다. "확인 필요"로 표시된 공고는 아직 모집 여부가 확정되지 않았으니 원문을 직접 확인해주세요.</p>
+      ${latestFeatured.length > 0
+        ? `<div class="card-grid">${latestFeatured.map(({ f, status }) => festivalCardHtml(f, status)).join("")}</div>`
+        : `<div class="empty-slot">아직 수집된 공고가 없습니다.</div>`}
+    `;
+
+    document.getElementById("main").innerHTML = `
+      <div class="page-head">
+        <h1 class="page-title">지금 접수해야 할 축제</h1>
+        <div class="page-actions">
+          <button class="view-all-btn" id="openAddFestival">+ 축제 추가</button>
+          <a class="view-all-btn" href="#browse">전국 모집공고 →</a>
+          <a class="view-all-btn" href="#open-all">모집 중 전체 보기${openCount > 0 ? ` (${openCount})` : ""} →</a>
+          <a class="view-all-btn" href="#closed-all">마감 전체 보기${closedCount > 0 ? ` (${closedCount})` : ""} →</a>
+        </div>
+      </div>
+      <p class="page-sub">실제로 신청 기간이 진행 중이고 모집공고로 확인된 축제만, 마감이 가까운 순으로 최대 8개 보여줍니다. 일반 축제 소식이나 아직 확인되지 않은 공고는 제외됩니다.</p>
+      ${urgentSection}
+      <div class="card-grid">${openCards}</div>
+      ${upcomingSection}
+      ${latestSection}
+      ${closedRecentSection}
+      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 지역별 페이지에서 수정·삭제할 수 있습니다.</footer>
+    `;
+
+    document.getElementById("openAddFestival").addEventListener("click", () => openFestivalModal());
+    bindDetailClicks();
+  }
+
+  // ---- 지역·기간·부스유형·검색어 통합 필터 ----
+  // 모집중/마감 전체보기 공통으로 쓰는 필터 상태와 적용 로직. dateField는 기간 필터를
+  // 어느 날짜 기준으로 걸지 지정한다(모집중 목록은 마감일, 마감 목록도 마감일 기준).
+  // 지역을 고르면 그 지역에 실제로 존재하는 시·군·구만 뽑아 "시군구" 선택지로 보여준다
+  // (데이터에 city가 없는 항목이 많으므로, 있는 값만 모아 추측 없이 구성).
+  function citiesForRegion(region) {
+    const set = new Set();
+    getAllFestivals().forEach(f => {
+      if ((region === "all" || f.region === region) && f.city) set.add(f.city);
+    });
+    return [...set].sort();
+  }
+
+  function applyListFilters(items, filters, dateField) {
+    const q = filters.q.trim().toLowerCase();
+    return items.filter(f => {
+      if (filters.region !== "all" && f.region !== filters.region) return false;
+      if (filters.city && filters.city !== "all" && f.city !== filters.city) return false;
+      if (filters.booth !== "all") {
+        const cat = boothCategory(f);
+        if (!cat || cat.key !== filters.booth) return false;
+      }
+      if (q) {
+        const hay = `${f.name || ""} ${f.organizer || f.sourceOrg || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (filters.dateFrom || filters.dateTo) {
+        const d = parseDate(f[dateField]);
+        if (!d) return false;
+        if (filters.dateFrom && d < parseDate(filters.dateFrom)) return false;
+        if (filters.dateTo && d > parseDate(filters.dateTo)) return false;
+      }
+      return true;
+    });
+  }
+
+  function filterBarHtml(idPrefix, filters, opts) {
+    const showCity = !!(opts && opts.city);
+    const regionOptions = `<option value="all" ${filters.region === "all" ? "selected" : ""}>전체 지역</option>` +
+      ALL_REGIONS.map(r => `<option value="${r}" ${r === filters.region ? "selected" : ""}>${r}</option>`).join("");
+    const boothOptions = `<option value="all" ${filters.booth === "all" ? "selected" : ""}>전체 유형</option>` +
+      BOOTH_CATEGORY_DEFS.map(d => `<option value="${d.key}" ${d.key === filters.booth ? "selected" : ""}>${d.label}</option>`).join("");
+    const cityHtml = showCity ? (() => {
+      const cities = citiesForRegion(filters.region || "all");
+      const cityOptions = `<option value="all" ${filters.city === "all" ? "selected" : ""}>전체 시·군·구</option>` +
+        cities.map(c => `<option value="${escapeHtml(c)}" ${c === filters.city ? "selected" : ""}>${escapeHtml(c)}</option>`).join("");
+      return `
+        <label for="${idPrefix}City">시·군·구</label>
+        <select id="${idPrefix}City" ${cities.length === 0 ? "disabled" : ""}>${cityOptions}</select>
+        <span class="filter-sep"></span>`;
+    })() : "";
+    const dateHtml = (opts && opts.date === false) ? "" : `
+        <label for="${idPrefix}DateFrom">모집마감일</label>
+        <input type="date" id="${idPrefix}DateFrom" value="${filters.dateFrom || ""}">
+        <span>~</span>
+        <input type="date" id="${idPrefix}DateTo" value="${filters.dateTo || ""}">
+        <span class="filter-sep"></span>`;
+    return `
+      <div class="filter-bar">
+        <label for="${idPrefix}Region">지역</label>
+        <select id="${idPrefix}Region">${regionOptions}</select>
+        <span class="filter-sep"></span>
+        ${cityHtml}
+        <label for="${idPrefix}Booth">부스 유형</label>
+        <select id="${idPrefix}Booth">${boothOptions}</select>
+        <span class="filter-sep"></span>
+        ${dateHtml}
+        <label for="${idPrefix}Q">검색</label>
+        <input type="text" id="${idPrefix}Q" placeholder="축제명·주최기관" value="${escapeHtml(filters.q)}">
+      </div>`;
+  }
+
+  function bindFilterBar(idPrefix, filters, onChange) {
+    document.getElementById(`${idPrefix}Region`).addEventListener("change", ev => {
+      filters.region = ev.target.value;
+      filters.city = "all";
+      onChange();
+    });
+    const cityEl = document.getElementById(`${idPrefix}City`);
+    if (cityEl) cityEl.addEventListener("change", ev => { filters.city = ev.target.value; onChange(); });
+    document.getElementById(`${idPrefix}Booth`).addEventListener("change", ev => { filters.booth = ev.target.value; onChange(); });
+    const dateFromEl = document.getElementById(`${idPrefix}DateFrom`);
+    const dateToEl = document.getElementById(`${idPrefix}DateTo`);
+    if (dateFromEl) dateFromEl.addEventListener("change", ev => { filters.dateFrom = ev.target.value; onChange(); });
+    if (dateToEl) dateToEl.addEventListener("change", ev => { filters.dateTo = ev.target.value; onChange(); });
+    const qEl = document.getElementById(`${idPrefix}Q`);
+    // 매 입력마다 다시 그리면 input이 통째로 교체되어 포커스를 잃으므로, blur/Enter에만
+    // 반응한다(다른 select/date 필터는 선택 즉시 바뀌어도 포커스를 잃을 일이 없어 change로 충분).
+    qEl.addEventListener("change", ev => { filters.q = ev.target.value; onChange(); });
+    qEl.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { filters.q = ev.target.value; onChange(); }
+    });
+  }
+
+  let allOpenFilters = { region: "all", city: "all", booth: "all", dateFrom: "", dateTo: "", q: "" };
+
+  function renderAllOpen() {
+    DETAIL_LOOKUP = {};
+    const openItems = getAllFestivals().filter(f => getStatus(f) === "open");
+    const items = applyListFilters(openItems, allOpenFilters, "applyEnd")
+      .sort((a, b) => parseDate(a.applyEnd) - parseDate(b.applyEnd));
+
+    const bodyHtml = items.length === 0
+      ? `<div class="empty-state">조건에 맞는 모집 중인 축제가 없습니다.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>축제명</th><th>지역</th><th>유형</th><th>축제 기간</th><th>모집 기간</th><th>주최</th><th>메모</th><th>신청</th><th>관리</th>
+          </tr></thead>
+          <tbody>${items.map(f => {
+            const info = ddayInfo(f, "open");
+            return `
+            <tr>
+              <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
+              <td>${f.region}</td>
+              <td>${boothBadge(f)}</td>
+              <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
+              <td class="recruit-cell">${periodText(f.applyStart, f.applyEnd)}<br><span class="dday ${info.cls}">${info.text}</span></td>
+              <td>${f.organizer || "-"} ${orgBadge(f)}</td>
+              <td class="memo-cell">${f.memo || "-"}</td>
+              <td>${applyBtn(f, true)}</td>
+              <td>${festivalManageCell(f)}</td>
+            </tr>
+          `;
+          }).join("")}</tbody>
+        </table></div>`;
+
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>모집 중 전체보기</div>
+      <div class="page-head"><h1 class="page-title">모집 중인 축제 전체보기</h1></div>
+      ${filterBarHtml("allOpen", allOpenFilters, { city: true })}
+      <p class="page-sub">현재 신청 가능한 축제 ${items.length}건 · 마감일이 가까운 순</p>
+      ${bodyHtml}
+      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다.</footer>
+    `;
+
+    bindFilterBar("allOpen", allOpenFilters, renderAllOpen);
+    bindFestivalManageButtons();
+    bindDetailClicks();
+  }
+
+  // 2026-10-17 추가: 마감 전체보기. renderAllOpen()과 동일한 구조를 재사용하되
+  // status === "closed"만 모아서, 최근에 마감된 순으로 보여준다("신청" 버튼은 제외 —
+  // 이미 마감됐으므로 신청 링크를 누를 수 없음).
+  let allClosedFilters = { region: "all", city: "all", booth: "all", dateFrom: "", dateTo: "", q: "" };
+
+  function renderAllClosed() {
+    DETAIL_LOOKUP = {};
+    const closedItems = getAllFestivals().filter(f => getStatus(f) === "closed");
+    const items = applyListFilters(closedItems, allClosedFilters, "applyEnd")
+      .sort((a, b) => parseDate(b.applyEnd) - parseDate(a.applyEnd));
+
+    const bodyHtml = items.length === 0
+      ? `<div class="empty-state">조건에 맞는 마감된 축제가 없습니다.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>축제명</th><th>지역</th><th>유형</th><th>축제 기간</th><th>모집 기간</th><th>주최</th><th>메모</th><th>관리</th>
+          </tr></thead>
+          <tbody>${items.map(f => {
+            const info = ddayInfo(f, "closed");
+            return `
+            <tr>
+              <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
+              <td>${f.region}</td>
+              <td>${boothBadge(f)}</td>
+              <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
+              <td class="recruit-cell">${periodText(f.applyStart, f.applyEnd)}<br><span class="dday ${info.cls}">${info.text}</span></td>
+              <td>${f.organizer || "-"} ${orgBadge(f)}</td>
+              <td class="memo-cell">${f.memo || "-"}</td>
+              <td>${festivalManageCell(f)}</td>
+            </tr>
+          `;
+          }).join("")}</tbody>
+        </table></div>`;
+
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>마감 전체보기</div>
+      <div class="page-head"><h1 class="page-title">마감된 축제 전체보기</h1></div>
+      ${filterBarHtml("allClosed", allClosedFilters, { city: true })}
+      <p class="page-sub">신청 기간이 종료된 축제 ${items.length}건 · 마감일이 최근인 순</p>
+      ${bodyHtml}
+      <footer>마감된 공고는 참고용입니다 — 내년도 재공고 시기를 가늠하는 데 활용하세요.</footer>
+    `;
+
+    bindFilterBar("allClosed", allClosedFilters, renderAllClosed);
+    bindFestivalManageButtons();
+    bindDetailClicks();
+  }
+
+  // 2026-10-21 추가: "전국 모집공고" — 상태를 가리지 않고 모든 공고(자동수집·수동등록·예시)를
+  // 지역·시군구·부스유형·검색어로 한 번에 걸러보는 통합 목록. 모집중/모집예정/마감 전체보기와
+  // 달리 상태를 미리 하나로 좁히지 않고, 각 행에 실제 상태 배지를 그대로 보여준다 — noticeType이
+  // "일반소식"/"확인필요"인 자동수집 항목도 셀러가 원문을 직접 판단할 수 있도록 함께 노출한다
+  // (모집중이라고 단정하지 않고 orgBadge()/STATUS_LABEL이 실제로 확인된 상태만 표시).
+  let browseFilters = { region: "all", city: "all", booth: "all", q: "" };
+
+  function renderBrowse() {
+    DETAIL_LOOKUP = {};
+    let items = getAllFestivals();
+    if (browseFilters.region !== "all") items = items.filter(f => f.region === browseFilters.region);
+    if (browseFilters.city !== "all") items = items.filter(f => f.city === browseFilters.city);
+    if (browseFilters.booth !== "all") {
+      items = items.filter(f => {
+        const cat = boothCategory(f);
+        return cat && cat.key === browseFilters.booth;
+      });
+    }
+    const q = browseFilters.q.trim().toLowerCase();
+    if (q) {
+      items = items.filter(f => `${f.name || ""} ${f.organizer || f.sourceOrg || ""}`.toLowerCase().includes(q));
+    }
+
+    const STATUS_ORDER = { open: 0, upcoming: 1, unknown: 2, closed: 3 };
+    const decorated = items.map(f => ({ f, status: getStatus(f) }));
+    decorated.sort((a, b) => {
+      const byStatus = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+      if (byStatus !== 0) return byStatus;
+      if (a.status === "open" || a.status === "upcoming") {
+        return (parseDate(a.f.applyEnd) || 0) - (parseDate(b.f.applyEnd) || 0);
+      }
+      return (parseDate(b.f.postedDate) || parseDate(b.f.collectedAt) || 0) - (parseDate(a.f.postedDate) || parseDate(a.f.collectedAt) || 0);
+    });
+
+    const bodyHtml = decorated.length === 0
+      ? `<div class="empty-state">조건에 맞는 공고가 없습니다. 필터를 조정해보세요.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>공고명</th><th>지역</th><th>부스유형</th><th>모집상태</th><th>모집 기간</th><th>주최</th><th>신청</th><th>관리</th>
+          </tr></thead>
+          <tbody>${decorated.map(({ f, status }) => {
+            const info = ddayInfo(f, status);
+            return `
+            <tr>
+              <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
+              <td>${f.region || "-"}${f.city ? ` · ${escapeHtml(f.city)}` : ""}</td>
+              <td>${boothBadge(f)}</td>
+              <td class="recruit-cell">
+                <span class="status-pill ${status}">${STATUS_LABEL[status]}</span>
+                ${status === "open" ? `<span class="dday ${info.cls}" style="margin-left:6px;">${info.text}</span>` : ""}
+              </td>
+              <td class="period-cell">${periodText(f.applyStart, f.applyEnd)}</td>
+              <td>${f.organizer || f.sourceOrg || "-"} ${orgBadge(f)}</td>
+              <td>${applyBtn(f, true)}</td>
+              <td>${festivalManageCell(f)}</td>
+            </tr>
+          `;
+          }).join("")}</tbody>
+        </table></div>`;
+
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>전국 모집공고</div>
+      <div class="page-head"><h1 class="page-title">전국 모집공고</h1></div>
+      <p class="page-sub">17개 시·도·시군구·부스 유형·키워드로 전체 공고 ${decorated.length}건을 검색합니다. 모집 상태는 실제로 확인된 값만 표시되며, 확인되지 않은 공고는 "미정" 또는 "확인 필요"로 표시됩니다.</p>
+      ${filterBarHtml("browse", browseFilters, { city: true, date: false })}
+      ${bodyHtml}
+      <footer>자동수집 항목 중 "확인 필요"로 표시된 공고는 아직 모집 여부가 확정되지 않았습니다 — 원문을 직접 확인해주세요.</footer>
+    `;
+
+    bindFilterBar("browse", browseFilters, renderBrowse);
+    bindFestivalManageButtons();
+    bindDetailClicks();
+  }
+
+  const NOTICE_TYPE_LABEL = { recruit: "모집공고", general: "일반소식", review: "확인필요" };
+  const NOTICE_TYPE_PILL_CLASS = { recruit: "open", general: "closed", review: "unknown" };
+  const AUTO_RECRUIT_STATUS_LABEL = { open: "모집중", upcoming: "모집예정", closed: "마감", unknown: "확인필요" };
+
+  function noticeTypeBadge(f) {
+    const type = f.noticeType || "review";
+    return `<span class="status-pill ${NOTICE_TYPE_PILL_CLASS[type] || "unknown"}">${NOTICE_TYPE_LABEL[type] || "확인필요"}</span>`;
+  }
+
+  function recruitStatusBadge(f) {
+    const st = f.recruitStatus || "unknown";
+    return `<span class="status-pill ${st}">${AUTO_RECRUIT_STATUS_LABEL[st] || "확인필요"}</span>`;
+  }
+
+  let collectReviewRegionFilter = "all";
+
+  function eligibilityCell(f) {
+    if (!f.eligibility) return `<span style="color:var(--ink-muted)">확인필요</span>`;
+    const isOutOfRegion = /관외|타지역/.test(f.eligibility);
+    return `<span${isOutOfRegion ? ' class="status-pill open"' : ""}>${escapeHtml(f.eligibility)}</span>`;
+  }
+
+  // 2026-10-17: "모집공고"로 확인된 항목을 맨 위로, "확인필요"는 그다음, "일반소식"은
+  // 맨 뒤로 정렬한다 — 검토자가 실제 승인 가능한 후보(=홈 화면에 표시될 후보)부터 먼저
+  // 보게 하기 위함("승인 → 홈 화면 반영" 연결을 실무적으로 돕는 목적, 분류 로직 자체는
+  // 바꾸지 않음). 같은 구분 안에서는 최근 수집순.
+  const NOTICE_TYPE_SORT_ORDER = { recruit: 0, review: 1, general: 2 };
+  // ---- 관리자 화면 접근 제한 ----
+  // 이 독립 사이트에는 실제 로그인/서버 인증이 없다. 비밀번호를 코드에 심어두는 방식은
+  // 소스를 열어보면 그대로 드러나는 "가짜 보안"이라 2026-10-21에 제거했다 — 대신
+  // 관리자 기능 자체를 로컬(개발자 PC) 환경에서만 켜고, 외부에 공개 배포된 주소
+  // (Netlify 등)에서는 관리자 화면 콘텐츠를 아예 렌더링하지 않는다. 실제로 여러
+  // 사람이 쓰는 승인 기능이 필요해지면, 그때 진짜 로그인(Netlify Identity 등)을
+  // 붙이고 이 제한을 풀어야 한다.
+  function isLocalEnvironment() {
+    try {
+      return location.protocol === "file:" ||
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1" ||
+        location.hostname === "::1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function renderAdminDisabled() {
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>관리자</div>
+      <div class="page-head"><h1 class="page-title">관리자 기능 비활성화</h1></div>
+      <p class="page-sub">이 사이트는 아직 로그인 기능이 없어, 공개된 주소에서는 관리자 화면(자동수집 승인·거절, 수동 등록)을 쓸 수 없도록 꺼두었습니다.</p>
+      <ul class="about-list">
+        <li>관리자 검토는 지금은 <b>로컬(개발자 PC)에서 이 파일을 직접 열었을 때만</b> 사용할 수 있습니다.</li>
+        <li>실제로 공고를 승인·반영하려면, <code>data/collected.json</code>의 해당 항목 <code>status</code>를 <code>"approved"</code>/<code>"rejected"</code>로 직접 수정해 GitHub에 커밋해주세요.</li>
+        <li>여러 관리자가 함께 쓰는 승인 기능이 필요해지면, 그때 로그인·서버 인증을 추가하는 것을 권장합니다 — 자세한 내용은 "서비스 안내"를 확인하세요.</li>
+      </ul>
+    `;
+  }
+
+  function renderCollectReview() {
+    DETAIL_LOOKUP = {};
+    const all = [...pendingAutoCache].sort((a, b) => {
+      const oa = NOTICE_TYPE_SORT_ORDER[a.noticeType] ?? 1;
+      const ob = NOTICE_TYPE_SORT_ORDER[b.noticeType] ?? 1;
+      if (oa !== ob) return oa - ob;
+      return (b.collectedAt || "").localeCompare(a.collectedAt || "");
+    });
+    const items = collectReviewRegionFilter === "all" ? all : all.filter(f => f.region === collectReviewRegionFilter);
+    const recruitCount = items.filter(f => (f.noticeType || "review") === "recruit").length;
+    const reviewCount = items.filter(f => (f.noticeType || "review") === "review").length;
+    const generalCount = items.filter(f => f.noticeType === "general").length;
+    const regionOptionsAuto = ["all", ...Array.from(new Set(all.map(f => f.region).filter(Boolean)))];
+    const regionLabel = r => r === "all" ? "전체 지역" : r;
+
+    const bodyHtml = items.length === 0
+      ? `<div class="empty-state">검토 대기 중인 자동수집 항목이 없습니다.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>제목</th><th>구분</th><th>부스유형</th><th>모집상태</th><th>지역</th><th>참가자격</th><th>기관</th><th>발견일</th><th>원문</th><th>처리</th>
+          </tr></thead>
+          <tbody>${items.map(f => `
+            <tr>
+              <td class="fest-name-cell">${escapeHtml(f.name || "")}</td>
+              <td>${noticeTypeBadge(f)}</td>
+              <td>${boothBadge(f)}</td>
+              <td>${recruitStatusBadge(f)}</td>
+              <td>${escapeHtml(f.region || "-")}${f.city ? ` · ${escapeHtml(f.city)}` : ""}</td>
+              <td>${eligibilityCell(f)}</td>
+              <td>${escapeHtml(f.sourceOrg || "-")}</td>
+              <td class="period-cell">${(f.collectedAt || "").slice(0, 10) || "-"}</td>
+              <td>${f.sourceUrl ? `<a href="${f.sourceUrl}" target="_blank" rel="noopener noreferrer">원문 ↗</a>${linkStatusWarning(f)}` : "-"}</td>
+              <td>
+                <div class="row-actions">
+                  <button class="icon-btn" data-review-approve="${f.id}">승인</button>
+                  <button class="icon-btn danger" data-review-reject="${f.id}">거절</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}</tbody>
+        </table></div>`;
+
+    // 2026-10-21 추가: 관리자가 직접 등록한 공고(자동수집과 무관) 관리 목록. 독립
+    // 웹사이트 버전에서는 공용 DB가 없으므로 전부 "manual-local"(이 브라우저 전용)이다.
+    const manualItems = getAllFestivals().filter(f => f.source === "manual" || f.source === "manual-local");
+    const manualBodyHtml = manualItems.length === 0
+      ? `<div class="empty-state">직접 등록한 공고가 없습니다. "+ 공고 수동 등록"으로 추가해보세요.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>공고명</th><th>지역</th><th>모집상태</th><th>저장 범위</th><th>관리</th>
+          </tr></thead>
+          <tbody>${manualItems.map(f => `
+            <tr>
+              <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
+              <td>${f.region || "-"}${f.city ? ` · ${escapeHtml(f.city)}` : ""}</td>
+              <td><span class="status-pill ${getStatus(f)}">${STATUS_LABEL[getStatus(f)]}</span></td>
+              <td>${f.source === "manual" ? "전체 공개(공용 DB)" : "이 브라우저만"}</td>
+              <td>${festivalManageCell(f)}</td>
+            </tr>
+          `).join("")}</tbody>
+        </table></div>`;
+
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>관리자</div>
+      <div class="page-head">
+        <h1 class="page-title">관리자</h1>
+        <div class="page-actions">
+          <button class="view-all-btn" id="openManualAdd">+ 공고 수동 등록</button>
+        </div>
+      </div>
+      <div class="page-head" style="margin-top:4px;"><h2 class="page-title" style="font-size:20px;">자동수집 대기</h2></div>
+      <p class="page-sub">게시판에서 자동으로 찾은 후보 ${items.length}건 (모집공고 ${recruitCount} · 확인필요 ${reviewCount} · 일반소식 ${generalCount}) · 모집공고로 확인되어 승인한 항목만 정식 목록에 반영됩니다. "참가자격"에 관외(타지역) 업체 참가 가능이라고 적힌 항목은 강조 표시됩니다.</p>
+      ${renderBoardStatusPanel()}
+      <div class="filter-bar">
+        <label for="collectReviewRegion">지역</label>
+        <select id="collectReviewRegion">${regionOptionsAuto.map(r => `<option value="${r}" ${r === collectReviewRegionFilter ? "selected" : ""}>${regionLabel(r)}</option>`).join("")}</select>
+      </div>
+      ${bodyHtml}
+      <div class="page-head" style="margin-top:32px;"><h2 class="page-title" style="font-size:20px;">직접 등록한 공고 ${manualItems.length > 0 ? `(${manualItems.length})` : ""}</h2></div>
+      <p class="page-sub">자동수집되지 않은 공고를 직접 등록·수정합니다. <b>독립 웹사이트에는 공용 데이터베이스가 없어, 등록한 공고와 위의 승인·거절 결정은 전부 이 브라우저에만 저장됩니다.</b> 실제로 모든 방문자에게 반영하려면, 이 내용을 참고해 <code>data/collected.json</code>을 직접 수정하고 GitHub에 커밋해주세요.</p>
+      ${manualBodyHtml}
+      <footer>자동수집은 참고용입니다. 반드시 원문 링크를 확인한 뒤 승인해주세요. "일반소식"으로 분류된 항목은 모집공고가 아닐 가능성이 높으니 승인 전 다시 한 번 확인해주세요.</footer>
+    `;
+
+    document.getElementById("collectReviewRegion").addEventListener("change", ev => {
+      collectReviewRegionFilter = ev.target.value;
+      renderCollectReview();
+    });
+    document.getElementById("openManualAdd").addEventListener("click", () => openManualModal());
+
+    document.querySelectorAll("[data-review-approve]").forEach(btn => {
+      btn.addEventListener("click", () => openReviewModal(btn.dataset.reviewApprove));
+    });
+    document.querySelectorAll("[data-review-reject]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (!confirm("이 항목을 거절할까요? (이 결정은 이 브라우저에만 저장됩니다)")) return;
+        setAdminOverride(btn.dataset.reviewReject, { status: "rejected" });
+        recomputeAutoCaches();
+        route();
+      });
+    });
+    bindFestivalManageButtons();
+    bindDetailClicks();
+  }
+
+  let regionBoothFilter = "all";
+
+  function renderRegion(region, tab) {
+    DETAIL_LOOKUP = {};
+    const regionItems = getAllFestivals().filter(f => f.region === region);
+    const items = (regionBoothFilter === "all" ? regionItems : regionItems.filter(f => {
+      const cat = boothCategory(f);
+      return cat && cat.key === regionBoothFilter;
+    })).map(f => ({ f, status: getStatus(f) }));
+    const activeTab = tab || "open";
+
+    const tabDefs = [
+      { key: "open", label: "모집중" },
+      { key: "upcoming", label: "모집예정" },
+      { key: "closed", label: "마감" }
+    ];
+    // 날짜 미정 항목은 "모집예정" 탭에 함께 노출 (닫힌 것으로 단정하지 않기 위함)
+    const bucket = key => items.filter(x => (key === "upcoming" ? (x.status === "upcoming" || x.status === "unknown") : x.status === key));
+
+    const tabsHtml = tabDefs.map(t => {
+      const n = bucket(t.key).length;
+      return `<button class="tab-btn ${activeTab === t.key ? "active" : ""}" data-tab="${t.key}">
+        ${t.label}<span class="count">${n}</span>
+      </button>`;
+    }).join("");
+
+    const rows = bucket(activeTab);
+    let bodyHtml;
+    if (rows.length === 0) {
+      bodyHtml = `<div class="empty-state">
+        이 탭에 해당하는 축제가 없습니다.<br>
+        홈 화면의 "+ 축제 추가" 버튼으로 이 지역의 축제를 추가해보세요.
+      </div>`;
+    } else {
+      const trs = rows.sort((a, b) => {
+        if (activeTab === "open") return parseDate(a.f.applyEnd) - parseDate(b.f.applyEnd);
+        if (activeTab === "upcoming") return (parseDate(a.f.applyStart) || 0) - (parseDate(b.f.applyStart) || 0);
+        return parseDate(b.f.applyEnd) - parseDate(a.f.applyEnd);
+      }).map(({ f, status }) => {
+        const info = ddayInfo(f, status);
+        return `
+        <tr>
+          <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
+          <td>${boothBadge(f)}</td>
+          <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
+          <td class="recruit-cell">
+            ${periodText(f.applyStart, f.applyEnd)}<br>
+            <span class="status-pill ${status}" style="margin-top:4px;">${STATUS_LABEL[status]}</span>
+            ${status === "open" ? `<span class="dday ${info.cls}" style="margin-left:6px;">${info.text}</span>` : ""}
+          </td>
+          <td>${f.organizer || "-"} ${orgBadge(f)}</td>
+          <td class="memo-cell">${f.memo || "-"}</td>
+          <td>${applyBtn(f, true)}</td>
+          <td>${festivalManageCell(f)}</td>
+        </tr>
+      `;
+      }).join("");
+      bodyHtml = `<div class="table-wrap"><table>
+        <thead><tr>
+          <th>축제명</th><th>유형</th><th>축제 기간</th><th>모집 기간</th><th>주최</th><th>메모</th><th>신청</th><th>관리</th>
+        </tr></thead>
+        <tbody>${trs}</tbody>
+      </table></div>`;
+    }
+
+    const boothFilterOptions = `<option value="all" ${regionBoothFilter === "all" ? "selected" : ""}>전체 유형</option>` +
+      BOOTH_CATEGORY_DEFS.map(d => `<option value="${d.key}" ${d.key === regionBoothFilter ? "selected" : ""}>${d.label}</option>`).join("");
+
+    document.getElementById("main").innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>${region}</div>
+      <div class="page-head"><h1 class="page-title">${region}</h1></div>
+      <div class="filter-bar">
+        <label for="regionBoothFilter">부스 유형</label>
+        <select id="regionBoothFilter">${boothFilterOptions}</select>
+      </div>
+      <p class="page-sub">등록된 축제 ${items.length}건</p>
+      <div class="tabs">${tabsHtml}</div>
+      ${bodyHtml}
+      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다.</footer>
+    `;
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        location.hash = `#region-${encodeURIComponent(region)}-${btn.dataset.tab}`;
+      });
+    });
+    document.getElementById("regionBoothFilter").addEventListener("change", ev => {
+      regionBoothFilter = ev.target.value;
+      renderRegion(region, activeTab);
+    });
+    bindFestivalManageButtons();
+    bindDetailClicks();
+  }
+
+  let editingEventId = null;
+
+  function renderMyEvents() {
+    const events = loadMyEvents();
+    const year = new Date().getFullYear();
+    const thisYear = events.filter(e => e.eventDate && new Date(e.eventDate + "T00:00:00").getFullYear() === year);
+    const totalRevenue = thisYear.reduce((s, e) => s + (Number(e.revenue) || 0), 0);
+    const totalCost = thisYear.reduce((s, e) => s + (Number(e.fee) || 0) + (Number(e.otherCost) || 0), 0);
+    const totalNet = totalRevenue - totalCost;
+
+    const statCards = `
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-label">${year}년 참가 행사 수</span><span class="stat-value">${thisYear.length}건</span></div>
+        <div class="stat-card"><span class="stat-label">${year}년 총매출</span><span class="stat-value">${fmtWon(totalRevenue)}</span></div>
+        <div class="stat-card"><span class="stat-label">${year}년 총비용</span><span class="stat-value">${fmtWon(totalCost)}</span></div>
+        <div class="stat-card"><span class="stat-label">${year}년 총순수익</span><span class="stat-value accent">${fmtWon(totalNet)}</span></div>
+      </div>`;
+
+    const rows = [...events].sort((a, b) => (b.eventDate || "").localeCompare(a.eventDate || ""));
+
+    const tableHtml = rows.length === 0
+      ? `<div class="empty-state">등록된 행사가 없습니다.<br>"+ 새 행사 등록" 버튼으로 참가한 축제를 기록해보세요.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>축제명</th><th>지역</th><th>행사 날짜</th><th>신청 상태</th>
+            <th class="num-head">참가비</th><th class="num-head">총매출</th><th class="num-head">기타비용</th><th class="num-head">순수익</th>
+            <th>현장 평가</th><th>재참가</th><th>메모</th><th>관리</th>
+          </tr></thead>
+          <tbody>${rows.map(e => {
+            const net = calcNetProfit(e);
+            const st = MYEVENT_STATUS_MAP[e.status] || MYEVENT_STATUS[0];
+            const rp = REPARTICIPATE_MAP[e.reparticipate];
+            return `
+            <tr>
+              <td class="fest-name-cell">${escapeHtml(e.name)}</td>
+              <td>${e.region || "-"}</td>
+              <td class="period-cell">${fmtDate(e.eventDate)}</td>
+              <td><span class="status-pill ${st.cls}">${st.label}</span></td>
+              <td class="num-cell">${fmtWon(Number(e.fee) || 0)}</td>
+              <td class="num-cell">${fmtWon(Number(e.revenue) || 0)}</td>
+              <td class="num-cell">${fmtWon(Number(e.otherCost) || 0)}</td>
+              <td class="num-cell ${net >= 0 ? "profit-positive" : "profit-negative"}">${fmtWon(net)}</td>
+              <td>${renderStars(e.rating)}</td>
+              <td>${rp ? `<span class="status-pill ${rp.cls}">${rp.label}</span>` : "-"}</td>
+              <td class="memo-cell">${e.memo ? escapeHtml(e.memo) : "-"}</td>
+              <td>
+                <div class="row-actions">
+                  <button class="icon-btn" data-edit="${e.id}">수정</button>
+                  <button class="icon-btn danger" data-delete="${e.id}">삭제</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+
+    document.getElementById("main").innerHTML = `
+      <div class="page-head">
+        <h1 class="page-title">내 행사 관리</h1>
+        <button class="view-all-btn" id="openAddEvent">+ 새 행사 등록</button>
+      </div>
+      <p class="page-sub">내가 신청·참가한 축제를 직접 등록하고 관리합니다. 순수익은 총매출에서 참가비와 기타 비용을 뺀 값으로 자동 계산됩니다.</p>
+      ${statCards}
+      ${tableHtml}
+      <footer>이 기록은 지금 사용 중인 브라우저에만 저장됩니다. 다른 기기·브라우저와는 공유되지 않으며, 브라우저 데이터를 지우면 함께 사라질 수 있습니다.</footer>
+
+      <div class="modal-overlay hidden" id="eventModalOverlay">
+        <div class="modal-card">
+          <h2 id="eventModalTitle">새 행사 등록</h2>
+          <form id="eventForm">
+            <div class="form-grid">
+              <div class="form-field full">
+                <label for="ev-name">축제명</label>
+                <input type="text" id="ev-name" required>
+              </div>
+              <div class="form-field">
+                <label for="ev-region">지역</label>
+                <select id="ev-region" required></select>
+              </div>
+              <div class="form-field">
+                <label for="ev-date">행사 날짜</label>
+                <input type="date" id="ev-date" required>
+              </div>
+              <div class="form-field">
+                <label for="ev-status">신청 상태</label>
+                <select id="ev-status"></select>
+              </div>
+              <div class="form-field">
+                <label for="ev-reparticipate">다음 해 재참가 여부</label>
+                <select id="ev-reparticipate"></select>
+              </div>
+              <div class="form-field">
+                <label for="ev-fee">참가비 (원)</label>
+                <input type="number" id="ev-fee" min="0" step="1000" value="0">
+              </div>
+              <div class="form-field">
+                <label for="ev-revenue">총매출 (원)</label>
+                <input type="number" id="ev-revenue" min="0" step="1000" value="0">
+              </div>
+              <div class="form-field">
+                <label for="ev-othercost">기타 비용 (원)</label>
+                <input type="number" id="ev-othercost" min="0" step="1000" value="0">
+              </div>
+              <div class="form-field">
+                <label>순수익 (자동 계산)</label>
+                <div class="net-profit-display" id="ev-net">0원</div>
+              </div>
+              <div class="form-field full">
+                <label>현장 평가</label>
+                <div class="star-picker" id="ev-rating" data-value="0">
+                  <button type="button" data-star="1">★</button>
+                  <button type="button" data-star="2">★</button>
+                  <button type="button" data-star="3">★</button>
+                  <button type="button" data-star="4">★</button>
+                  <button type="button" data-star="5">★</button>
+                </div>
+              </div>
+              <div class="form-field full">
+                <label for="ev-memo">메모</label>
+                <textarea id="ev-memo"></textarea>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" id="eventModalCancel">취소</button>
+              <button type="submit" class="btn-primary">저장</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    populateSelectOptions(document.getElementById("ev-region"), ALL_REGIONS.map(r => ({ key: r, label: r })), ALL_REGIONS[0]);
+    populateSelectOptions(document.getElementById("ev-status"), MYEVENT_STATUS, "reviewing");
+    populateSelectOptions(document.getElementById("ev-reparticipate"), REPARTICIPATE, "maybe");
+
+    document.getElementById("openAddEvent").addEventListener("click", () => openEventModal());
+    document.querySelectorAll("[data-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openEventModal(btn.dataset.edit));
+    });
+    document.querySelectorAll("[data-delete]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (confirm("이 행사 기록을 삭제할까요?")) {
+          deleteMyEvent(btn.dataset.delete);
+          renderMyEvents();
+        }
+      });
+    });
+
+    document.getElementById("eventModalCancel").addEventListener("click", closeEventModal);
+    document.getElementById("eventModalOverlay").addEventListener("click", ev => {
+      if (ev.target.id === "eventModalOverlay") closeEventModal();
+    });
+    document.querySelectorAll("#ev-rating button").forEach(btn => {
+      btn.addEventListener("click", () => setStarRating(Number(btn.dataset.star)));
+    });
+    ["ev-fee", "ev-revenue", "ev-othercost"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateNetProfitDisplay);
+    });
+    document.getElementById("eventForm").addEventListener("submit", ev => {
+      ev.preventDefault();
+      const data = {
+        name: document.getElementById("ev-name").value.trim(),
+        region: document.getElementById("ev-region").value,
+        eventDate: document.getElementById("ev-date").value,
+        status: document.getElementById("ev-status").value,
+        reparticipate: document.getElementById("ev-reparticipate").value,
+        fee: Number(document.getElementById("ev-fee").value) || 0,
+        revenue: Number(document.getElementById("ev-revenue").value) || 0,
+        otherCost: Number(document.getElementById("ev-othercost").value) || 0,
+        rating: Number(document.getElementById("ev-rating").dataset.value) || 0,
+        memo: document.getElementById("ev-memo").value.trim()
+      };
+      if (!data.name || !data.eventDate) return;
+      upsertMyEvent(data, editingEventId);
+      closeEventModal();
+      renderMyEvents();
+    });
+  }
+
+  function populateSelectOptions(selectEl, options, selectedKey) {
+    selectEl.innerHTML = options.map(o =>
+      `<option value="${o.key}" ${o.key === selectedKey ? "selected" : ""}>${o.label}</option>`
+    ).join("");
+  }
+
+  function setStarRating(value) {
+    const picker = document.getElementById("ev-rating");
+    picker.dataset.value = value;
+    picker.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("filled", Number(btn.dataset.star) <= value);
+    });
+  }
+
+  function updateNetProfitDisplay() {
+    const fee = Number(document.getElementById("ev-fee").value) || 0;
+    const revenue = Number(document.getElementById("ev-revenue").value) || 0;
+    const otherCost = Number(document.getElementById("ev-othercost").value) || 0;
+    document.getElementById("ev-net").textContent = fmtWon(revenue - fee - otherCost);
+  }
+
+  function openEventModal(id) {
+    editingEventId = id || null;
+    const existing = id ? loadMyEvents().find(e => e.id === id) : null;
+
+    document.getElementById("eventModalTitle").textContent = existing ? "행사 수정" : "새 행사 등록";
+    document.getElementById("ev-name").value = existing ? existing.name : "";
+    populateSelectOptions(document.getElementById("ev-region"), ALL_REGIONS.map(r => ({ key: r, label: r })), existing ? existing.region : ALL_REGIONS[0]);
+    document.getElementById("ev-date").value = existing ? existing.eventDate : "";
+    populateSelectOptions(document.getElementById("ev-status"), MYEVENT_STATUS, existing ? existing.status : "reviewing");
+    populateSelectOptions(document.getElementById("ev-reparticipate"), REPARTICIPATE, existing ? existing.reparticipate : "maybe");
+    document.getElementById("ev-fee").value = existing ? existing.fee : 0;
+    document.getElementById("ev-revenue").value = existing ? existing.revenue : 0;
+    document.getElementById("ev-othercost").value = existing ? existing.otherCost : 0;
+    document.getElementById("ev-memo").value = existing ? (existing.memo || "") : "";
+    setStarRating(existing ? (existing.rating || 0) : 0);
+    updateNetProfitDisplay();
+
+    document.getElementById("eventModalOverlay").classList.remove("hidden");
+  }
+
+  function closeEventModal() {
+    document.getElementById("eventModalOverlay").classList.add("hidden");
+    editingEventId = null;
+  }
+
+  function route() {
+    const hash = location.hash.replace(/^#/, "");
+    if (hash === "open-all") {
+      renderSidebar(null);
+      renderAllOpen();
+    } else if (hash === "closed-all") {
+      renderSidebar(null);
+      renderAllClosed();
+    } else if (hash === "browse") {
+      renderSidebar("browse");
+      renderBrowse();
+    } else if (hash === "about") {
+      renderSidebar("about");
+      renderAbout();
+    } else if (hash === "collect-review") {
+      renderSidebar("collect-review");
+      if (isLocalEnvironment()) {
+        renderCollectReview();
+      } else {
+        renderAdminDisabled();
+      }
+    } else if (hash === "myevents") {
+      renderSidebar("myevents");
+      renderMyEvents();
+    } else if (hash.startsWith("region-")) {
+      const rest = decodeURIComponent(hash.slice("region-".length));
+      const knownTabs = ["open", "upcoming", "closed"];
+      const parts = rest.split("-");
+      let tab = null;
+      if (parts.length > 1 && knownTabs.includes(parts[parts.length - 1])) {
+        tab = parts.pop();
+      }
+      const region = parts.join("-");
+      renderSidebar(region);
+      renderRegion(region, tab);
+    } else {
+      renderSidebar("home");
+      renderHome();
+    }
+    window.scrollTo(0, 0);
+  }
+
+  let editingFestivalId = null;
+  let reviewingPendingId = null;
+  // "personal": 홈 화면 "+ 축제 추가"(이 브라우저에만 저장) / "adminNew","adminEdit":
+  // 관리자 페이지에서 등록·수정하는 수동 공고(가능하면 공용 데이터베이스에 저장, 모든
+  // 방문자에게 보임) — 2026-10-21 추가.
+  let formMode = "personal";
+  let editingManualId = null;
+
+  function fillFestivalForm(existing) {
+    document.getElementById("fm-name").value = existing ? (existing.name || "") : "";
+    populateSelectOptions(document.getElementById("fm-region"), ALL_REGIONS.map(r => ({ key: r, label: r })), existing ? (existing.region || ALL_REGIONS[0]) : ALL_REGIONS[0]);
+    document.getElementById("fm-city").value = existing ? (existing.city || "") : "";
+    populateSelectOptions(document.getElementById("fm-orgtype"), [
+      { key: "official", label: "공식 모집" },
+      { key: "private", label: "민간 모집" }
+    ], existing ? (existing.organizerType || "official") : "official");
+    document.getElementById("fm-booth").value = existing ? (existing.boothType || "") : "";
+    document.getElementById("fm-fstart").value = existing && existing.festivalStart ? existing.festivalStart : "";
+    document.getElementById("fm-fend").value = existing && existing.festivalEnd ? existing.festivalEnd : "";
+    document.getElementById("fm-astart").value = existing && existing.applyStart ? existing.applyStart : "";
+    document.getElementById("fm-aend").value = existing && existing.applyEnd ? existing.applyEnd : "";
+    document.getElementById("fm-location").value = existing ? (existing.location || "") : "";
+    document.getElementById("fm-organizer").value = existing ? (existing.organizer || existing.sourceOrg || "") : "";
+    document.getElementById("fm-fee").value = existing ? (existing.fee || "") : "";
+    document.getElementById("fm-eligibility").value = existing ? (existing.eligibility || "") : "";
+    document.getElementById("fm-link").value = existing ? (existing.applyLink || existing.sourceUrl || "") : "";
+    document.getElementById("fm-memo").value = existing ? (existing.memo || "") : "";
+  }
+
+  function openFestivalModal(id) {
+    formMode = "personal";
+    editingFestivalId = id || null;
+    reviewingPendingId = null;
+    editingManualId = null;
+    const existing = id ? loadCustomFestivals().find(f => f.id === id) : null;
+    document.getElementById("festivalModalTitle").textContent = existing ? "축제 수정 (이 브라우저에만 저장)" : "축제 추가 (이 브라우저에만 저장)";
+    fillFestivalForm(existing);
+    document.getElementById("festivalModalOverlay").classList.remove("hidden");
+  }
+
+  // 2026-10-21 추가: 관리자가 자동수집되지 않은 공고를 직접 등록·수정 — db 캐퍼빌리티를
+  // 쓸 수 있으면 공용 데이터베이스(collected_festivals, source:"manual")에 저장되어 모든
+  // 방문자에게 동일하게 보이고, db를 쓸 수 없는 미리보기 환경에서는 이 브라우저에만 저장되는
+  // 방식(source:"manual-local")으로 자동 대체된다.
+  function openManualModal(id) {
+    formMode = id ? "adminEdit" : "adminNew";
+    editingFestivalId = null;
+    reviewingPendingId = null;
+    editingManualId = id || null;
+    const existing = id
+      ? getAllFestivals().find(f => f.id === id && (f.source === "manual" || f.source === "manual-local"))
+      : null;
+    document.getElementById("festivalModalTitle").textContent = existing ? "공고 수정 (관리자 · 전체 공개)" : "공고 수동 등록 (관리자 · 전체 공개)";
+    fillFestivalForm(existing);
+    document.getElementById("festivalModalOverlay").classList.remove("hidden");
+  }
+
+  function openReviewModal(id) {
+    const existing = pendingAutoCache.find(f => f.id === id);
+    if (!existing) return;
+    formMode = "personal";
+    editingFestivalId = null;
+    editingManualId = null;
+    reviewingPendingId = id;
+
+    document.getElementById("festivalModalTitle").textContent = "자동수집 축제 검토 · 승인";
+    fillFestivalForm(existing);
+    document.getElementById("fm-memo").value = [existing.memo || "", existing.sourceUrl ? `원문: ${existing.sourceUrl}` : ""].filter(Boolean).join("\n");
+
+    document.getElementById("festivalModalOverlay").classList.remove("hidden");
+  }
+
+  function closeFestivalModal() {
+    document.getElementById("festivalModalOverlay").classList.add("hidden");
+    formMode = "personal";
+    editingFestivalId = null;
+    editingManualId = null;
+    reviewingPendingId = null;
+  }
+
+  document.getElementById("festivalModalCancel").addEventListener("click", closeFestivalModal);
+  document.getElementById("festivalModalOverlay").addEventListener("click", ev => {
+    if (ev.target.id === "festivalModalOverlay") closeFestivalModal();
+  });
+  document.getElementById("detailModalOverlay").addEventListener("click", ev => {
+    if (ev.target.id === "detailModalOverlay") closeDetailModal();
+  });
+  document.getElementById("festivalForm").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const fstart = document.getElementById("fm-fstart").value || null;
+    const fend = document.getElementById("fm-fend").value || fstart;
+    const data = {
+      name: document.getElementById("fm-name").value.trim(),
+      region: document.getElementById("fm-region").value,
+      city: document.getElementById("fm-city").value.trim() || null,
+      organizerType: document.getElementById("fm-orgtype").value,
+      boothType: document.getElementById("fm-booth").value.trim() || null,
+      festivalStart: fstart,
+      festivalEnd: fend,
+      applyStart: document.getElementById("fm-astart").value || null,
+      applyEnd: document.getElementById("fm-aend").value || null,
+      location: document.getElementById("fm-location").value.trim() || null,
+      organizer: document.getElementById("fm-organizer").value.trim(),
+      fee: document.getElementById("fm-fee").value.trim() || null,
+      eligibility: document.getElementById("fm-eligibility").value.trim() || null,
+      applyLink: document.getElementById("fm-link").value.trim() || null,
+      memo: document.getElementById("fm-memo").value.trim()
+    };
+    if (!data.name || !data.region) return;
+    if (reviewingPendingId) {
+      // "승인"은 사람이 원문을 확인해 실제 부스/셀러 모집공고임을 확정했다는 뜻이므로,
+      // noticeType을 "recruit"으로 같이 갱신한다. 이걸 안 하면 원래 noticeType이
+      // "review"(확인필요)였던 항목은 승인해도 isRecommendable()에서 계속 제외되어
+      // 홈 화면(모집중/모집예정/최근마감)에 영원히 안 나타나는 문제가 있었다
+      // (2026-10-17, "승인하면 홈 화면에 연결되도록" 요청에 따라 수정).
+      // 독립 웹사이트 버전: 이 결정은 로컬 오버레이에만 저장된다(공용 DB 없음).
+      setAdminOverride(reviewingPendingId, { ...data, noticeType: "recruit", status: "approved" });
+      recomputeAutoCaches();
+    } else if (formMode === "adminNew" || formMode === "adminEdit") {
+      // 관리자 수동 등록: 독립 웹사이트에는 공용 DB가 없으므로 항상 이 브라우저의
+      // localStorage에 저장된다(source: "manual-local") — 다른 방문자에게는 보이지 않음.
+      upsertCustomFestival({ ...data, source: "manual-local" }, formMode === "adminEdit" ? editingManualId : null);
+    } else {
+      upsertCustomFestival(data, editingFestivalId);
+    }
+    closeFestivalModal();
+    route();
+  });
+
+  window.addEventListener("hashchange", route);
+  if (!location.hash) location.hash = "#home";
+  route();
+  initAutoCollectData();
+</script>
+
+</body>
+</html>

@@ -2366,7 +2366,11 @@
       renderMyEvents();
     } else if (hash.startsWith("region-")) {
       const rest = decodeURIComponent(hash.slice("region-".length));
-      const knownTabs = ["open", "upcoming", "closed"];
+      // 2026-10-22 수정: "확인 필요" 탭(key: "unknown")이 이 목록에 빠져 있어, 예를 들어
+      // "#region-세종-unknown"에서 탭 분리가 안 되고 "세종-unknown" 전체가 지역명으로
+      // 취급되는 버그가 있었음(실측 — 세종 "확인 필요" 탭 클릭 시 등록된 1건이 0건으로
+      // 보임). tabDefs(renderRegion)의 4개 탭 키와 반드시 일치해야 한다.
+      const knownTabs = ["open", "upcoming", "closed", "unknown"];
       const parts = rest.split("-");
       let tab = null;
       if (parts.length > 1 && knownTabs.includes(parts[parts.length - 1])) {

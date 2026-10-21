@@ -2136,6 +2136,23 @@ function classifyNotice(title, bodyText) {
   };
 }
 
+// 2026-10-22 신설: "관리자 승인" 없이도 홈페이지에 자동 반영해도 안전한 공고인지 판정.
+// 관리자 화면은 공개 배포 사이트에서 보안상 비활성화돼 있어(요청사항, 해제하지 않음),
+// 사람이 눌러서 승인하는 경로 자체가 없다 — 그래서 "실제 셀러·푸드트럭·체험부스·
+// 프리마켓 모집공고로 확실히 분류된 것"만 자동으로 status:"approved"를 주고, 그 외
+// (noticeType이 general/review/미분류)는 전부 "pending"으로 남겨 홈페이지에 노출하지
+// 않는다. 신청기간·참가자격 확인 여부는 여기서 보지 않는다 — 그건 홈페이지 쪽
+// getStatus()가 "확인 필요" 표시로 이미 안전하게 처리하므로, 날짜가 비어 있어도
+// (noticeType이 확실하면) 공고 자체는 노출해 셀러가 원문을 직접 확인할 수 있게 한다.
+//   조건: noticeType === "recruit" (제목에 부스/셀러 모집 키워드가 명확히 있어야만
+//         classifyNotice가 매기는 값 — "review"/"general"은 절대 대상 아님)
+//       AND boothType이 null이 아님(판매부스/체험부스/프리마켓/푸드트럭 등으로 실제
+//         분류된 경우만 — 방어적 이중 확인, 이론상 recruit면 항상 채워져 있음)
+function decideAutoPublishStatus(cls) {
+  if (cls.noticeType === "recruit" && cls.boothType) return "approved";
+  return "pending";
+}
+
 function parseKoDate(s) {
   const m = s.replace(/\s/g, "").match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
   if (!m) return null;
@@ -2750,7 +2767,7 @@ async function main() {
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,
           collectedAt: new Date().toISOString(),
-          status: "pending",
+          status: decideAutoPublishStatus(cls),
           organizerType: "official",
           noticeType: cls.noticeType,
           recruitStatus: cls.recruitStatus,
@@ -2825,7 +2842,7 @@ async function main() {
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,
           collectedAt: new Date().toISOString(),
-          status: "pending",
+          status: decideAutoPublishStatus(cls),
           organizerType: "official",
           noticeType: cls.noticeType,
           recruitStatus: cls.recruitStatus,
@@ -2901,6 +2918,7 @@ module.exports = {
   extractFacilities,
   extractApplyMethod,
   classifyNotice,
+  decideAutoPublishStatus,
   extractAttachmentPdfUrls,
   fetchPdfText,
   fetchText,

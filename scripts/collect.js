@@ -107,6 +107,16 @@ const BOARDS = [
 // 읽을 수 없음. 날짜를 추출하지 못한 항목은 recruitStatus를 "unknown"(확인필요)으로
 // 남기고, memo에 "첨부파일 원문 확인 필요"라고 명시함 — 절대 임의로 모집중/마감을
 // 추정하지 않음.
+// 2026-10-22 수정: 경주시청의 3개 게시판(공지사항·고시공고·신라문화제)은 영주·경산과
+// 완전히 같은 "open_content/.../page.do?mnu_uid=" CMS(parm_bod_uid= 링크 + title 속성 +
+// 근처 YYYY-MM-DD 날짜)라는 게 실제 fetch로 재확인됨(OPEN_CONTENT_ITEM_RE가 그대로
+// 매치됨) — 그런데도 처음 추가할 때(2026-10-15) extractor를 지정하지 않아 기본
+// extractPostCandidates()가 쓰였고, 이 기본 추출기는 postedDate를 전혀 뽑지 않음.
+// 그래서 "접수기간: 공고일 ~ M.D"(공고일을 postedDate로 추론하는 extractDateRange의
+// APPLY_PERIOD_ANNOUNCE_RE 분기)가 postedDate 없이는 시작일을 못 메워 "확인 필요"로
+// 남는 사례가 실제로 있었음(윈터포차라이트 음식부스 모집 — 참가자격·마감일·장소·참가비는
+// PDF에서 정상 추출됐는데 postedDate가 없어 시작일만 비어 있었음). extractor를 명시해
+// postedDate를 채워주면, 앞으로 수집되는 글은 이 분기가 실제 시작일까지 확정할 수 있다.
 const GYEONGJU_GIMHAE_BOARDS = [
   {
     org: "경주시청",
@@ -114,6 +124,7 @@ const GYEONGJU_GIMHAE_BOARDS = [
     url: "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=416",
     region: "경북",
     city: "경주",
+    extractor: extractOpenContentCandidates,
   },
   {
     org: "경주시청",
@@ -121,6 +132,7 @@ const GYEONGJU_GIMHAE_BOARDS = [
     url: "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=423",
     region: "경북",
     city: "경주",
+    extractor: extractOpenContentCandidates,
   },
   {
     org: "신라문화제추진위원회",
@@ -128,6 +140,7 @@ const GYEONGJU_GIMHAE_BOARDS = [
     url: "https://www.gyeongju.go.kr/sillafestival/page.do?mnu_uid=1895",
     region: "경북",
     city: "경주",
+    extractor: extractOpenContentCandidates,
   },
   {
     org: "김해시청",
@@ -2135,6 +2148,17 @@ function parseKoMonthDay(monthStr, dayStr, year) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+// postedDate는 게시판마다 표기가 다를 수 있어("2026-10-21", "2026.10.13" 등) 항상
+// YYYY-MM-DD로 맞춘다. 파싱 실패 시 null(추측하지 않음).
+function normalizePostedDate(s) {
+  if (!s) return null;
+  const m = String(s)
+    .replace(/\s/g, "")
+    .match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+  if (!m) return null;
+  return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+}
+
 // 본문에서 신청기간을 뽑아내는 3단계 폴백 — 위에서 아래로 시도하며, 먼저 성공한 패턴을
 // 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
 // 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
@@ -2183,17 +2207,26 @@ function extractDateRange(bodyText, postedDate) {
 
   // 2026-10-21 추가: "접수기간: 공고일 ~ M.D" 형태(경주 사례로 실측) — 시작일을 "공고일"
   // 이라는 말로만 표현해 위 패턴들이 못 잡던 경우. 공고가 이미 게시됐다는 사실 자체가
-  // "모집이 시작됐다"는 근거이므로(추측이 아니라 "공고=게시일"이라는 사실관계), 마감일만
-  // 있는 일반적인 경우(unknown 유지)보다 한 단계 더 확실하게 open/closed를 판정한다.
+  // "모집이 시작됐다"는 근거이지만, 그 시작일이 정확히 언제인지는 게시판에서 postedDate를
+  // 캡처했을 때만 안다 — postedDate가 없으면 시작일을 비워두고(확인 필요 유지),
+  // "이미 마감됐는지"만 판정한다(2026-10-22 수정: postedDate 없이 "open"이라 단정하던
+  // 이전 동작은 "신청 시작일을 확인할 수 있는 항목만 모집중으로 분류" 요구사항과
+  // 어긋나서 더 엄격하게 고침).
   const announceMatch = bodyText.match(APPLY_PERIOD_ANNOUNCE_RE);
   if (announceMatch) {
     const [, endYearRaw, endMonth, endDay] = announceMatch;
     const endYear = endYearRaw || today.getFullYear();
     const end = parseKoMonthDay(endMonth, endDay, +endYear);
     if (end) {
-      out.applyStart = postedDate || null;
+      out.applyStart = normalizePostedDate(postedDate);
       out.applyEnd = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
-      out.recruitStatus = today > end ? "closed" : "open";
+      if (today > end) {
+        out.recruitStatus = "closed";
+      } else if (out.applyStart) {
+        out.recruitStatus = "open";
+      } else {
+        out.recruitStatus = "unknown";
+      }
     }
   }
 

@@ -834,84 +834,12 @@
 
 <script>
   // =====================================================================
-  // DATA — 축제를 추가하려면 아래 배열에 객체를 하나 더 넣으면 됩니다.
-  // region        : 17개 시도 중 하나 (예: "경북", "서울", "제주")
-  // name          : 축제명
-  // festivalStart / festivalEnd : 축제 개최 기간 (YYYY-MM-DD), 하루짜리면 동일하게
-  // applyStart / applyEnd       : 참가 신청(모집) 기간 (YYYY-MM-DD). 모르면 null
-  //                               -> 모집 시작일이 지나지 않았으면 "모집예정",
-  //                                  기간 안이면 "모집중", 지났으면 "마감"으로
-  //                                  자동 계산됩니다. 둘 다 null이면 "미정".
-  // applyLink     : 신청 페이지 URL. 없으면 null
-  // organizer     : 주최(주관) 기관
-  // organizerType : "official"(시청·군청·구청·문화재단·관광재단·공공기관·축제 조직위 등
-  //                  주최 측이 직접 모집 → 파란색 "공식 모집" 배지) 또는
-  //                  "private"(민간 업체·플리마켓 운영사 등이 모집 → 회색 "민간 모집" 배지).
-  //                  생략하면 "official"로 취급됨.
-  // memo          : 자유 메모 (참가비, 경쟁률, 준비물 등)
+  // DATA — 코드에 포함된 예시 축제 데이터를 담던 배열. 2026-10-22부터 요청에 따라
+  // 실제 공고가 아닌 예시 데이터는 공개 목록에서 완전히 제외하기 위해 비워두었다.
+  // getAllFestivals()도 더 이상 이 배열을 병합하지 않는다 — 로컬 개발 중 화면 구조를
+  // 빠르게 확인하고 싶을 때만 여기에 임시로 항목을 넣고, 커밋 전에 다시 비울 것.
   // =====================================================================
-  const DATA = [
-    {
-      region: "경남",
-      name: "진주남강유등축제",
-      festivalStart: "2026-10-01",
-      festivalEnd: "2026-10-14",
-      applyStart: "2026-08-01",
-      applyEnd: "2026-09-20",
-      applyLink: "https://namgang.or.kr",
-      organizer: "진주시청 축제기획단",
-      organizerType: "official",
-      memo: "체험부스 참가비 유료. 작년 경쟁률 높았음 — 서류 미리 준비."
-    },
-    {
-      region: "강원",
-      name: "화천산천어축제",
-      festivalStart: "2027-01-09",
-      festivalEnd: "2027-01-31",
-      applyStart: "2026-09-01",
-      applyEnd: "2026-10-15",
-      applyLink: "https://narafestival.com",
-      organizer: "화천군 축제위원회",
-      organizerType: "official",
-      memo: "겨울 먹거리부스 최고 매출 구간. 자리 선점 위해 접수 첫 주 신청 권장."
-    },
-    {
-      region: "부산",
-      name: "부산불꽃축제",
-      festivalStart: "2026-11-07",
-      festivalEnd: "2026-11-07",
-      applyStart: "2026-09-20",
-      applyEnd: "2026-10-15",
-      applyLink: null,
-      organizer: "부산광역시",
-      organizerType: "official",
-      memo: "노점 구역 추첨제. 공고문 확인 필요."
-    },
-    {
-      region: "경북",
-      name: "안동국제탈춤페스티벌",
-      festivalStart: "2026-09-25",
-      festivalEnd: "2026-10-04",
-      applyStart: "2026-07-01",
-      applyEnd: "2026-08-31",
-      applyLink: "https://tour.andong.go.kr",
-      organizer: "안동축제관광재단",
-      organizerType: "official",
-      memo: "내년 일정 나오면 갱신할 것."
-    },
-    {
-      region: "경기",
-      name: "여주오곡나루축제",
-      festivalStart: null,
-      festivalEnd: null,
-      applyStart: null,
-      applyEnd: null,
-      applyLink: null,
-      organizer: "여주시청",
-      organizerType: "official",
-      memo: "작년 기준 모집 10월 초 시작 추정 — 공고 나오면 날짜 채우기."
-    }
-  ];
+  const DATA = [];
 
   const REGION_GROUPS = [
     { label: "수도권", color: "capital", regions: ["서울", "인천", "경기"] },
@@ -922,7 +850,7 @@
     { label: "제주권", color: "jeju", regions: ["제주"] }
   ];
 
-  const STATUS_LABEL = { open: "모집중", upcoming: "모집예정", closed: "마감", unknown: "미정" };
+  const STATUS_LABEL = { open: "모집중", upcoming: "모집예정", closed: "마감", unknown: "확인 필요" };
 
   // ---- 내 행사 관리 ----
   const ALL_REGIONS = REGION_GROUPS.flatMap(g => g.regions);
@@ -1010,10 +938,13 @@
     return Math.round((a - b) / 86400000);
   }
 
+  // 2026-10-22: 모집중/모집예정/마감은 "공고 원문에서 신청 시작일, 마감일, 참가 자격을
+  // 모두 확인할 수 있는" 공고만으로 분류한다 — 날짜만 있고 참가자격이 확인되지 않은
+  // 공고까지 모집중으로 단정하지 않기 위함(요청사항). 셋 중 하나라도 없으면 "확인 필요".
   function getStatus(f) {
     const start = parseDate(f.applyStart);
     const end = parseDate(f.applyEnd);
-    if (!start || !end) return "unknown";
+    if (!start || !end || !f.eligibility) return "unknown";
     const t = today0();
     if (t < start) return "upcoming";
     if (t > end) return "closed";
@@ -1048,10 +979,6 @@
   //   - noticeType 필드 자체가 없는 항목(DATA 예시 축제, 직접 추가한 축제)은 자동수집
   //     분류 대상이 아니므로 기존처럼 organizerType(주최 기관 유형) 기준으로 공식/민간 표시
   function orgBadge(f) {
-    // "예시"(DATA 배열의 샘플 데이터)는 실제 공고가 아니므로 항상 구분되게 표시한다.
-    if (f.source === "demo") {
-      return `<span class="org-badge review">예시 데이터</span>`;
-    }
     const nt = f.noticeType;
     if (nt === undefined) {
       return isOfficial(f)
@@ -1136,7 +1063,7 @@
         ${detailField("축제 기간", escapeHtml(periodText(f.festivalStart, f.festivalEnd)))}
         ${detailField("모집 기간", escapeHtml(periodText(f.applyStart, f.applyEnd)))}
         ${detailField("신청 마감일", f.applyEnd ? escapeHtml(fmtDate(f.applyEnd)) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
-        ${detailField("장소", f.location ? escapeHtml(f.location) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
+        ${detailField("장소", f.venue ? escapeHtml(f.venue) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
         ${detailField("주최·주관", f.organizer ? escapeHtml(f.organizer) : (f.sourceOrg ? escapeHtml(f.sourceOrg) : ""))}
         ${detailField("참가 자격", f.eligibility ? escapeHtml(f.eligibility) : (f.ulsanEligible ? `울산 사업자 참가: ${escapeHtml(f.ulsanEligible)}` : ""))}
         ${detailField("참가비", f.fee ? escapeHtml(String(f.fee)) : `<span style="color:var(--ink-muted)">확인 필요</span>`)}
@@ -1212,10 +1139,11 @@
     }
   }
 
-  // DATA는 코드에 포함된 예시 데이터이므로 "demo" 출처로 표시해, 실제 자동수집·수동등록
-  // 공고와 섞여 보여도 셀러가 진짜 공고로 오해하지 않도록 한다(2026-10-21).
+  // 2026-10-22: 예시 데이터(DATA)는 공개 목록에서 완전히 제외한다(요청사항) — DATA는
+  // 이제 항상 빈 배열이지만, 혹시 로컬 개발 중 임시로 채워 넣더라도 공개 화면에는 절대
+  // 섞이지 않도록 아래 병합에서 의도적으로 빼둔다.
   function getAllFestivals() {
-    return [...DATA.map(f => ({ ...f, source: f.source || "demo" })), ...loadCustomFestivals(), ...approvedAutoCache];
+    return [...loadCustomFestivals(), ...approvedAutoCache];
   }
 
   function upsertCustomFestival(data, id) {
@@ -1452,14 +1380,16 @@
       .map(f => ({ f, status: "open" }));
   }
 
-  // 2026-10-21 추가: "최신 공고" — 상태와 무관하게 가장 최근에 발견/등록된 공고를 보여준다.
-  // 아직 "확인 필요"/"일반소식"으로 분류된 자동수집 항목도 포함해, 새로 들어온 공고를
-  // 놓치지 않도록 한다(모집중이라고 단정하지 않고 실제 orgBadge/상태를 그대로 노출).
+  // 2026-10-21 추가, 2026-10-22 수정: "최신 공고" — 상태와 무관하게 가장 최근에 발견/
+  // 등록된 공고를 보여준다. 아직 "확인 필요"/"일반소식"으로 분류된 자동수집 항목도
+  // 포함해 새로 들어온 공고를 놓치지 않도록 하되, 실제 셀러 모집공고(noticeType:
+  // "recruit")를 먼저 보여주고 같은 분류 안에서는 최근 수집순으로 정렬한다
+  // (모집중이라고 단정하지 않고 실제 orgBadge/상태는 그대로 노출).
   function pickHomeLatest(limit) {
     const recencyOf = f => parseDate(f.collectedAt ? f.collectedAt.slice(0, 10) : null) || parseDate(f.postedDate) || null;
     return getAllFestivals()
       .filter(f => recencyOf(f))
-      .sort((a, b) => recencyOf(b) - recencyOf(a))
+      .sort((a, b) => (noticeTypePriority(a) - noticeTypePriority(b)) || (recencyOf(b) - recencyOf(a)))
       .slice(0, limit || 8)
       .map(f => ({ f, status: getStatus(f) }));
   }
@@ -1598,7 +1528,7 @@
       ${upcomingSection}
       ${latestSection}
       ${closedRecentSection}
-      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 지역별 페이지에서 수정·삭제할 수 있습니다.</footer>
+      <footer>직접 추가한 축제는 이 브라우저에 저장되어 지역별 페이지에서 수정·삭제할 수 있습니다. (예시 데이터는 공개 목록에 표시되지 않습니다.)</footer>
     `;
 
     document.getElementById("openAddFestival").addEventListener("click", () => openFestivalModal());
@@ -1737,7 +1667,7 @@
       ${filterBarHtml("allOpen", allOpenFilters, { city: true })}
       <p class="page-sub">현재 신청 가능한 축제 ${items.length}건 · 마감일이 가까운 순</p>
       ${bodyHtml}
-      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다.</footer>
+      <footer>직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다. (예시 데이터는 공개 목록에 표시되지 않습니다.)</footer>
     `;
 
     bindFilterBar("allOpen", allOpenFilters, renderAllOpen);
@@ -1818,9 +1748,13 @@
 
     const STATUS_ORDER = { open: 0, upcoming: 1, unknown: 2, closed: 3 };
     const decorated = items.map(f => ({ f, status: getStatus(f) }));
+    // 2026-10-22: 같은 모집상태 안에서는 실제 셀러 모집공고(noticeType:"recruit")를
+    // 먼저 보여주고, 그다음 날짜순으로 정렬한다.
     decorated.sort((a, b) => {
       const byStatus = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
       if (byStatus !== 0) return byStatus;
+      const byNoticeType = noticeTypePriority(a.f) - noticeTypePriority(b.f);
+      if (byNoticeType !== 0) return byNoticeType;
       if (a.status === "open" || a.status === "upcoming") {
         return (parseDate(a.f.applyEnd) || 0) - (parseDate(b.f.applyEnd) || 0);
       }
@@ -1894,6 +1828,13 @@
   // 보게 하기 위함("승인 → 홈 화면 반영" 연결을 실무적으로 돕는 목적, 분류 로직 자체는
   // 바꾸지 않음). 같은 구분 안에서는 최근 수집순.
   const NOTICE_TYPE_SORT_ORDER = { recruit: 0, review: 1, general: 2 };
+  // 2026-10-22 추가: "실제 셀러 모집공고(noticeType:"recruit")"를 다른 목록(홈 최신공고,
+  // 전국 모집공고)에서도 우선 노출하기 위한 공용 우선순위 — 위 NOTICE_TYPE_SORT_ORDER와
+  // 같은 기준을 재사용한다. noticeType이 없는 자동수집 외 항목(수동등록 등)은 review와
+  // 같은 중간 순위로 취급한다.
+  function noticeTypePriority(f) {
+    return NOTICE_TYPE_SORT_ORDER[f.noticeType] ?? 1;
+  }
   // ---- 관리자 화면 접근 제한 ----
   // 이 독립 사이트에는 실제 로그인/서버 인증이 없다. 비밀번호를 코드에 심어두는 방식은
   // 소스를 열어보면 그대로 드러나는 "가짜 보안"이라 2026-10-21에 제거했다 — 대신
@@ -2044,10 +1985,14 @@
     const tabDefs = [
       { key: "open", label: "모집중" },
       { key: "upcoming", label: "모집예정" },
-      { key: "closed", label: "마감" }
+      { key: "closed", label: "마감" },
+      { key: "unknown", label: "확인 필요" }
     ];
-    // 날짜 미정 항목은 "모집예정" 탭에 함께 노출 (닫힌 것으로 단정하지 않기 위함)
-    const bucket = key => items.filter(x => (key === "upcoming" ? (x.status === "upcoming" || x.status === "unknown") : x.status === key));
+    // 2026-10-22: 신청 시작일·마감일·참가자격을 모두 확인할 수 있는 공고만 모집중/
+    // 모집예정/마감으로 나누고, 그렇지 않은 공고는 "확인 필요" 탭에 따로 모은다
+    // (예전에는 날짜 미정 항목을 "모집예정" 탭에 섞어 보여줬는데, 모집예정으로
+    // 단정하는 것도 부정확해서 분리함).
+    const bucket = key => items.filter(x => x.status === key);
 
     const tabsHtml = tabDefs.map(t => {
       const n = bucket(t.key).length;
@@ -2067,6 +2012,7 @@
       const trs = rows.sort((a, b) => {
         if (activeTab === "open") return parseDate(a.f.applyEnd) - parseDate(b.f.applyEnd);
         if (activeTab === "upcoming") return (parseDate(a.f.applyStart) || 0) - (parseDate(b.f.applyStart) || 0);
+        if (activeTab === "unknown") return (noticeTypePriority(a.f) - noticeTypePriority(b.f)) || (a.f.name || "").localeCompare(b.f.name || "");
         return parseDate(b.f.applyEnd) - parseDate(a.f.applyEnd);
       }).map(({ f, status }) => {
         const info = ddayInfo(f, status);
@@ -2108,7 +2054,7 @@
       <p class="page-sub">등록된 축제 ${items.length}건</p>
       <div class="tabs">${tabsHtml}</div>
       ${bodyHtml}
-      <footer>예시로 포함된 축제는 코드의 <code>DATA</code> 배열에서 관리되고, 직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다.</footer>
+      <footer>직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다. (예시 데이터는 공개 목록에 표시되지 않습니다.)</footer>
     `;
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -2411,7 +2357,7 @@
     document.getElementById("fm-fend").value = existing && existing.festivalEnd ? existing.festivalEnd : "";
     document.getElementById("fm-astart").value = existing && existing.applyStart ? existing.applyStart : "";
     document.getElementById("fm-aend").value = existing && existing.applyEnd ? existing.applyEnd : "";
-    document.getElementById("fm-location").value = existing ? (existing.location || "") : "";
+    document.getElementById("fm-location").value = existing ? (existing.venue || "") : "";
     document.getElementById("fm-organizer").value = existing ? (existing.organizer || existing.sourceOrg || "") : "";
     document.getElementById("fm-fee").value = existing ? (existing.fee || "") : "";
     document.getElementById("fm-eligibility").value = existing ? (existing.eligibility || "") : "";
@@ -2491,7 +2437,7 @@
       festivalEnd: fend,
       applyStart: document.getElementById("fm-astart").value || null,
       applyEnd: document.getElementById("fm-aend").value || null,
-      location: document.getElementById("fm-location").value.trim() || null,
+      venue: document.getElementById("fm-location").value.trim() || null,
       organizer: document.getElementById("fm-organizer").value.trim(),
       fee: document.getElementById("fm-fee").value.trim() || null,
       eligibility: document.getElementById("fm-eligibility").value.trim() || null,

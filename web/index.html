@@ -1339,15 +1339,21 @@
       if (getStatus(f) === "open") counts[f.region] = (counts[f.region] || 0) + 1;
     });
 
+    // 2026-10-22 수정: 관리자 메뉴·대기 건수(119 등)는 로그인 없이 누구나 보던 정보라
+    // 공개 주소에서는 아예 숨긴다(실측 피드백 — 클릭하면 "비활성화" 안내가 뜨긴 했지만
+    // 메뉴 자체와 대기 건수가 그대로 노출되고 있었음). 로컬(관리자) 환경에서만 보여준다.
+    const adminNavHtml = isLocalEnvironment()
+      ? `<a class="nav-item ${activeKey === "collect-review" ? "active" : ""}" href="#collect-review">
+          <span>관리자 · 자동수집 대기</span>${pendingAutoCache.length > 0 ? `<span class="count">${pendingAutoCache.length}</span>` : ""}
+        </a>`
+      : "";
     let html = `
       <div class="brand"><span class="mark">🎪</span><span class="name">축제 신청 캘린더</span></div>
       <div class="nav-group">
         <a class="nav-item ${activeKey === "home" ? "active" : ""}" href="#home">홈</a>
         <a class="nav-item ${activeKey === "browse" ? "active" : ""}" href="#browse">전국 모집공고</a>
         <a class="nav-item ${activeKey === "myevents" ? "active" : ""}" href="#myevents">내 행사 관리</a>
-        <a class="nav-item ${activeKey === "collect-review" ? "active" : ""}" href="#collect-review">
-          <span>관리자 · 자동수집 대기</span>${pendingAutoCache.length > 0 ? `<span class="count">${pendingAutoCache.length}</span>` : ""}
-        </a>
+        ${adminNavHtml}
         <a class="nav-item ${activeKey === "about" ? "active" : ""}" href="#about">서비스 안내</a>
       </div>`;
 
@@ -1375,9 +1381,13 @@
   // 실제로 신청 기간이 진행 중("open")이고 noticeType상 확인된 모집인 것만, 마감 임박순으로
   // 최대 8개. 예전 방식(마감/미정도 같이 정렬 후 자르기)은 모집중이 8개를 못 채우면 마감된
   // 축제가 "지금 접수해야 할 축제"에 섞여 보이는 문제가 있었음 — 아예 open만 걸러낸다.
-  function pickHomeOpen() {
+  // 2026-10-22 수정: excludeIds에 담긴 항목(이미 "마감임박"에 미리보기로 나온 것)은
+  // 빼고 돌려준다 — 모집중 공고가 1~4건뿐일 때 마감임박 섹션과 바로 아래 모집중
+  // 섹션에 같은 카드가 연달아 중복으로 보이던 문제(실측 피드백)를 고치기 위함.
+  function pickHomeOpen(excludeIds) {
+    const skip = excludeIds || new Set();
     return getAllFestivals()
-      .filter(f => isRecommendable(f) && getStatus(f) === "open")
+      .filter(f => isRecommendable(f) && getStatus(f) === "open" && !skip.has(f.id))
       .sort((a, b) => parseDate(a.applyEnd) - parseDate(b.applyEnd))
       .slice(0, 8)
       .map(f => ({ f, status: "open" }));
@@ -1404,7 +1414,8 @@
   }
 
   // 2026-10-21 추가: "마감임박" — 모집중인 공고 중 마감 D-7 이내인 것만 따로 모아 맨 위에
-  // 보여준다(모집중 전체 목록에도 그대로 포함되며, 여기서는 눈에 띄게 미리보기만 한다).
+  // 보여준다. 2026-10-22부터 바로 아래 "모집중" 섹션(pickHomeOpen)에서는 여기 나온
+  // 항목을 제외하므로, 같은 카드가 두 섹션에 중복으로 보이지 않는다.
   function pickHomeUrgent(limit) {
     return getAllFestivals()
       .filter(f => isRecommendable(f) && getStatus(f) === "open" && dayDiff(parseDate(f.applyEnd), today0()) <= 7)
@@ -1493,7 +1504,7 @@
   function renderHome() {
     DETAIL_LOOKUP = {};
     const urgentFeatured = pickHomeUrgent(4);
-    const openFeatured = pickHomeOpen();
+    const openFeatured = pickHomeOpen(new Set(urgentFeatured.map(({ f }) => f.id)));
     const upcomingFeatured = pickHomeUpcoming(4);
     const closedRecentFeatured = pickHomeClosedRecent(6);
     const latestFeatured = pickHomeLatest(8);
@@ -1506,7 +1517,9 @@
     // 문제 개선 요청에 따라 수정).
     const openCards = openFeatured.length > 0
       ? openFeatured.map(({ f, status }) => festivalCardHtml(f, status)).join("")
-      : `<div class="empty-slot">현재 모집 중으로 확인된 축제가 없습니다.<br>아래 "모집 예정"과 "최근 마감된 공고"를 확인하거나, "+ 축제 추가"로 직접 등록해보세요.</div>`;
+      : openCount > 0
+        ? `<div class="empty-slot">모집 중인 축제는 모두 위 "마감임박" 섹션에 표시되어 있습니다.</div>`
+        : `<div class="empty-slot">현재 모집 중으로 확인된 축제가 없습니다.<br>아래 "모집 예정"과 "최근 마감된 공고"를 확인하거나, "+ 축제 추가"로 직접 등록해보세요.</div>`;
 
     const upcomingSection = `
       <div class="page-head" style="margin-top:32px;">

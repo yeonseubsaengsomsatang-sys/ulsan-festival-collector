@@ -1269,14 +1269,24 @@
     return `<div class="page-sub" style="opacity:0.8;">${summary}</div>${failedListHtml}`;
   }
 
+  // 2026-10-22 수정: "제외"(auto)와 "수정/삭제"(manual) 버튼은 관리자 전용 조작이다.
+  // 이 함수가 홈/전국 모집공고/지역별/전체보기 같은 공개 화면에서도 호출되는데, 로그인
+  // 기능이 없는 이 사이트에서는 isLocalEnvironment()가 아닐 때 이 버튼들을 숨긴다
+  // (실측으로 발견 — 공개 배포 주소에서 방문자 전원에게 "제외" 버튼이 그대로 보이고
+  // 있었음). "내가 직접 추가한 축제"(f.source 없음, f.id만 있음)는 각자의 브라우저에만
+  // 저장되는 개인 데이터라 전과 동일하게 누구에게나 수정·삭제를 보여준다.
   function festivalManageCell(f) {
     if (f.source === "auto") {
+      const rejectBtn = isLocalEnvironment()
+        ? `<button class="icon-btn danger" data-auto-reject="${f.id}">제외</button>`
+        : "";
       return `<div class="row-actions">
         ${f.sourceUrl ? `<a class="icon-btn" href="${f.sourceUrl}" target="_blank" rel="noopener noreferrer">원문</a>${linkStatusWarning(f)}` : ""}
-        <button class="icon-btn danger" data-auto-reject="${f.id}">제외</button>
+        ${rejectBtn}
       </div>`;
     }
     if (f.source === "manual" || f.source === "manual-local") {
+      if (!isLocalEnvironment()) return "-";
       return `<div class="row-actions">
         <button class="icon-btn" data-manual-edit="${f.id}">수정</button>
         <button class="icon-btn danger" data-manual-delete="${f.id}">삭제</button>

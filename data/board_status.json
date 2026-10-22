@@ -1,43 +1,403 @@
 [
   {
+    "org": "강원특별자치도청",
+    "region": "강원",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "강원특별자치도 춘천시청",
+    "region": "강원",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경기도 용인특례시청",
+    "region": "경기",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 밀양시청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 3,
+    "okBoards": 0,
+    "failedBoards": 3,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 창원특례시청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 진주시청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 통영시청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 함안군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 함양군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: EAI_AGAIN)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 합천군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 하동군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 거제시청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 고성군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "HTTP 400",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경남문화예술진흥원",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 산청군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 남해군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 거창군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상남도 창녕군청",
+    "region": "경남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상북도 고령군청",
+    "region": "경북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "HTTP 404",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상북도 김천시청",
+    "region": "경북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "HTTP 404",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "경상북도 청송군청",
+    "region": "경북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "HTTP 404",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "광주광역시 광산구청",
+    "region": "광주",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "대구광역시청",
+    "region": "대구",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "대구광역시 수성구청",
+    "region": "대구",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "대전광역시청",
+    "region": "대전",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
     "org": "부산광역시청",
     "region": "부산",
     "status": "fetch_failed",
     "boards": 1,
     "okBoards": 0,
     "failedBoards": 1,
-    "lastError": "The operation was aborted due to timeout",
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
-    "org": "강원특별자치도청",
-    "region": "강원",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "org": "울산광역시 북구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 3,
+    "okBoards": 0,
+    "failedBoards": 3,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
-    "org": "강원특별자치도 춘천시청",
-    "region": "강원",
-    "status": "ok",
+    "org": "울산광역시 중구청",
+    "region": "울산",
+    "status": "fetch_failed",
     "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
-    "org": "경기도 용인특례시청",
-    "region": "경기",
-    "status": "ok",
+    "org": "울산광역시 동구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 6,
+    "okBoards": 0,
+    "failedBoards": 6,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "울산광역시 남구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 3,
+    "okBoards": 0,
+    "failedBoards": 3,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "울산광역시 울주군청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 7,
+    "okBoards": 0,
+    "failedBoards": 7,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "울산광역시청",
+    "region": "울산",
+    "status": "fetch_failed",
     "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "인천광역시청",
+    "region": "인천",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "전라남도 목포시청",
+    "region": "전남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "전라남도 여수시청",
+    "region": "전남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "전라북도 군산시청",
+    "region": "전북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "충청남도 보령시청",
+    "region": "충남",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "충청남도 공주시청",
+    "region": "충남",
+    "status": "fetch_failed",
+    "boards": 8,
+    "okBoards": 0,
+    "failedBoards": 8,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "충청북도청",
+    "region": "충북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: ECONNRESET)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
+  },
+  {
+    "org": "충청북도 청주시청",
+    "region": "충북",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경기도 화성특례시청",
@@ -47,7 +407,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경기도 남양주시청",
@@ -57,7 +417,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "김해시청",
@@ -67,47 +427,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 밀양시청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 3,
-    "okBoards": 3,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 창원특례시청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 진주시청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 통영시청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상남도 사천시청",
@@ -117,77 +437,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 함안군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 함양군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 합천군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 하동군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 거제시청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 고성군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경남문화예술진흥원",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경남관광재단",
@@ -197,47 +447,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 산청군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 남해군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 거창군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상남도 창녕군청",
-    "region": "경남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경주시청",
@@ -247,7 +457,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "신라문화제추진위원회",
@@ -257,7 +467,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 영주시청",
@@ -267,7 +477,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 경산시청",
@@ -277,7 +487,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 성주군청",
@@ -287,7 +497,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 울진군청",
@@ -297,27 +507,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상북도 고령군청",
-    "region": "경북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상북도 김천시청",
-    "region": "경북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 의성군청",
@@ -327,17 +517,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "경상북도 청송군청",
-    "region": "경북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "경상북도 칠곡군청",
@@ -347,7 +527,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "광주광역시청",
@@ -357,47 +537,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "광주광역시 광산구청",
-    "region": "광주",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "대구광역시청",
-    "region": "대구",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "대구광역시 수성구청",
-    "region": "대구",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "대전광역시청",
-    "region": "대전",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "서울특별시 강남구청",
@@ -407,7 +547,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "서울특별시 송파구청",
@@ -417,7 +557,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "서울특별시 마포구청",
@@ -427,7 +567,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "세종특별자치시청",
@@ -437,97 +577,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시 북구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 3,
-    "okBoards": 3,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시 중구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시 동구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 6,
-    "okBoards": 6,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시 남구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 3,
-    "okBoards": 3,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시 울주군청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 7,
-    "okBoards": 7,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "울산광역시청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "인천광역시청",
-    "region": "인천",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "전라남도 목포시청",
-    "region": "전남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "전라남도 여수시청",
-    "region": "전남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "전라남도 함평군청",
@@ -537,17 +587,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "전라북도 군산시청",
-    "region": "전북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   },
   {
     "org": "제주특별자치도 서귀포시청",
@@ -557,46 +597,6 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "충청남도 보령시청",
-    "region": "충남",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "충청남도 공주시청",
-    "region": "충남",
-    "status": "ok",
-    "boards": 8,
-    "okBoards": 8,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "충청북도청",
-    "region": "충북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
-  },
-  {
-    "org": "충청북도 청주시청",
-    "region": "충북",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-21T17:18:49.868Z"
+    "checkedAt": "2026-10-22T06:07:51.900Z"
   }
 ]

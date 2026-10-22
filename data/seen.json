@@ -518,5 +518,17 @@
   "https://www.namhae.go.kr/news/pgnews/View.do?seq=34734&pageCd=NW0201000000&orderBy=wdate+desc": {
     "firstSeen": "2026-10-21T17:18:41.214Z",
     "org": "경상남도 남해군청"
+  },
+  "https://www.gangnam.go.kr/board/B_000031/1075504/view.do?mid=ID01_0313": {
+    "firstSeen": "2026-10-22T05:50:21.506Z",
+    "org": "서울특별시 강남구청"
+  },
+  "https://www.hscity.go.kr/www/user/bbs/BD_selectBbs.do?q_bbsCode=1051&q_bbscttSn=20261022084706998&q_deptCode=55306620000": {
+    "firstSeen": "2026-10-22T05:51:11.157Z",
+    "org": "경기도 화성특례시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163519Hw2aI0z&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-22T05:51:17.261Z",
+    "org": "세종특별자치시청"
   }
 }

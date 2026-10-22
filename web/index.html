@@ -485,6 +485,56 @@
   .apply-card .apply-link.disabled { color: var(--ink-muted); pointer-events: none; }
   .apply-link.closed-link { color: var(--ink-muted); }
 
+  /* 2026-10-22 추가: 지역별 목록 — 표(가로 스크롤 필요) 대신 반응형 카드.
+     auto-fit/minmax로 화면 폭에 맞춰 열 수가 자동으로 줄어들어, 어떤 화면
+     크기에서도(PC·모바일 전부) 가로 스크롤 없이 카드가 세로로 쌓인다. */
+  .region-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .region-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0; /* 그리드 안에서 내용(긴 제목 등)이 카드 폭을 넘어 밀어내지 않도록 */
+  }
+  .region-card .fest-name {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .region-card-rows {
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .region-card-rows dt {
+    display: inline;
+    color: var(--ink-muted);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .region-card-rows dd { display: inline; margin: 0; }
+  .region-card-memo { font-size: 12.5px; color: var(--ink-muted); }
+  .region-card-footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .status-row { display: flex; align-items: center; gap: 8px; }
+  .region-card-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
   .empty-slot {
     border: 1px dashed var(--line);
     border-radius: 14px;
@@ -1056,6 +1106,18 @@
     if (!start && !end) return "미정";
     if (start === end) return fmtDate(start);
     return `${fmtDate(start)} ~ ${fmtDate(end)}`;
+  }
+
+  // 2026-10-22 추가: 지역별 목록 카드의 "모집 기간" 표시 — 시작일·마감일을 둘 다
+  // 확인한 경우만 실제 날짜를 보여주고, 그렇지 않으면 추측 없이 "모집 기간
+  // 미확인"이라고 명확히 밝힌다. 모집 기간은 못 찾았어도 행사(festivalEnd) 자체가
+  // 이미 끝났다면 "행사 종료"라는 사실까지 함께 보여줘, 단순히 "미확인"만 보일 때보다
+  // 더 정확한 정보를 전달한다(요청사항).
+  function recruitPeriodDisplay(f) {
+    if (f.applyStart && f.applyEnd) return periodText(f.applyStart, f.applyEnd);
+    const festivalEnd = parseDate(f.festivalEnd);
+    const eventEnded = festivalEnd && today0() > festivalEnd;
+    return eventEnded ? "행사 종료 · 모집 기간 미확인" : "모집 기간 미확인";
   }
 
   function isOfficial(f) {
@@ -2201,7 +2263,11 @@
         홈 화면의 "+ 축제 추가" 버튼으로 이 지역의 축제를 추가해보세요.
       </div>`;
     } else {
-      const trs = rows.sort((a, b) => {
+      // 2026-10-22 수정: 표가 가로로 길어져 PC에서도 스크롤해야 신청 버튼이 보이던
+      // 문제(요청사항)를 고치기 위해, 지역별 목록을 표 대신 반응형 카드로 바꿨다.
+      // 카드 폭은 auto-fit/minmax로 화면 크기에 맞춰 자동으로 줄이 바뀌어, 별도
+      // 미디어쿼리 없이도 PC·모바일 모두 가로 스크롤이 생기지 않는다.
+      const cards = rows.sort((a, b) => {
         if (activeTab === "open") return parseDate(a.f.applyEnd) - parseDate(b.f.applyEnd);
         if (activeTab === "upcoming") return (parseDate(a.f.applyStart) || 0) - (parseDate(b.f.applyStart) || 0);
         if (activeTab === "unknown") return (noticeTypePriority(a.f) - noticeTypePriority(b.f)) || (a.f.name || "").localeCompare(b.f.name || "");
@@ -2209,28 +2275,31 @@
       }).map(({ f, status }) => {
         const info = ddayInfo(f, status);
         return `
-        <tr>
-          <td class="fest-name-cell">${detailTrigger(f, f.name)}</td>
-          <td>${boothBadge(f)}</td>
-          <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
-          <td class="recruit-cell">
-            ${periodText(f.applyStart, f.applyEnd)}<br>
-            <span class="status-pill ${status}" style="margin-top:4px;">${STATUS_LABEL[status]}</span>
-            ${status === "open" ? `<span class="dday ${info.cls}" style="margin-left:6px;">${info.text}</span>` : ""}
-          </td>
-          <td>${f.organizer || "-"} ${orgBadge(f)}</td>
-          <td class="memo-cell">${memoCellHtml(f)}</td>
-          <td>${applyBtn(f, true)}</td>
-          <td>${festivalManageCell(f)}</td>
-        </tr>
+        <div class="region-card">
+          <div class="card-tags">
+            ${boothBadge(f)}
+            ${orgBadge(f)}
+          </div>
+          <div class="fest-name">${detailTrigger(f, f.name)}</div>
+          <dl class="region-card-rows">
+            <div><dt>행사 기간</dt><dd>${periodText(f.festivalStart, f.festivalEnd)}</dd></div>
+            <div><dt>모집 기간</dt><dd>${recruitPeriodDisplay(f)}</dd></div>
+          </dl>
+          <div class="region-card-memo">${memoCellHtml(f)}</div>
+          <div class="region-card-footer">
+            <div class="status-row">
+              <span class="status-pill ${status}">${STATUS_LABEL[status]}</span>
+              ${status === "open" ? `<span class="dday ${info.cls}">${info.text}</span>` : ""}
+            </div>
+            <div class="region-card-actions">
+              ${applyBtn(f, true)}
+              ${festivalManageCell(f)}
+            </div>
+          </div>
+        </div>
       `;
       }).join("");
-      bodyHtml = `<div class="table-wrap"><table>
-        <thead><tr>
-          <th>축제명</th><th>유형</th><th>축제 기간</th><th>모집 기간</th><th>주최</th><th>메모</th><th>신청</th><th>관리</th>
-        </tr></thead>
-        <tbody>${trs}</tbody>
-      </table></div>`;
+      bodyHtml = `<div class="region-card-grid">${cards}</div>`;
     }
 
     const boothFilterOptions = `<option value="all" ${regionBoothFilter === "all" ? "selected" : ""}>전체 유형</option>` +

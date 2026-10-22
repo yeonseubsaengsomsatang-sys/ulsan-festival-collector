@@ -556,6 +556,29 @@
   tbody tr:hover { background: var(--surface-2); }
   td.fest-name-cell { font-weight: 700; min-width: 150px; }
   td.memo-cell { color: var(--ink-muted); max-width: 260px; }
+  .memo-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .memo-wrap.expanded .memo-clamp {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+  .memo-toggle {
+    display: inline-block;
+    margin-top: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .memo-toggle:hover { text-decoration: underline; }
   td.period-cell, td.recruit-cell { white-space: nowrap; color: var(--ink-muted); }
   th.num-head { text-align: right; }
   td.num-cell {
@@ -744,6 +767,20 @@
     main { padding: 20px 18px 48px; }
     .card-grid, .stat-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
+    /* 2026-10-22 추가: 모바일에서 표를 가로로 스크롤해도 축제명이 계속 보이도록
+       첫 열을 고정하고, 메모 칸은 더 좁혀서 신청 버튼이 화면에 가깝게 온다. */
+    table { font-size: 12.5px; }
+    tbody td { padding: 10px 10px; }
+    td.fest-name-cell {
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      min-width: 110px;
+      max-width: 140px;
+      z-index: 1;
+    }
+    tbody tr:hover td.fest-name-cell { background: var(--surface-2); }
+    td.memo-cell { max-width: 150px; }
   }
   @media (min-width: 861px) and (max-width: 1100px) {
     .card-grid, .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1137,6 +1174,32 @@
         : `<span class="${cls} disabled">링크 없음</span>`;
     }
     return `<a class="${cls}" href="${f.applyLink}" target="_blank" rel="noopener noreferrer">신청 페이지 ↗</a>${linkStatusWarning(f)}`;
+  }
+
+  // 2026-10-22 추가: 자동수집 메모가 길어지면(판단 근거를 문장으로 풀어 쓰다 보니 흔함)
+  // 표의 해당 행이 세로로 길게 늘어나 축제명·신청 버튼까지 찾기 어려워진다는 실측
+  // 피드백에 따라, 기본 3줄만 보이게 자르고 "더보기"를 눌러야 전체를 볼 수 있게 한다.
+  // 토글은 CSS 클래스만 바꾸므로 다시 렌더링하지 않고, 전체 텍스트는 처음부터 DOM에
+  // 그대로 있다(검색엔진·접근성 도구에서도 전체 내용이 보임).
+  const MEMO_CLAMP_THRESHOLD = 70; // 대략 3줄을 넘길 만한 길이부터만 "더보기"를 붙인다.
+  function memoCellHtml(f) {
+    const memo = f.memo ? escapeHtml(f.memo) : null;
+    if (!memo) return "-";
+    if (memo.length <= MEMO_CLAMP_THRESHOLD) return memo;
+    return `<div class="memo-wrap">
+      <div class="memo-clamp">${memo}</div>
+      <button type="button" class="memo-toggle" data-action="toggle-memo">더보기</button>
+    </div>`;
+  }
+
+  function bindMemoToggles(root) {
+    (root || document).querySelectorAll(".memo-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const wrap = btn.closest(".memo-wrap");
+        const expanded = wrap.classList.toggle("expanded");
+        btn.textContent = expanded ? "접기" : "더보기";
+      });
+    });
   }
 
   // ---- 직접 추가한 축제(브라우저 저장) ----
@@ -1699,7 +1762,7 @@
               <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
               <td class="recruit-cell">${periodText(f.applyStart, f.applyEnd)}<br><span class="dday ${info.cls}">${info.text}</span></td>
               <td>${f.organizer || "-"} ${orgBadge(f)}</td>
-              <td class="memo-cell">${f.memo || "-"}</td>
+              <td class="memo-cell">${memoCellHtml(f)}</td>
               <td>${applyBtn(f, true)}</td>
               <td>${festivalManageCell(f)}</td>
             </tr>
@@ -1718,6 +1781,7 @@
 
     bindFilterBar("allOpen", allOpenFilters, renderAllOpen);
     bindFestivalManageButtons();
+    bindMemoToggles();
     bindDetailClicks();
   }
 
@@ -1748,7 +1812,7 @@
               <td class="period-cell">${periodText(f.festivalStart, f.festivalEnd)}</td>
               <td class="recruit-cell">${periodText(f.applyStart, f.applyEnd)}<br><span class="dday ${info.cls}">${info.text}</span></td>
               <td>${f.organizer || "-"} ${orgBadge(f)}</td>
-              <td class="memo-cell">${f.memo || "-"}</td>
+              <td class="memo-cell">${memoCellHtml(f)}</td>
               <td>${festivalManageCell(f)}</td>
             </tr>
           `;
@@ -1766,6 +1830,7 @@
 
     bindFilterBar("allClosed", allClosedFilters, renderAllClosed);
     bindFestivalManageButtons();
+    bindMemoToggles();
     bindDetailClicks();
   }
 
@@ -2073,7 +2138,7 @@
             ${status === "open" ? `<span class="dday ${info.cls}" style="margin-left:6px;">${info.text}</span>` : ""}
           </td>
           <td>${f.organizer || "-"} ${orgBadge(f)}</td>
-          <td class="memo-cell">${f.memo || "-"}</td>
+          <td class="memo-cell">${memoCellHtml(f)}</td>
           <td>${applyBtn(f, true)}</td>
           <td>${festivalManageCell(f)}</td>
         </tr>
@@ -2113,6 +2178,7 @@
       renderRegion(region, activeTab);
     });
     bindFestivalManageButtons();
+    bindMemoToggles();
     bindDetailClicks();
   }
 

@@ -960,15 +960,15 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "나눔장터",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "collectedAt": "2026-10-16T08:26:24.512Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스 관련 키워드가 기사 본문이 아니라 게시판 공통 사이드바 메뉴(나눔장터/벼룩시장 등)에서만 매치된 오탐으로 확인됨 — 기사 내용 자체는 부스·셀러 모집과 무관함. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-S6UDafbgplMzAIs3",
@@ -1011,7 +1011,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "푸드트럭",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1020,9 +1020,9 @@
     "collectedAt": "2026-10-17T16:07:05.872Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상남도 함양군청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상남도 함양군청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-IBr3Kwoi94fa_iYm",
@@ -1065,7 +1065,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "플리마켓",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1074,9 +1074,9 @@
     "collectedAt": "2026-10-17T16:07:09.431Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 제주특별자치도 서귀포시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 제주특별자치도 서귀포시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-j5rqd_LzNVAkIbaF",
@@ -1119,7 +1119,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "플리마켓",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1128,9 +1128,9 @@
     "collectedAt": "2026-10-17T16:07:12.086Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-kvEICpD-PXpaBa0A",
@@ -1146,7 +1146,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "푸드트럭",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1155,9 +1155,9 @@
     "collectedAt": "2026-10-17T16:07:13.626Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 송파구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 송파구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-YPoFl4yaOD0jQ5g5",
@@ -1173,7 +1173,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "체험부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1182,9 +1182,9 @@
     "collectedAt": "2026-10-17T16:07:13.945Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 송파구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 송파구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-tArpKyA9cmIdTvAB",
@@ -1335,7 +1335,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "나눔장터",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1344,9 +1344,9 @@
     "collectedAt": "2026-10-17T16:07:24.880Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 세종특별자치시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 세종특별자치시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-RdQx8FA5GrbYNtuS",
@@ -1545,7 +1545,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "나눔장터",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1554,9 +1554,9 @@
     "collectedAt": "2026-10-19T09:06:15.853Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스 관련 키워드가 기사 본문이 아니라 게시판 공통 사이드바 메뉴(나눔장터/벼룩시장 등)에서만 매치된 오탐으로 확인됨 — 기사 내용 자체는 부스·셀러 모집과 무관함. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-npSY3Krn6ymAOdhC",
@@ -1572,7 +1572,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "나눔장터",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1581,9 +1581,9 @@
     "collectedAt": "2026-10-19T09:06:16.565Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상남도 진주시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스 관련 키워드가 기사 본문이 아니라 게시판 공통 사이드바 메뉴(나눔장터/벼룩시장 등)에서만 매치된 오탐으로 확인됨 — 기사 내용 자체는 부스·셀러 모집과 무관함. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh--aEVCtts4BDhpLUp",
@@ -1707,7 +1707,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "판매부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1716,9 +1716,9 @@
     "collectedAt": "2026-10-19T09:06:36.504Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 마포구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 마포구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 이미 종료된 행사의 결과를 알리는 사후 소식(과거 시제로 이미 운영을 마친 부스를 설명)으로 확인됨 — 신규 모집 요소 없음. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-51WdqNdytrtIM88I",
@@ -1734,7 +1734,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "푸드트럭",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1743,9 +1743,9 @@
     "collectedAt": "2026-10-19T09:06:38.284Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경기도 용인특례시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경기도 용인특례시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 이미 종료된 행사의 결과를 알리는 사후 소식(과거 시제로 이미 운영을 마친 부스를 설명)으로 확인됨 — 신규 모집 요소 없음. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-ab1oL1INwDSVaM8V",
@@ -1902,7 +1902,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "플리마켓",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -1911,9 +1911,9 @@
     "collectedAt": "2026-10-19T10:00:07.125Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 강원특별자치도 춘천시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 강원특별자치도 춘천시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 이미 종료된 행사의 결과를 알리는 사후 소식(과거 시제로 이미 운영을 마친 부스를 설명)으로 확인됨 — 신규 모집 요소 없음. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-Au2Wb2aOrLXLGnk6",
@@ -2037,7 +2037,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "푸드트럭",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -2046,9 +2046,9 @@
     "collectedAt": "2026-10-20T05:32:55.777Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-5X5Lf35GRuwBuRYl",
@@ -2253,7 +2253,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "체험부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -2262,9 +2262,9 @@
     "collectedAt": "2026-10-20T14:19:07.026Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상남도 함양군청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상남도 함양군청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 이미 종료된 행사의 결과를 알리는 사후 소식(과거 시제로 이미 운영을 마친 부스를 설명)으로 확인됨 — 신규 모집 요소 없음. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-Bo3pHSVfQsYH50JJ",
@@ -2388,7 +2388,7 @@
     "festivalEnd": null,
     "applyLink": null,
     "fee": null,
-    "boothType": "나눔장터",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "linkStatus": "ok",
@@ -2397,9 +2397,9 @@
     "collectedAt": "2026-10-20T17:23:24.470Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경상북도 칠곡군청 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경상북도 칠곡군청 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스 관련 키워드가 기사 본문이 아니라 게시판 공통 사이드바 메뉴(나눔장터/벼룩시장 등)에서만 매치된 오탐으로 확인됨 — 기사 내용 자체는 부스·셀러 모집과 무관함. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-_Bcl8ujnkYhEXKVd",
@@ -2620,7 +2620,7 @@
     "fee": null,
     "facilities": null,
     "applyMethod": null,
-    "boothType": "판매부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "eligibilityCategory": "unknown",
@@ -2631,9 +2631,9 @@
     "collectedAt": "2026-10-21T05:45:15.097Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 인천광역시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 인천광역시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-3wlPSG2rb7QgpzgJ",
@@ -2653,7 +2653,7 @@
     "fee": null,
     "facilities": null,
     "applyMethod": null,
-    "boothType": "먹거리부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "eligibilityCategory": "unknown",
@@ -2664,9 +2664,9 @@
     "collectedAt": "2026-10-21T05:45:18.947Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-OTb0hz6I4DXo_tb7",
@@ -2686,7 +2686,7 @@
     "fee": null,
     "facilities": null,
     "applyMethod": null,
-    "boothType": "프리마켓",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "eligibilityCategory": "unknown",
@@ -2697,9 +2697,9 @@
     "collectedAt": "2026-10-21T05:45:20.085Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 서울특별시 강남구청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-xVV0simOMXIqcc2G",
@@ -2719,7 +2719,7 @@
     "fee": null,
     "facilities": null,
     "applyMethod": null,
-    "boothType": "프리마켓",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "eligibilityCategory": "unknown",
@@ -2730,9 +2730,9 @@
     "collectedAt": "2026-10-21T05:47:32.305Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 강원특별자치도 춘천시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 강원특별자치도 춘천시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-WFicQFDZzXJz2FkL",
@@ -2950,7 +2950,7 @@
     "fee": null,
     "facilities": null,
     "applyMethod": null,
-    "boothType": "체험부스",
+    "boothType": null,
     "eligibility": null,
     "ulsanEligible": "unknown",
     "eligibilityCategory": "unknown",
@@ -2961,9 +2961,9 @@
     "collectedAt": "2026-10-22T05:51:11.924Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 경기도 화성특례시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 경기도 화성특례시청 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [2026-10-22 비공개 공고 전수 재검토] 원문을 직접 확인한 결과, 부스/장터가 주최측·협력기관에 의해 이미 구성되어 있거나 참여업체가 이미 선정된 상태로 소개될 뿐, 외부 셀러를 향한 모집·신청 문구가 없는 행사 프로그램 설명으로 확인됨. \"모집공고 아님\"으로 확정."
   },
   {
     "id": "gh-VOwj_874iz8KRRTJ",

@@ -483,6 +483,7 @@
     gap: 4px;
   }
   .apply-card .apply-link.disabled { color: var(--ink-muted); pointer-events: none; }
+  .apply-link.closed-link { color: var(--ink-muted); }
 
   .empty-slot {
     border: 1px dashed var(--line);
@@ -617,6 +618,15 @@
     border-color: var(--line);
     pointer-events: none;
   }
+  /* 2026-10-22 추가: 마감된 공고는 "신청 페이지"처럼 아직 신청 가능하다고 보이면
+     안 되지만, 원문(공식 공고)은 계속 확인할 수 있어야 한다 — disabled와 똑같이
+     흐리게 보이되 pointer-events는 막지 않아 클릭(원문 확인)은 그대로 된다. */
+  .apply-btn.closed-link {
+    color: var(--ink-muted);
+    background: var(--surface-2);
+    border-color: var(--line);
+  }
+  .apply-btn.closed-link:hover { border-color: var(--ink-muted); }
   .empty-state {
     padding: 48px 24px;
     text-align: center;
@@ -1210,12 +1220,20 @@
     return ` <span class="link-warn" title="${title}">⚠ 링크 확인 필요</span>`;
   }
 
+  // 2026-10-22 수정: 마감된 공고도 "신청 페이지 ↗"라고 그대로 보이면 아직 신청할 수
+  // 있는 것처럼 오해할 수 있어(요청사항), 마감이면 문구와 스타일을 "마감된 공고"로
+  // 바꾼다. 다만 원문(공식 공고문)은 계속 확인할 수 있어야 하므로 링크 자체는
+  // 그대로 클릭 가능하게 둔다(pointer-events를 막지 않음) — "링크 없음"일 때만
+  // 클릭이 막힌다.
   function applyBtn(f, small) {
     const cls = small ? "apply-btn" : "apply-link";
     if (!f.applyLink) {
       return small
         ? `<span class="${cls} disabled">링크 없음</span>`
         : `<span class="${cls} disabled">링크 없음</span>`;
+    }
+    if (getStatus(f) === "closed") {
+      return `<a class="${cls} closed-link" href="${f.applyLink}" target="_blank" rel="noopener noreferrer">마감된 공고 · 원문보기 ↗</a>${linkStatusWarning(f)}`;
     }
     return `<a class="${cls}" href="${f.applyLink}" target="_blank" rel="noopener noreferrer">신청 페이지 ↗</a>${linkStatusWarning(f)}`;
   }

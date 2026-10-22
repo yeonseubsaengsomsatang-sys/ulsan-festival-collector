@@ -23,8 +23,9 @@ const path = require("path");
 // 첨부파일(PDF)에만 있는 경우가 실제로 매우 흔함(경주 윈터포차라이트 사례로 실측 확인).
 // pdf-parse는 무료 오픈소스(MIT) 라이브러리로 외부 API 호출이 전혀 없어 이 프로젝트의
 // "LLM 호출 없는 순수 HTTP+정규식" 철학에 맞음 — 비용 $0, GitHub Actions에 npm install
-// 단계만 추가됨. .hwp(구 바이너리 한글파일)는 무료로 안정적으로 읽을 라이브러리가 없어
-// 지금처럼 "확인 필요"로 남긴다(추측 금지 원칙).
+// 단계만 추가됨. .hwp(구 바이너리 한글파일)는 2026-10-22부터 외부 라이브러리 없이
+// CFBF+HWP5 레코드 구조를 직접 해석해 지원함(extractHwp5BodyText 참고, 2026
+// 울산옹기축제 플리마켓 모집 공고 실제 .hwp로 실측 검증).
 const { PDFParse } = require("pdf-parse");
 const zlib = require("zlib");
 
@@ -2023,6 +2024,13 @@ const DATE_RANGE_RE = new RegExp(
 // 연도 없이 "O월 O일부터 O월 O일까지"만 적힌 경우 — 수집 시점(올해)을 연도로 가정
 const KOREAN_MONTH_DAY_RANGE_RE =
   /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:\([^)]{1,4}\))?\s*(?:~|-|부터)\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/;
+// 2026-10-22 신설: "공고·접수: 2. 20.(금) ~ 3. 13.(금)"처럼 "월"/"일" 글자 없이 점(.)
+// 으로만 구분하고 연도도 없는 표기 — HWP 공문에서 자주 쓰는 축약형(2026 울산옹기축제
+// 플리마켓 모집 공고 .hwp 첨부파일 실측 확인). "월"/"일" 글자가 없어 숫자 범위만으로는
+// 오탐 위험이 있으므로(전화번호·가격 등과 혼동), KOREAN_MONTH_DAY_RANGE_RE와 달리
+// "모집/접수/신청/공고" 라벨이 바로 앞에 있을 때만 인정한다.
+const NUMERIC_MONTH_DAY_RANGE_RE =
+  /(?:모집|접수|신청|공고)(?:\s*[·∙]\s*(?:모집|접수|신청|공고))?\s*(?:기간|기한)?\s*\)?\s*[:：]?\s*(\d{1,2})\s*\.\s*(\d{1,2})\s*\.?\s*(?:\([^)]{1,4}\))?\s*(?:~|-|부터)\s*(\d{1,2})\s*\.\s*(\d{1,2})\s*\.?\s*(?:\([^)]{1,4}\))?/;
 // 마감일만 언급된 경우(시작일 없음). 2026-10-22 수정: "모집기간 : 2026. 8. 30.(일) 까지"
 // 처럼 날짜와 "까지" 사이에 요일 괄호가 끼는 표현(덕신온마켓 셀러모집 실측 사례)을
 // 날짜 끝의 "."과 "(요일)"을 선택적으로 허용해 잡는다.
@@ -2046,7 +2054,9 @@ const ATTACHMENT_RE = /([^\s]+\.(?:hwp|hwpx|pdf|jpg|jpeg|png))\s*다운로드/gi
 const EVENT_NAME_RE = /행\s*사\s*명\s*(?:[:：]|\))\s*([^\n]{2,80})/;
 const VENUE_RE = /(?:행\s*사\s*장\s*소|개\s*최\s*장\s*소|장\s*소)\s*(?:[:：]|\))\s*([^\n]{2,60})/;
 const BOOTH_COUNT_RE = /(?:모\s*집\s*규\s*모|부스\s*수|참가\s*업체\s*수)\s*(?:[:：]|\))\s*([^\n]{1,40})/;
-const FEE_RE = /참\s*가\s*비\s*(?:[:：]|\))\s*([^\n]{1,40})/;
+// 2026-10-22 보강: "입점비: 없음"(참가비 대신 쓰는 표현, 2026 울산옹기축제 플리마켓
+// 모집 공고 .hwp 첨부파일 실측 확인)도 참가비 라벨로 인정.
+const FEE_RE = /(?:참\s*가\s*비|입\s*점\s*비)\s*(?:[:：]|\))\s*([^\n]{1,40})/;
 const APPLY_METHOD_RE = /(?:접수\s*방법|신청\s*방법|제출\s*방법)\s*(?:[:：]|\))\s*([^\n]{1,60})/;
 // 2026-10-22 신설: 본문에 "신청링크/접수링크/신청서 작성/바로가기" 같은 라벨과 함께 별도
 // 신청 페이지(구글폼·네이버폼 등) URL이 적혀 있는 경우만 뽑는다 — 이메일 접수처럼 URL이
@@ -2086,8 +2096,12 @@ const APPLY_PERIOD_ANNOUNCE_RE =
 // 공방")도 같은 뜻이라 함께 허용한다.
 // 2026-10-22 추가: "세종시 관내 거주 성인 누구나"처럼 지역명과 "거주" 사이에 "관내"가
 // 끼는 표현(세종시 반곡동 플리마켓 모집 실측 사례)도 관내 한정으로 인식한다.
+// 2026-10-22 추가(넷째 대안): "울산광역시에 판매 대상 품목의 사업자등록이 된 셀러"처럼
+// "~시/군/구에 ...사업자등록이 된"으로 표현하는 경우(2026 울산옹기축제 플리마켓 모집
+// 공고 .hwp 첨부파일 실측 확인) — "사업장을 둔"과는 다른 phrasing이라 기존 첫째
+// 대안이 못 잡았음.
 const ELIGIBILITY_LOCAL_BIZ_RE =
-  /([가-힣]{2,6}(?:시|군|구))에\s*사업(?:장|자)[을를]\s*(?:둔|두고|두거나)|([가-힣]{2,6}(?:특별시|광역시|시|군|구))\s*(?:관내\s*)?거주(?:자|하는)?\s*(?:및\s*사업자)?|([가-힣]{2,6})\s*지역\s*거주(?:자|하는)?/;
+  /([가-힣]{2,6}(?:시|군|구))에\s*사업(?:장|자)[을를]\s*(?:둔|두고|두거나)|([가-힣]{2,6}(?:특별시|광역시|시|군|구))\s*(?:관내\s*)?거주(?:자|하는)?\s*(?:및\s*사업자)?|([가-힣]{2,6})\s*지역\s*거주(?:자|하는)?|([가-힣]{2,6}(?:특별시|광역시|시|군|구))에\s*[^.\n]{0,20}?사업자\s*등록이?\s*된/;
 
 function cleanValue(s) {
   return s ? s.replace(/\s+/g, " ").trim() : null;
@@ -2385,6 +2399,18 @@ function extractDateRange(bodyText, postedDate) {
     }
   }
 
+  const numericMdMatch = bodyText.match(NUMERIC_MONTH_DAY_RANGE_RE);
+  if (numericMdMatch) {
+    const start = resolveYearlessMonthDay(numericMdMatch[1], numericMdMatch[2], referenceDate);
+    const end = resolveYearlessMonthDay(numericMdMatch[3], numericMdMatch[4], referenceDate);
+    if (start && end && end >= start) {
+      out.applyStart = `${start.getUTCFullYear()}-${String(numericMdMatch[1]).padStart(2, "0")}-${String(numericMdMatch[2]).padStart(2, "0")}`;
+      out.applyEnd = `${end.getUTCFullYear()}-${String(numericMdMatch[3]).padStart(2, "0")}-${String(numericMdMatch[4]).padStart(2, "0")}`;
+      out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
+      return out;
+    }
+  }
+
   const deadlineMatch = bodyText.match(DATE_DEADLINE_ONLY_RE);
   if (deadlineMatch) {
     const raw = deadlineMatch[1] || deadlineMatch[2];
@@ -2481,7 +2507,7 @@ function detectEligibility(bodyText, boardRegion) {
       eligibility: localBiz[0].replace(/\s+/g, " ").trim(),
       ulsanEligible: boardRegion === "울산" ? "yes" : "no",
       eligibilityCategory: "local_only",
-      restrictedRegion: localBiz[1] || localBiz[2] || localBiz[3],
+      restrictedRegion: localBiz[1] || localBiz[2] || localBiz[3] || localBiz[4],
     };
   }
   // 근거 문구가 없거나 모순되게 여러 패턴이 동시에 매치되면 — 추측하지 않고 unknown 유지
@@ -2520,13 +2546,21 @@ function stripHtmlPreserveLines(html) {
     .join("\n");
 }
 
-// ---- 2026-10-21 신설, 2026-10-22 HWPX 추가: 공식 첨부파일(PDF·HWPX) 분석 ----
+// ---- 2026-10-21 신설, 2026-10-22 HWPX·HWP 추가: 공식 첨부파일(PDF·HWPX·HWP) 분석 ----
 // 비용 조사 결과(사용자 승인 완료): pdf-parse는 무료 오픈소스라 외부 API 호출/비용이
-// 전혀 없음. .hwp(구 바이너리 한글파일, ~2014년 이전)는 무료로 안정적으로 읽을
-// 라이브러리가 없어 여전히 "확인 필요"로 남긴다. 반면 .hwpx(2014년 이후 신형,
-// 사실상 ZIP+XML 컨테이너 — OOXML과 같은 구조)는 외부 라이브러리 없이 Node 내장
-// zlib(raw deflate)만으로 직접 풀어 읽을 수 있어 이번에 추가 지원한다.
-const DIRECT_ATTACHMENT_LINK_RE = /<a[^>]+href="([^"]+\.(?:pdf|hwpx))"[^>]*>/gi;
+// 전혀 없음. .hwpx(2014년 이후 신형, ZIP+XML 컨테이너)는 Node 내장 zlib만으로 직접
+// 풀어 읽는다. .hwp(구 바이너리, ~2014년 이전)는 "무료 파서가 없다"고 판단해 오랫동안
+// 미지원이었으나, 2026-10-22 재검증 요청으로 실제 가능함을 확인 — CFBF(옛 MS
+// Office와 같은 복합 바이너리 컨테이너) + HWP5 본문 레코드 구조를 직접 파싱하는
+// 전용 코드를 새로 작성해 외부 라이브러리 없이 지원한다(아래 parseCFBF/
+// extractHwp5BodyText 참고, 2026 울산옹기축제 플리마켓 모집 공고 실제 .hwp 파일로
+// 텍스트 추출 결과가 공식 모집기간·참가비·신청방법과 정확히 일치함을 실측 검증함).
+const DIRECT_ATTACHMENT_LINK_RE = /<a[^>]+href="([^"]+\.(pdf|hwpx|hwp))"[^>]*>/gi;
+// 2026-10-22 신설: 그누보드5 계열(이 프로젝트에서 이미 여러 재단·소규모 기관 사이트가
+// 쓰는 것으로 확인된 CMS)은 다운로드 링크가 "bbs/download.php?...&nonce=..." 형태라
+// href에 확장자가 없고, 파일명은 링크 "텍스트"에만 있음(울주문화재단 실측 확인) — 이
+// 경우를 위한 보조 패턴. href 기반으로 못 찾았을 때만 보조로 쓴다.
+const ATTACHMENT_TEXT_LINK_RE = /<a[^>]+href="([^"]+)"[^>]*>\s*([^<]{1,200}?\.(pdf|hwpx|hwp))\s*<\/a>/gi;
 // eminwon(경주 등 NTIS 계열 게시판)의 첨부파일은 onclick="goDownLoad('표시이름','저장이름',
 // '경로',파일ID)"로 다운로드되고, 실제 다운로드 URL은 그 사이트의 외부 js(utility.js)에
 // 박혀 있는 "eminwon.<도메인>/emwp/jsp/ofr/FileDown.jsp?..." 패턴으로 역추적해 확인함
@@ -2534,6 +2568,16 @@ const DIRECT_ATTACHMENT_LINK_RE = /<a[^>]+href="([^"]+\.(?:pdf|hwpx))"[^>]*>/gi;
 // 단계에서 실측 검증 완료).
 const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*\d+\)/g;
 
+function attachmentKindOf(filename) {
+  if (/\.hwpx$/i.test(filename)) return "hwpx";
+  if (/\.hwp$/i.test(filename)) return "hwp";
+  if (/\.pdf$/i.test(filename)) return "pdf";
+  return null;
+}
+
+// 반환값이 과거엔 URL 문자열 배열이었는데, 이제 형식(pdf/hwpx/hwp)별로 다른 방식으로
+// 받아와야 해서 {url, kind} 객체 배열로 바꿈 — 유일한 호출부(fetchAttachmentPdfText)도
+// 같이 수정함.
 function extractAttachmentPdfUrls(html, pageUrl) {
   const out = [];
   let m;
@@ -2552,7 +2596,17 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   const direct = new RegExp(DIRECT_ATTACHMENT_LINK_RE.source, "gi");
   while ((m = direct.exec(searchHtml))) {
     try {
-      out.push(new URL(decodeEntities(m[1]), pageUrl).href);
+      out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind: attachmentKindOf(m[1]) });
+    } catch {
+      /* ignore malformed href */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  const textLink = new RegExp(ATTACHMENT_TEXT_LINK_RE.source, "gi");
+  while ((m = textLink.exec(searchHtml))) {
+    try {
+      out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind: attachmentKindOf(m[2]) });
     } catch {
       /* ignore malformed href */
     }
@@ -2562,7 +2616,8 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   const godown = new RegExp(GODOWNLOAD_RE.source, "g");
   while ((m = godown.exec(searchHtml))) {
     const [, userFileNm, sysFileNm, filePath] = m;
-    if (!/\.(?:pdf|hwpx)$/i.test(userFileNm)) continue; // .hwp(구형)·이미지는 지원 안 함 — 확인 필요로 남김
+    const kind = attachmentKindOf(userFileNm);
+    if (!kind) continue; // 이미지 등 지원 안 하는 형식 — 확인 필요로 남김
     try {
       const host = new URL(pageUrl).hostname.replace(/^www\./, "");
       const url =
@@ -2570,7 +2625,7 @@ function extractAttachmentPdfUrls(html, pageUrl) {
         `user_file_nm=${encodeURI(decodeEntities(userFileNm))}` +
         `&sys_file_nm=${encodeURI(decodeEntities(sysFileNm))}` +
         `&file_path=${encodeURI(decodeEntities(filePath))}`;
-      out.push(url);
+      out.push({ url, kind });
     } catch {
       /* ignore */
     }
@@ -2685,11 +2740,273 @@ async function fetchHwpxText(url) {
   }
 }
 
-async function fetchAttachmentPdfText(html, pageUrl) {
-  const urls = extractAttachmentPdfUrls(html, pageUrl);
+// 2026-10-22 신설: 그누보드5 계열의 "bbs/download.php?...&nonce=..." 다운로드는 목록/
+// 상세 페이지를 받아온 바로 그 요청의 세션 쿠키 + Referer가 없으면 "잘못된 접근입니다"
+// 오류 페이지만 돌려줌(울주문화재단 실측 확인 — 쿠키·Referer 없이 보낸 첫 시도는
+// 실패했고, 상세페이지를 다시 받아 그 응답의 Set-Cookie를 그대로 넘기자 성공함).
+// 본문 분류용 메인 fetchText(detailUrl) 호출은 그대로 두고(기존 재시도 로직 보존,
+// 회귀 위험 없음), hwp 첨부파일이 실제로 있을 때만 쿠키 확보용으로 한 번 더 가볍게
+// 받아온다.
+async function fetchTextWithCookie(url) {
+  const res = await fetch(url, {
+    headers: { "User-Agent": BROWSER_UA },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return { text: await res.text(), cookie: res.headers.get("set-cookie") || null };
+}
+
+// ---- 2026-10-22 신설: 구형 .hwp(바이너리) 첨부파일 분석 ----
+// .hwp 파일은 옛 MS Office(.doc/.xls)와 같은 CFBF(Compound File Binary Format)
+// 컨테이너이고, 본문 텍스트는 그 안의 "BodyText/SectionN" 스트림에 HWP5 전용 레코드
+// 구조로 들어있다. 외부 라이브러리 없이 Node 내장 zlib(raw deflate)만으로 직접
+// 해석한다 — 2026 울산옹기축제 플리마켓 모집 공고의 실제 .hwp 파일로 전체 흐름을
+// 검증했고, 추출된 모집기간·참가비·신청방법이 공식 공고 내용과 정확히 일치함을
+// 확인함(추측이 아니라 실제 바이너리 디코딩 결과).
+const CFBF_SIG = 0xd0cf11e0a1b11ae1n;
+const CFBF_FREESECT = 0xffffffff;
+const CFBF_ENDOFCHAIN = 0xfffffffe;
+
+function parseCFBF(buf) {
+  if (buf.length < 512 || buf.readBigUInt64BE(0) !== CFBF_SIG) return null;
+  const sectorShift = buf.readUInt16LE(30);
+  const miniSectorShift = buf.readUInt16LE(32);
+  const sectorSize = 1 << sectorShift;
+  const miniSectorSize = 1 << miniSectorShift;
+  const firstDirSector = buf.readUInt32LE(48);
+  const miniStreamCutoff = buf.readUInt32LE(56);
+  const firstMiniFatSector = buf.readUInt32LE(60);
+  const numMiniFatSectors = buf.readUInt32LE(64);
+  const firstDifatSector = buf.readUInt32LE(68);
+
+  const sectorOffset = (n) => 512 + n * sectorSize;
+  const readSector = (n) => buf.subarray(sectorOffset(n), sectorOffset(n) + sectorSize);
+
+  // DIFAT: 헤더 안 109개 + (드물게) 체인으로 이어지는 추가 DIFAT 섹터.
+  const difat = [];
+  for (let i = 0; i < 109; i++) difat.push(buf.readUInt32LE(76 + i * 4));
+  let difatSector = firstDifatSector;
+  let guard = 0;
+  while (difatSector < 0xfffffffc && guard++ < 10000) {
+    const sec = readSector(difatSector);
+    const perSector = sectorSize / 4;
+    for (let i = 0; i < perSector - 1; i++) difat.push(sec.readUInt32LE(i * 4));
+    difatSector = sec.readUInt32LE((perSector - 1) * 4);
+  }
+
+  // FAT: DIFAT가 가리키는 섹터들을 이어붙인 것 — 섹터 번호 -> 다음 섹터 번호.
+  const fat = [];
+  for (const fatSecNum of difat) {
+    if (fatSecNum >= 0xfffffffc) continue;
+    const sec = readSector(fatSecNum);
+    for (let i = 0; i < sectorSize / 4; i++) fat.push(sec.readUInt32LE(i * 4));
+  }
+
+  function followChain(startSector, knownSize) {
+    const chunks = [];
+    let s = startSector;
+    let g = 0;
+    while (s < 0xfffffffc && g++ < 200000) {
+      chunks.push(readSector(s));
+      s = fat[s];
+    }
+    let out = Buffer.concat(chunks);
+    if (knownSize !== undefined && knownSize < out.length) out = out.subarray(0, knownSize);
+    return out;
+  }
+
+  // 디렉터리 스트림 — 128바이트짜리 엔트리가 연이어 있음.
+  const dirBuf = followChain(firstDirSector);
+  const DIRENT_SIZE = 128;
+  const entries = [];
+  for (let i = 0; i + DIRENT_SIZE <= dirBuf.length; i += DIRENT_SIZE) {
+    const nameLenBytes = dirBuf.readUInt16LE(i + 64);
+    const nameLenChars = nameLenBytes > 0 ? nameLenBytes / 2 - 1 : 0;
+    const name = nameLenChars > 0 ? dirBuf.toString("utf16le", i, i + nameLenChars * 2) : "";
+    entries.push({
+      name,
+      type: dirBuf.readUInt8(i + 66),
+      leftSib: dirBuf.readUInt32LE(i + 68),
+      rightSib: dirBuf.readUInt32LE(i + 72),
+      childId: dirBuf.readUInt32LE(i + 76),
+      startSector: dirBuf.readUInt32LE(i + 116),
+      size: dirBuf.readUInt32LE(i + 120),
+    });
+  }
+  if (!entries.length) return null;
+  const root = entries[0];
+
+  // 미니스트림(루트 엔트리가 가리키는, 작은 스트림들을 모아둔 영역)과 미니FAT.
+  const miniStreamData = root.startSector < 0xfffffffc ? followChain(root.startSector, root.size) : Buffer.alloc(0);
+  const miniFat = [];
+  if (numMiniFatSectors > 0) {
+    const miniFatBuf = followChain(firstMiniFatSector);
+    for (let i = 0; i < miniFatBuf.length / 4; i++) miniFat.push(miniFatBuf.readUInt32LE(i * 4));
+  }
+  function followMiniChain(startSector, knownSize) {
+    const chunks = [];
+    let s = startSector;
+    let g = 0;
+    while (s < 0xfffffffc && g++ < 200000) {
+      const off = s * miniSectorSize;
+      chunks.push(miniStreamData.subarray(off, off + miniSectorSize));
+      s = miniFat[s];
+    }
+    let out = Buffer.concat(chunks);
+    if (knownSize !== undefined && knownSize < out.length) out = out.subarray(0, knownSize);
+    return out;
+  }
+
+  function readStreamData(entry) {
+    if (entry.size < miniStreamCutoff) return followMiniChain(entry.startSector, entry.size);
+    return followChain(entry.startSector, entry.size);
+  }
+
+  // 디렉터리는 평평한 배열이 아니라 트리(이진 트리형 형제 포인터) 구조 — 루트부터
+  // 재귀적으로 훑어 "BodyText/Section0" 같은 전체 경로를 복원한다.
+  const paths = {};
+  function visit(nodeId, prefix) {
+    if (nodeId >= 0xfffffffc) return;
+    const e = entries[nodeId];
+    if (!e) return;
+    visit(e.leftSib, prefix);
+    const path = prefix ? `${prefix}/${e.name}` : e.name;
+    paths[path] = e;
+    if (e.type === 1 || e.type === 5) visit(e.childId, path); // storage(1) 또는 root(5)
+    visit(e.rightSib, prefix);
+  }
+  visit(root.childId, "");
+
+  return { paths, readStreamData };
+}
+
+const HWPTAG_PARA_TEXT = 0x43; // HWPTAG_BEGIN(0x10) + 51
+
+// PARA_TEXT 레코드 데이터는 UTF-16LE 문자 시퀀스. 코드값 0~31은 표/그림 등 인라인
+// 객체나 특수 글자를 뜻하며, 종류별로 추가로 건너뛸 길이가 다르다(HWP5 배포 문서 스펙).
+function hwp5ControlCharExtraSkip(code) {
+  if (code >= 1 && code <= 9) return code === 9 ? 0 : 7; // 1~8: 인라인 컨트롤(8워드 단위)
+  if (code >= 11 && code <= 12) return 7;
+  if (code >= 14 && code <= 17) return 7;
+  if (code >= 18 && code <= 21) return 3;
+  if (code === 22 || code === 23) return 7;
+  return 0; // 0, 9(tab), 10(줄바꿈), 13(문단끝) 등은 추가 데이터 없음
+}
+function extractTextFromHwp5ParaText(data) {
+  let out = "";
+  for (let i = 0; i + 1 < data.length; i += 2) {
+    const code = data.readUInt16LE(i);
+    if (code === 0) continue;
+    if (code < 32) {
+      if (code === 9) out += "\t";
+      if (code === 10 || code === 13) out += "\n";
+      i += hwp5ControlCharExtraSkip(code) * 2;
+      continue;
+    }
+    out += String.fromCharCode(code);
+  }
+  return out;
+}
+function parseHwp5Records(buf) {
+  const records = [];
+  let pos = 0;
+  while (pos + 4 <= buf.length) {
+    const header = buf.readUInt32LE(pos);
+    const tagId = header & 0x3ff;
+    let size = (header >>> 20) & 0xfff;
+    pos += 4;
+    if (size === 0xfff) {
+      if (pos + 4 > buf.length) break;
+      size = buf.readUInt32LE(pos);
+      pos += 4;
+    }
+    if (pos + size > buf.length) break; // 손상/오독 방어 — 조용히 중단
+    records.push({ tagId, data: buf.subarray(pos, pos + size) });
+    pos += size;
+  }
+  return records;
+}
+function extractHwp5BodyText(fileBuf) {
+  const cfbf = parseCFBF(fileBuf);
+  if (!cfbf) return null;
+  const { paths, readStreamData } = cfbf;
+  const fileHeaderEntry = paths["FileHeader"];
+  if (!fileHeaderEntry) return null;
+  const fileHeader = readStreamData(fileHeaderEntry);
+  if (fileHeader.subarray(0, 17).toString("latin1") !== "HWP Document File") return null; // HWP5 시그니처 확인
+  const compressed = !!(fileHeader.readUInt32LE(36) & 1);
+
+  const sectionPaths = Object.keys(paths)
+    .filter((p) => /^BodyText\/Section\d+$/i.test(p))
+    .sort((a, b) => {
+      const na = +a.match(/\d+$/)[0];
+      const nb = +b.match(/\d+$/)[0];
+      return na - nb;
+    });
+  if (!sectionPaths.length) return null;
+
   const texts = [];
-  for (const url of urls) {
-    const text = /\.hwpx($|\?)/i.test(url) ? await fetchHwpxText(url) : await fetchPdfText(url);
+  for (const p of sectionPaths) {
+    const raw = readStreamData(paths[p]);
+    let sectionData;
+    try {
+      sectionData = compressed ? zlib.inflateRawSync(raw) : raw;
+    } catch {
+      continue; // 이 섹션만 건너뜀 — 전체를 실패로 처리하지 않음
+    }
+    const records = parseHwp5Records(sectionData);
+    for (const r of records) {
+      if (r.tagId === HWPTAG_PARA_TEXT) texts.push(extractTextFromHwp5ParaText(r.data));
+    }
+  }
+  return texts.length ? texts.join("\n") : null;
+}
+async function fetchHwpText(url, { referer, cookie } = {}) {
+  try {
+    const headers = { "User-Agent": BROWSER_UA };
+    if (referer) headers["Referer"] = referer;
+    if (cookie) headers["Cookie"] = cookie;
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > 15 * 1024 * 1024) return null;
+    return extractHwp5BodyText(buf);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchAttachmentPdfText(html, pageUrl) {
+  let attachments = extractAttachmentPdfUrls(html, pageUrl);
+
+  // 2026-10-22 발견: 그누보드5의 nonce는 그걸 발급한 "그 요청"의 세션 쿠키와만
+  // 짝이 맞는다 — 서로 다른 요청(fetchText로 받은 html의 세션 vs 여기서 따로 받는
+  // 쿠키의 세션)의 PHPSESSID가 서로 다르면 "잘못된 접근입니다" 오류만 돌아옴을
+  // 실측으로 확인함. 그래서 hwp 첨부가 있을 때는, 쿠키와 nonce를 "같은 한 번의
+  // 요청"에서 함께 다시 받아와 짝을 맞춘다(이미 넘어온 html은 이 용도로 쓰지 않음).
+  if (attachments.some((a) => a.kind === "hwp")) {
+    try {
+      const fresh = await fetchTextWithCookie(pageUrl);
+      const freshHwpUrls = extractAttachmentPdfUrls(fresh.text, pageUrl).filter((a) => a.kind === "hwp");
+      let next = 0;
+      attachments = attachments.map((a) =>
+        a.kind === "hwp" && next < freshHwpUrls.length ? { ...freshHwpUrls[next++], _cookie: fresh.cookie } : a
+      );
+    } catch {
+      /* 실패하면 원래 attachments로 계속 — 아래에서 쿠키 없이 시도해 보고 안 되면 null */
+    }
+  }
+
+  const texts = [];
+  for (const att of attachments) {
+    let text = null;
+    if (att.kind === "pdf") {
+      text = await fetchPdfText(att.url);
+    } else if (att.kind === "hwpx") {
+      text = await fetchHwpxText(att.url);
+    } else if (att.kind === "hwp") {
+      text = await fetchHwpText(att.url, { referer: pageUrl, cookie: att._cookie || null });
+    }
     if (text) texts.push(text);
     if (texts.join("\n").length > 8000) break; // 과도하게 긴 첨부파일은 앞부분만
   }
@@ -2789,9 +3106,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
     ? ` 참가자격 근거: "${eligInfo.eligibility}"${eligInfo.restrictedRegion ? ` (제한 지역: ${eligInfo.restrictedRegion})` : ""}.`
     : "";
   const pdfNote = result.attachmentParsed
-    ? " 첨부 PDF·HWPX 공고문에서 세부정보를 추가로 확인함."
+    ? " 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
     : attachments.length
-      ? ` 첨부파일(${attachments.join(", ")})이 있으나 자동분석에 실패했거나 지원하지 않는 형식(구형 .hwp 등)이라 직접 확인이 필요함.`
+      ? ` 첨부파일(${attachments.join(", ")})이 있으나 자동분석에 실패했거나 지원하지 않는 형식(이미지 등)이라 직접 확인이 필요함.`
       : "";
   if (result.recruitStatus === "unknown") {
     result.memo = `${fetchFailNote}${cls.reason} 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.${eligNote}${pdfNote}`;
@@ -3301,6 +3618,10 @@ module.exports = {
   fetchPdfText,
   fetchHwpxText,
   extractOnggiCandidates,
+  extractHwp5BodyText,
+  fetchHwpText,
+  fetchTextWithCookie,
+  fetchAttachmentPdfText,
   fetchText,
   stripHtmlPreserveLines,
 };

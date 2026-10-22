@@ -530,5 +530,41 @@
   "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163519Hw2aI0z&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
     "firstSeen": "2026-10-22T05:51:17.261Z",
     "org": "세종특별자치시청"
+  },
+  "https://www.ulju.ulsan.kr/onsan/bbs/view.do?bIdx=70125&ptIdx=223&mId=0401000000": {
+    "firstSeen": "2026-10-22T10:37:15.110Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886200&amode=view&": {
+    "firstSeen": "2026-10-22T10:37:29.133Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39622096&amode=view&": {
+    "firstSeen": "2026-10-22T10:37:31.002Z",
+    "org": "경상남도 진주시청"
+  },
+  "https://www.jinju.go.kr/00138.web?gcode=1004&idx=39622094&amode=view&": {
+    "firstSeen": "2026-10-22T10:37:31.786Z",
+    "org": "경상남도 진주시청"
+  },
+  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155665000": {
+    "firstSeen": "2026-10-22T10:37:37.204Z",
+    "org": "제주특별자치도 서귀포시청"
+  },
+  "https://www.seogwipo.go.kr/news/seogwiponews/sijungnews.htm?act=view&seq=155664289": {
+    "firstSeen": "2026-10-22T10:37:37.578Z",
+    "org": "제주특별자치도 서귀포시청"
+  },
+  "https://www.brcn.go.kr/cop/bbs/BBSMSTR_000000000263/selectBoardArticle.do;jsessionid=5UBKmx5ZyPaPzjgkv1cn5jB7nsoGEUaw911WqYwRcNRPLFocT7aU6fTDoR3NuHf5.brwas1_servlet_engine1?bbsId=BBSMSTR_000000000289&nttId=198977&kind=&mno=sitemap_02&pageIndex=1&searchCnd=&searchWrd=&isExpired=N&moveBbsId=": {
+    "firstSeen": "2026-10-22T10:37:45.933Z",
+    "org": "충청남도 보령시청"
+  },
+  "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000028&menuCd=DOM_000008902003004000&paging=ok&startPage=1&dataSid=306502937": {
+    "firstSeen": "2026-10-22T10:37:59.941Z",
+    "org": "경상남도 거제시청"
+  },
+  "https://www.sancheong.go.kr/news/selectBbsNttView.do?key=1825&bbsNo=115&nttNo=166241&searchCtgry=&searchCnd=all&searchKrwd=&pageIndex=1&integrDeptCode=": {
+    "firstSeen": "2026-10-22T10:38:04.949Z",
+    "org": "경상남도 산청군청"
   }
 }

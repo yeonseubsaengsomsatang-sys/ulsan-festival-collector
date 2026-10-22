@@ -26,6 +26,7 @@ const path = require("path");
 // 단계만 추가됨. .hwp(구 바이너리 한글파일)는 무료로 안정적으로 읽을 라이브러리가 없어
 // 지금처럼 "확인 필요"로 남긴다(추측 금지 원칙).
 const { PDFParse } = require("pdf-parse");
+const zlib = require("zlib");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
@@ -1995,7 +1996,7 @@ const DATE_DEADLINE_ONLY_RE =
 // 전제(연도 없으면 수집 시점의 연도로 가정)로 마감일만 뽑는다.
 const KOREAN_MONTH_DAY_DEADLINE_RE =
   /(?:신청|접수|모집)\s*(?:기간|기한)?\s*\)?\s*[:：]?\s*~?\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*까지/;
-const ATTACHMENT_RE = /([^\s]+\.(?:hwp|pdf|jpg|jpeg|png))\s*다운로드/gi;
+const ATTACHMENT_RE = /([^\s]+\.(?:hwp|hwpx|pdf|jpg|jpeg|png))\s*다운로드/gi;
 
 // ---- 2026-10-21 신설: 모집공고 상세정보(행사명/장소/기간/모집규모/참가비/신청방법) 자동
 // 추출. 정부 공고 양식은 라벨(행사명/기간/장소 등)이 2~3글자라 "행 사 명"처럼 글자마다
@@ -2482,11 +2483,13 @@ function stripHtmlPreserveLines(html) {
     .join("\n");
 }
 
-// ---- 2026-10-21 신설: 공식 첨부파일(PDF) 분석 ----
+// ---- 2026-10-21 신설, 2026-10-22 HWPX 추가: 공식 첨부파일(PDF·HWPX) 분석 ----
 // 비용 조사 결과(사용자 승인 완료): pdf-parse는 무료 오픈소스라 외부 API 호출/비용이
-// 전혀 없음. .hwp(구 바이너리 한글파일)는 무료로 안정적으로 읽을 라이브러리가 없어
-// 지금처럼 건드리지 않고 "확인 필요"로 남긴다 — PDF만 지원.
-const DIRECT_PDF_LINK_RE = /<a[^>]+href="([^"]+\.pdf)"[^>]*>/gi;
+// 전혀 없음. .hwp(구 바이너리 한글파일, ~2014년 이전)는 무료로 안정적으로 읽을
+// 라이브러리가 없어 여전히 "확인 필요"로 남긴다. 반면 .hwpx(2014년 이후 신형,
+// 사실상 ZIP+XML 컨테이너 — OOXML과 같은 구조)는 외부 라이브러리 없이 Node 내장
+// zlib(raw deflate)만으로 직접 풀어 읽을 수 있어 이번에 추가 지원한다.
+const DIRECT_ATTACHMENT_LINK_RE = /<a[^>]+href="([^"]+\.(?:pdf|hwpx))"[^>]*>/gi;
 // eminwon(경주 등 NTIS 계열 게시판)의 첨부파일은 onclick="goDownLoad('표시이름','저장이름',
 // '경로',파일ID)"로 다운로드되고, 실제 다운로드 URL은 그 사이트의 외부 js(utility.js)에
 // 박혀 있는 "eminwon.<도메인>/emwp/jsp/ofr/FileDown.jsp?..." 패턴으로 역추적해 확인함
@@ -2509,7 +2512,7 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   // 첨부파일 목록이 보통 들어가는 2000자 이내로만 범위를 좁힌다.
   const attachIdx = html.indexOf("첨부");
   const searchHtml = attachIdx !== -1 ? html.slice(attachIdx, attachIdx + 2000) : html;
-  const direct = new RegExp(DIRECT_PDF_LINK_RE.source, "gi");
+  const direct = new RegExp(DIRECT_ATTACHMENT_LINK_RE.source, "gi");
   while ((m = direct.exec(searchHtml))) {
     try {
       out.push(new URL(decodeEntities(m[1]), pageUrl).href);
@@ -2522,7 +2525,7 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   const godown = new RegExp(GODOWNLOAD_RE.source, "g");
   while ((m = godown.exec(searchHtml))) {
     const [, userFileNm, sysFileNm, filePath] = m;
-    if (!/\.pdf$/i.test(userFileNm)) continue; // .hwp/.hwpx/이미지는 지원 안 함 — 확인 필요로 남김
+    if (!/\.(?:pdf|hwpx)$/i.test(userFileNm)) continue; // .hwp(구형)·이미지는 지원 안 함 — 확인 필요로 남김
     try {
       const host = new URL(pageUrl).hostname.replace(/^www\./, "");
       const url =
@@ -2558,13 +2561,100 @@ async function fetchPdfText(pdfUrl) {
   }
 }
 
+// 2026-10-22 신설: .hwpx(한글 2014+ 신형 포맷)는 내부적으로 ZIP 컨테이너이고, 본문은
+// Contents/section0.xml(여러 섹션이면 section1.xml...) 안에 <hp:p>문단</hp:p>,
+// <hp:t>텍스트</hp:t> 구조로 들어있다. 외부 압축 라이브러리 없이 Node 내장
+// zlib.inflateRawSync만으로 ZIP의 central directory를 직접 읽어 해당 엔트리만
+// 꺼낸다 — 전체 압축을 풀 필요 없이 필요한 XML 파트만 읽어 가볍다.
+function readZipCentralDirectory(buf) {
+  const EOCD_SIG = 0x06054b50;
+  const searchFrom = Math.max(0, buf.length - 22 - 65536);
+  let eocdOffset = -1;
+  for (let i = buf.length - 22; i >= searchFrom; i--) {
+    if (buf.readUInt32LE(i) === EOCD_SIG) {
+      eocdOffset = i;
+      break;
+    }
+  }
+  if (eocdOffset === -1) return [];
+  const entryCount = buf.readUInt16LE(eocdOffset + 10);
+  const cdOffset = buf.readUInt32LE(eocdOffset + 16);
+  const entries = [];
+  let p = cdOffset;
+  for (let i = 0; i < entryCount && p + 46 <= buf.length; i++) {
+    if (buf.readUInt32LE(p) !== 0x02014b50) break;
+    const compMethod = buf.readUInt16LE(p + 10);
+    const compSize = buf.readUInt32LE(p + 20);
+    const nameLen = buf.readUInt16LE(p + 28);
+    const extraLen = buf.readUInt16LE(p + 30);
+    const commentLen = buf.readUInt16LE(p + 32);
+    const localHeaderOffset = buf.readUInt32LE(p + 42);
+    const name = buf.toString("utf8", p + 46, p + 46 + nameLen);
+    entries.push({ name, compMethod, compSize, localHeaderOffset });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+function readZipEntryData(buf, entry) {
+  const p = entry.localHeaderOffset;
+  if (p + 30 > buf.length || buf.readUInt32LE(p) !== 0x04034b50) return null;
+  const nameLen = buf.readUInt16LE(p + 26);
+  const extraLen = buf.readUInt16LE(p + 28);
+  const dataStart = p + 30 + nameLen + extraLen;
+  const raw = buf.subarray(dataStart, dataStart + entry.compSize);
+  if (entry.compMethod === 0) return raw; // 저장만(비압축)
+  if (entry.compMethod === 8) {
+    try {
+      return zlib.inflateRawSync(raw);
+    } catch {
+      return null;
+    }
+  }
+  return null; // 지원하지 않는 압축 방식(드묾) — 조용히 포기
+}
+function hwpxXmlToText(xml) {
+  return xml
+    .replace(/<\/hp:p>/g, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .trim();
+}
+async function fetchHwpxText(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": BROWSER_UA },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > 15 * 1024 * 1024) return null;
+    const entries = readZipCentralDirectory(buf)
+      .filter((e) => /Contents\/section\d+\.xml/i.test(e.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (!entries.length) return null;
+    const texts = [];
+    for (const entry of entries) {
+      const data = readZipEntryData(buf, entry);
+      if (!data) continue;
+      const text = hwpxXmlToText(data.toString("utf8"));
+      if (text) texts.push(text);
+    }
+    return texts.length ? texts.join("\n") : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAttachmentPdfText(html, pageUrl) {
   const urls = extractAttachmentPdfUrls(html, pageUrl);
   const texts = [];
   for (const url of urls) {
-    const text = await fetchPdfText(url);
+    const text = /\.hwpx($|\?)/i.test(url) ? await fetchHwpxText(url) : await fetchPdfText(url);
     if (text) texts.push(text);
-    if (texts.join("\n").length > 8000) break; // 과도하게 긴 PDF는 앞부분만
+    if (texts.join("\n").length > 8000) break; // 과도하게 긴 첨부파일은 앞부분만
   }
   return texts.length ? texts.join("\n").slice(0, 8000) : null;
 }
@@ -2662,9 +2752,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
     ? ` 참가자격 근거: "${eligInfo.eligibility}"${eligInfo.restrictedRegion ? ` (제한 지역: ${eligInfo.restrictedRegion})` : ""}.`
     : "";
   const pdfNote = result.attachmentParsed
-    ? " 첨부 PDF 공고문에서 세부정보를 추가로 확인함."
+    ? " 첨부 PDF·HWPX 공고문에서 세부정보를 추가로 확인함."
     : attachments.length
-      ? ` 첨부파일(${attachments.join(", ")})이 있으나 자동분석에 실패했거나 지원하지 않는 형식(.hwp 등)이라 직접 확인이 필요함.`
+      ? ` 첨부파일(${attachments.join(", ")})이 있으나 자동분석에 실패했거나 지원하지 않는 형식(구형 .hwp 등)이라 직접 확인이 필요함.`
       : "";
   if (result.recruitStatus === "unknown") {
     result.memo = `${fetchFailNote}${cls.reason} 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.${eligNote}${pdfNote}`;
@@ -3120,7 +3210,38 @@ if (require.main === module) {
   });
 }
 
+// 2026-10-22 신설: main() 안에서만 쓰던 보드 목록 전체를 외부에서도 점검할 수 있게
+// 하나로 모아 내보낸다(동작 변경 없음 — main()의 두 반복문이 쓰는 것과 동일한 배열).
+// "60개 기관 전수 점검" 같은 진단 스크립트가 이 목록을 그대로 재사용해, main()의
+// 실제 수집 로직과 분리된 별도 URL 목록을 만들다가 서로 어긋나는 일을 막기 위함.
+const ALL_BOARDS = [
+  // isUlsanBaseBoard: main()의 첫 반복문(BOARDS, extractCandidates 사용)과 둘째 반복문
+  // (아래 나머지 전부, board.extractor || extractPostCandidates 사용)이 서로 다른
+  // 추출기를 쓰므로, 외부 점검 스크립트가 어느 쪽을 써야 하는지 구분할 수 있게 표시.
+  ...BOARDS.map((b) => ({ ...b, region: b.region || "울산", isUlsanBaseBoard: true })),
+  ...GYEONGJU_GIMHAE_BOARDS,
+  ...MIRYANG_BOARDS,
+  ...YEONGJU_GYEONGSAN_BOARDS,
+  ...CHANGWON_BOARDS,
+  ...HADONG_BOARDS,
+  ...NATIONWIDE_PHASE1_BOARDS,
+  ...NATIONWIDE_PHASE2_BOARDS,
+  ...NATIONWIDE_PHASE3_BOARDS,
+  ...NATIONWIDE_PHASE4_BOARDS,
+  ...NATIONWIDE_PHASE5_BOARDS,
+  ...NATIONWIDE_PHASE6_BOARDS,
+  ...NATIONWIDE_PHASE7_BOARDS,
+  ...NATIONWIDE_PHASE8_BOARDS,
+  ...NATIONWIDE_PHASE9_BOARDS,
+  ...NATIONWIDE_PHASE10_BOARDS,
+];
+
 module.exports = {
+  ALL_BOARDS,
+  extractCandidates,
+  extractPostCandidates,
+  NEW_SITE_KEYWORD_RE,
+  describeFetchError,
   fetchAndClassifyDetail,
   extractDateRange,
   extractEventPeriod,
@@ -3141,6 +3262,7 @@ module.exports = {
   cleanTitle,
   extractAttachmentPdfUrls,
   fetchPdfText,
+  fetchHwpxText,
   fetchText,
   stripHtmlPreserveLines,
 };

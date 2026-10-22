@@ -566,5 +566,9 @@
   "https://www.sancheong.go.kr/news/selectBbsNttView.do?key=1825&bbsNo=115&nttNo=166241&searchCtgry=&searchCnd=all&searchKrwd=&pageIndex=1&integrDeptCode=": {
     "firstSeen": "2026-10-22T10:38:04.949Z",
     "org": "경상남도 산청군청"
+  },
+  "https://www.brcn.go.kr/cop/bbs/BBSMSTR_000000000263/selectBoardArticle.do;jsessionid=x5JLaXGtM1faeQE2WToFpjn4KD5LgEiw9a6aDZ0WsoXmEyNOTlBLvI4BosdJeECd.brwas2_servlet_engine1?bbsId=BBSMSTR_000000000289&nttId=198977&kind=&mno=sitemap_02&pageIndex=1&searchCnd=&searchWrd=&isExpired=N&moveBbsId=": {
+    "firstSeen": "2026-10-22T11:00:55.343Z",
+    "org": "충청남도 보령시청"
   }
 }

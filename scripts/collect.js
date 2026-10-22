@@ -2083,6 +2083,13 @@ function extractEventName(text) {
 // 행사(개최) 기간 — 모집기간과는 다른 필드(festivalStart/festivalEnd). "모집/접수/신청"
 // 라벨은 제외하고, 그 외 날짜범위 라벨(기간/행사기간/행사일/축제기간/개최기간 등)
 // 중 처음 나오는 것을 행사 기간으로 본다. 둘 다 없으면 null -> 확인 필요.
+// 2026-10-22 신설: 범위("~")가 아니라 "일시 : 2026.6.13.(토) 12:00~20:00"처럼 하루짜리
+// 행사 날짜만 적힌 경우(덕신온마켓 셀러모집 실측 사례 — 행사는 6/13 하루뿐이고 그
+// 뒤의 "12:00~20:00"은 시간 범위일 뿐 날짜 범위가 아님) festivalStart/End를 모두
+// 이 날짜로 본다. 오탐을 줄이기 위해 "모집/접수/신청"과는 무관한, 행사 날짜를
+// 가리키는 라벨로만 한정한다.
+const EVENT_SINGLE_DATE_RE =
+  /(?:행사\s*일시|행사\s*일자|개최\s*일시|개최\s*일자|축제\s*일시|일\s*시)\s*(?:[:：]|\))\s*(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})/;
 function extractEventPeriod(text) {
   const re = new RegExp(LABELED_DATE_RANGE_RE.source, "g");
   let m;
@@ -2096,6 +2103,11 @@ function extractEventPeriod(text) {
       festivalStart: `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`,
       festivalEnd: `${endYear}-${endMonth.padStart(2, "0")}-${ed.padStart(2, "0")}`,
     };
+  }
+  const single = text.match(EVENT_SINGLE_DATE_RE);
+  if (single) {
+    const d = `${single[1]}-${String(single[2]).padStart(2, "0")}-${String(single[3]).padStart(2, "0")}`;
+    return { festivalStart: d, festivalEnd: d };
   }
   return { festivalStart: null, festivalEnd: null };
 }
@@ -2257,6 +2269,39 @@ function extractSelfDeclaredNoticeDate(text) {
   return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
 }
 
+// 2026-10-22 신설: 게시판 목록에서 postedDate를 못 캡처했을 때, 상세페이지 본문 안에
+// 흔히 있는 "등록일 : 2026-05-13" 같은 자체 날짜 표기를 대신 찾는다(덕신온마켓
+// 셀러모집 실측 사례 — 목록 추출기가 날짜를 못 가져왔지만 본문엔 등록일이 그대로
+// 있었음). 연도 없는 "O월 O일" 날짜의 기준점(postedDate)을 넓게 확보하기 위함.
+const POSTED_DATE_BODY_RE =
+  /(?:등록일|게시일|작성일|등록\s*일자|게시\s*일자)\s*(?:[:：]|\))\s*(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})/;
+function extractPostedDateFromBody(text) {
+  const m = text.match(POSTED_DATE_BODY_RE);
+  if (!m) return null;
+  return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+}
+
+// 2026-10-22 신설: "O월 O일"처럼 연도 없이 적힌 날짜에 실행 시점(수집 당일)의 연도를
+// 그냥 붙이던 기존 방식은, 수집이 연말연초에 걸리면 완전히 다른 연도를 가리킬 수 있어
+// 위험함(예: 12월에 수집한 공고가 "1월 5일까지"라면 올해가 아니라 내년을 가리킴).
+// 대신 그 공고의 게시일(postedDate — 목록 또는 본문 "등록일"에서 확인된 값)을
+// 기준으로 삼는다: 모집기간은 상식적으로 게시일 당일이거나 그 이후에 시작하므로,
+// 계산한 날짜가 게시일보다 60일 이상 이전이면 다음 해를 가리키는 것으로 보정한다.
+// 기준으로 쓸 게시일 자체가 없으면(목록·본문 모두 못 찾음) 추측할 근거가 전혀
+// 없으므로 null을 돌려주고, 호출한 쪽에서 "확인 필요"로 남긴다(추측 금지 원칙).
+function resolveYearlessMonthDay(month, day, referenceDateStr) {
+  if (!referenceDateStr) return null;
+  const ref = parseKoDate(referenceDateStr);
+  if (!ref) return null;
+  const year = ref.getUTCFullYear();
+  let candidate = parseKoMonthDay(month, day, year);
+  if (!candidate) return null;
+  if (candidate.getTime() < ref.getTime() - 60 * 24 * 60 * 60 * 1000) {
+    candidate = parseKoMonthDay(month, day, year + 1);
+  }
+  return candidate;
+}
+
 // 본문에서 신청기간을 뽑아내는 3단계 폴백 — 위에서 아래로 시도하며, 먼저 성공한 패턴을
 // 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
 // 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
@@ -2264,6 +2309,11 @@ function extractSelfDeclaredNoticeDate(text) {
 function extractDateRange(bodyText, postedDate) {
   const out = { applyStart: null, applyEnd: null, recruitStatus: "unknown" };
   const today = new Date();
+  // 2026-10-22: 연도 없는 "O월 O일" 날짜를 해석할 기준점 — 목록에서 못 가져왔으면
+  // 본문의 "등록일" 표기, 그마저 없으면 공고문 자체에 박힌 "YYYY년 M월 D일" 표기까지
+  // 순서대로 찾는다. 셋 다 없으면 null — 이 경우 아래 kmd 관련 분기들은 전부
+  // 추측하지 않고 그대로 통과한다(최종적으로 "확인 필요"로 남음).
+  const referenceDate = postedDate || extractPostedDateFromBody(bodyText) || extractSelfDeclaredNoticeDate(bodyText);
 
   const rangeMatch = bodyText.match(DATE_RANGE_RE);
   if (rangeMatch) {
@@ -2282,12 +2332,11 @@ function extractDateRange(bodyText, postedDate) {
 
   const kmdMatch = bodyText.match(KOREAN_MONTH_DAY_RANGE_RE);
   if (kmdMatch) {
-    const year = today.getFullYear();
-    const start = parseKoMonthDay(kmdMatch[1], kmdMatch[2], year);
-    const end = parseKoMonthDay(kmdMatch[3], kmdMatch[4], year);
+    const start = resolveYearlessMonthDay(kmdMatch[1], kmdMatch[2], referenceDate);
+    const end = resolveYearlessMonthDay(kmdMatch[3], kmdMatch[4], referenceDate);
     if (start && end && end >= start) {
-      out.applyStart = `${year}-${String(kmdMatch[1]).padStart(2, "0")}-${String(kmdMatch[2]).padStart(2, "0")}`;
-      out.applyEnd = `${year}-${String(kmdMatch[3]).padStart(2, "0")}-${String(kmdMatch[4]).padStart(2, "0")}`;
+      out.applyStart = `${start.getUTCFullYear()}-${String(kmdMatch[1]).padStart(2, "0")}-${String(kmdMatch[2]).padStart(2, "0")}`;
+      out.applyEnd = `${end.getUTCFullYear()}-${String(kmdMatch[3]).padStart(2, "0")}-${String(kmdMatch[4]).padStart(2, "0")}`;
       out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
       return out;
     }
@@ -2308,10 +2357,9 @@ function extractDateRange(bodyText, postedDate) {
 
   const kmdDeadlineMatch = bodyText.match(KOREAN_MONTH_DAY_DEADLINE_RE);
   if (kmdDeadlineMatch) {
-    const year = today.getFullYear();
-    const end = parseKoMonthDay(kmdDeadlineMatch[1], kmdDeadlineMatch[2], year);
+    const end = resolveYearlessMonthDay(kmdDeadlineMatch[1], kmdDeadlineMatch[2], referenceDate);
     if (end) {
-      out.applyEnd = `${year}-${String(kmdDeadlineMatch[1]).padStart(2, "0")}-${String(kmdDeadlineMatch[2]).padStart(2, "0")}`;
+      out.applyEnd = `${end.getUTCFullYear()}-${String(kmdDeadlineMatch[1]).padStart(2, "0")}-${String(kmdDeadlineMatch[2]).padStart(2, "0")}`;
       out.recruitStatus = today > end ? "closed" : "unknown";
       return out;
     }
@@ -2327,11 +2375,14 @@ function extractDateRange(bodyText, postedDate) {
   const announceMatch = bodyText.match(APPLY_PERIOD_ANNOUNCE_RE);
   if (announceMatch) {
     const [, endYearRaw, endMonth, endDay] = announceMatch;
-    const endYear = endYearRaw || today.getFullYear();
-    const end = parseKoMonthDay(endMonth, endDay, +endYear);
+    // 2026-10-22 수정: 연도가 본문에 명시되지 않은 경우, 실행 시점 연도를 쓰던 것을
+    // referenceDate(공고 게시일) 기준 보정으로 바꿈 — 위 kmd 분기들과 같은 이유.
+    const end = endYearRaw
+      ? parseKoMonthDay(endMonth, endDay, +endYearRaw)
+      : resolveYearlessMonthDay(endMonth, endDay, referenceDate);
     if (end) {
       out.applyStart = normalizePostedDate(postedDate) || extractSelfDeclaredNoticeDate(bodyText);
-      out.applyEnd = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
+      out.applyEnd = `${end.getUTCFullYear()}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
       if (today > end) {
         out.recruitStatus = "closed";
       } else if (out.applyStart) {
@@ -3076,6 +3127,8 @@ module.exports = {
   extractApplyMethod,
   extractApplyLink,
   extractSelfDeclaredNoticeDate,
+  extractPostedDateFromBody,
+  resolveYearlessMonthDay,
   classifyNotice,
   decideAutoPublishStatus,
   canonicalDedupKey,

@@ -2579,6 +2579,12 @@ const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,
 // <a> 태그의 title 속성("...파일명.ext 다운로드")에 있음.
 const OPENDOWNLOADFILES_RE =
   /<a[^>]*onclick="openDownloadFiles\((\d+)[^)]*\)[^"]*"[^>]*title="([^"]+?\.(hwp|hwpx|pdf))\s*다운로드"/gi;
+// 2026-10-23 신설: 울산 중구청(board/view.ulsan 계열) 첨부파일 — href는 바로
+// "/board/download.ulsan?...&fileSid=N" 형태라 쿠키·Referer 없이 그대로 받을 수
+// 있지만(실측 확인), 파일명이 <a> 안의 <img> 다음 <span>에 있어(사이에 태그가
+// 끼어 있음) 기존 ATTACHMENT_TEXT_LINK_RE([^<]+ 로 텍스트만 찾음)가 못 잡음.
+const JUNGGU_FILE_RE =
+  /<a href="(\/board\/download\.ulsan\?[^"]+)"[^>]*class="file"[^>]*>[\s\S]{0,150}?<span>([^<]+\.(pdf|hwpx|hwp))/gi;
 
 function attachmentKindOf(filename) {
   if (/\.hwpx$/i.test(filename)) return "hwpx";
@@ -2603,7 +2609,15 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   // "첨부"가 여러 번 나올 수 있어(실측: 울주군청 페이지는 본문 첨부파일 영역과 전혀
   // 무관한 꼬리말/위젯에도 같은 글자가 또 나옴) 첫 등장 지점부터 끝까지가 아니라, 실제
   // 첨부파일 목록이 보통 들어가는 2000자 이내로만 범위를 좁힌다.
-  const attachIdx = html.indexOf("첨부");
+  // 2026-10-23 수정: 중구청(junggu.ulsan.kr)은 실제 첨부파일 영역(class="file_wrap")이
+  // 본문보다 먼저 나오고, 본문 안의 "첨부파일을 참고하시기 바랍니다" 같은 안내 문구가
+  // 오히려 더 나중에 나와 "첨부"의 첫 등장 지점만 보면 실제 첨부 영역을 지나쳐버림
+  // (실측 확인). "첨부"와 "file_wrap"(또는 class="file") 중 더 앞쪽에 있는 지점을
+  // 기준으로 삼아 이런 순서 역전에도 영역을 놓치지 않게 한다.
+  const attachKeywordIdx = html.indexOf("첨부");
+  const fileWrapIdx = html.search(/class="file(_wrap|_zone|")/);
+  const candidates = [attachKeywordIdx, fileWrapIdx].filter((i) => i !== -1);
+  const attachIdx = candidates.length ? Math.min(...candidates) : -1;
   const searchHtml = attachIdx !== -1 ? html.slice(attachIdx, attachIdx + 2000) : html;
   const direct = new RegExp(DIRECT_ATTACHMENT_LINK_RE.source, "gi");
   while ((m = direct.exec(searchHtml))) {
@@ -2632,6 +2646,18 @@ function extractAttachmentPdfUrls(html, pageUrl) {
     try {
       const origin = new URL(pageUrl).origin;
       out.push({ url: `${origin}/programs/board/download.do?parm_file_uid=${m[1]}`, kind });
+    } catch {
+      /* ignore */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  const jungguFile = new RegExp(JUNGGU_FILE_RE.source, "gi");
+  while ((m = jungguFile.exec(searchHtml))) {
+    const kind = attachmentKindOf(m[2]);
+    if (!kind) continue;
+    try {
+      out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind });
     } catch {
       /* ignore */
     }

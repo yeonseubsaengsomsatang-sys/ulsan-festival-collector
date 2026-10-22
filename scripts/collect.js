@@ -3410,6 +3410,12 @@ async function main() {
       recordBoardResult(board, true);
 
       for (const c of candidates) {
+        // 2026-10-23 신설: "javascript:;" 같은 실행 불가 href가 그대로 섞여 들어오는
+        // 경우(실측 — 울주군청 통합검색 페이지의 "실시간 인기검색어" 위젯이 검색결과
+        // 목록처럼 보이는 <a href="javascript:;">를 내보냄)를 걸러낸다. 이런 후보는
+        // 원문 URL이 영원히 없는 "확인 불가" 데이터만 쌓이게 되므로, seen 등록 전에
+        // 미리 제외해 깨진 레코드가 생기지 않게 한다.
+        if (!/^https?:\/\//i.test(c.url)) continue;
         if (seen[c.url]) continue; // already surfaced in a past run
         const ckey = canonicalDedupKey(c.url);
         if (seenCanonical.has(ckey)) continue; // 같은 글이 다른 페이지/파라미터로 재수집되는 것 방지

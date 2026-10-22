@@ -1261,6 +1261,33 @@ function extractGntoCandidates(html, pageUrl) {
   return out;
 }
 
+// 2026-10-22 신설: 울주문화재단(onggi.or.kr, 2026 울산옹기축제 공식 홈페이지) 축제소식
+// 게시판. 상세 링크가 "/notice/<번호>?page=<N>" 형태의 REST 경로라 "parm_bod_uid=" 나
+// "amode=view" 파라미터가 전혀 없음 — 범용 extractPostCandidates의 POST_LINK_RE 필터에
+// 걸려 후보가 통째로 걸러지던 것을 "2026 울산옹기축제 「플리마켓」 모집 공고" 실측
+// 테스트로 발견하고, 전용 추출기를 새로 만들어 해결함. 제목은 <div class="subj">, 날짜는
+// 그 뒤 <span class="date ...">YYYY-MM-DD</span>.
+const ONGGI_ITEM_RE =
+  /<a href="(https:\/\/www\.onggi\.or\.kr\/notice\/\d+[^"]*)"[^>]*>[\s\S]{0,250}?<div class="subj">([^<]{4,150})<\/div>[\s\S]{0,450}?<span class="date[^>]*>[\s\S]{0,200}?(\d{4})-(\d{2})-(\d{2})/g;
+function extractOnggiCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(ONGGI_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: `${m[3]}-${m[4]}-${m[5]}` });
+  }
+  return out;
+}
+
 // 경상남도 산청군청(sancheong.go.kr) 보도자료: 충북/남양주와 같은 selectBbsNttList/View.do
 // 계열이지만 스킨이 또 달라, 제목은 <strong class="news_ti">, 요약문은 <span class="news_txt">
 // (창원처럼 제목에 키워드가 없고 요약문에만 있는 경우가 있어 둘을 합쳐서 판정), 날짜는
@@ -1807,6 +1834,16 @@ const NATIONWIDE_PHASE9_BOARDS = [
     region: "대구",
     city: "수성",
     extractor: extractSuseongCandidates,
+  },
+  // 2026-10-22 신설: 울주문화재단(2026 울산옹기축제 공식 홈페이지) — "2026 울산옹기축제
+  // 「플리마켓」 모집 공고" 실측 테스트로 발견·등록. 전용 추출기 필요(위 ONGGI_ITEM_RE 설명 참고).
+  {
+    org: "울주문화재단",
+    sourceOrg: "울주문화재단 축제소식(울산옹기축제)",
+    url: "https://www.onggi.or.kr/notice",
+    region: "울산",
+    city: "울주",
+    extractor: extractOnggiCandidates,
   },
 ];
 
@@ -3263,6 +3300,7 @@ module.exports = {
   extractAttachmentPdfUrls,
   fetchPdfText,
   fetchHwpxText,
+  extractOnggiCandidates,
   fetchText,
   stripHtmlPreserveLines,
 };

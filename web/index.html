@@ -562,11 +562,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  .memo-wrap.expanded .memo-clamp {
-    display: block;
-    -webkit-line-clamp: unset;
-    overflow: visible;
-  }
   .memo-toggle {
     display: inline-block;
     margin-top: 4px;
@@ -679,6 +674,38 @@
     padding: 28px;
   }
   .modal-card h2 { font-size: 20px; margin-bottom: 18px; }
+  /* 2026-10-22 추가: 메모 "더보기"를 표 안 펼침 대신 별도 팝업(모달)으로 열기 위한
+     스타일 — 기존 modal-overlay/modal-card를 그대로 재사용해(이미 PC·모바일 모두
+     가운데 정렬 + 화면이 작으면 안에서 스크롤되게 되어 있음) 추가 작업 없이도 두
+     환경 모두에서 동작한다. */
+  .modal-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .modal-header-row h2 { margin-bottom: 0; }
+  .modal-close-x {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .modal-close-x:hover { color: var(--ink); border-color: var(--ink-muted); }
+  .memo-modal-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 14.5px;
+    color: var(--ink);
+  }
   .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -870,6 +897,11 @@
 
 <div class="modal-overlay hidden" id="detailModalOverlay">
   <div class="modal-card" id="detailModalCard">
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="memoModalOverlay">
+  <div class="modal-card" id="memoModalCard">
   </div>
 </div>
 
@@ -1178,9 +1210,10 @@
 
   // 2026-10-22 추가: 자동수집 메모가 길어지면(판단 근거를 문장으로 풀어 쓰다 보니 흔함)
   // 표의 해당 행이 세로로 길게 늘어나 축제명·신청 버튼까지 찾기 어려워진다는 실측
-  // 피드백에 따라, 기본 3줄만 보이게 자르고 "더보기"를 눌러야 전체를 볼 수 있게 한다.
-  // 토글은 CSS 클래스만 바꾸므로 다시 렌더링하지 않고, 전체 텍스트는 처음부터 DOM에
-  // 그대로 있다(검색엔진·접근성 도구에서도 전체 내용이 보임).
+  // 피드백에 따라, 기본 3줄만 보이게 자르고 "더보기"를 누르면 별도 팝업(모달)으로
+  // 축제명과 메모 전체를 보여준다(2026-10-22 2차 수정: 처음엔 표 안에서 펼쳤는데,
+  // 팝업으로 바꿔달라는 요청에 따라 변경 — 표 셀 안에는 항상 3줄 미리보기만 남음).
+  // 전체 텍스트는 처음부터 DOM(미리보기 div)에 있어 검색엔진·접근성 도구에는 영향 없음.
   const MEMO_CLAMP_THRESHOLD = 70; // 대략 3줄을 넘길 만한 길이부터만 "더보기"를 붙인다.
   function memoCellHtml(f) {
     const memo = f.memo ? escapeHtml(f.memo) : null;
@@ -1188,18 +1221,36 @@
     if (memo.length <= MEMO_CLAMP_THRESHOLD) return memo;
     return `<div class="memo-wrap">
       <div class="memo-clamp">${memo}</div>
-      <button type="button" class="memo-toggle" data-action="toggle-memo">더보기</button>
+      <button type="button" class="memo-toggle" data-memo-id="${registerDetail(f)}">더보기</button>
     </div>`;
   }
 
   function bindMemoToggles(root) {
     (root || document).querySelectorAll(".memo-toggle").forEach(btn => {
       btn.addEventListener("click", () => {
-        const wrap = btn.closest(".memo-wrap");
-        const expanded = wrap.classList.toggle("expanded");
-        btn.textContent = expanded ? "접기" : "더보기";
+        const f = DETAIL_LOOKUP[btn.dataset.memoId];
+        if (f) openMemoModal(f);
       });
     });
+  }
+
+  function openMemoModal(f) {
+    document.getElementById("memoModalCard").innerHTML = `
+      <div class="modal-header-row">
+        <h2>${escapeHtml(f.name || "메모")}</h2>
+        <button type="button" class="modal-close-x" id="memoModalCloseX" aria-label="닫기">✕</button>
+      </div>
+      <div class="memo-modal-body">${f.memo ? escapeHtml(f.memo) : "메모가 없습니다."}</div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="memoModalClose">닫기</button>
+      </div>
+    `;
+    document.getElementById("memoModalOverlay").classList.remove("hidden");
+    document.getElementById("memoModalCloseX").addEventListener("click", closeMemoModal);
+    document.getElementById("memoModalClose").addEventListener("click", closeMemoModal);
+  }
+  function closeMemoModal() {
+    document.getElementById("memoModalOverlay").classList.add("hidden");
   }
 
   // ---- 직접 추가한 축제(브라우저 저장) ----
@@ -2538,6 +2589,14 @@
   });
   document.getElementById("detailModalOverlay").addEventListener("click", ev => {
     if (ev.target.id === "detailModalOverlay") closeDetailModal();
+  });
+  document.getElementById("memoModalOverlay").addEventListener("click", ev => {
+    if (ev.target.id === "memoModalOverlay") closeMemoModal();
+  });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && !document.getElementById("memoModalOverlay").classList.contains("hidden")) {
+      closeMemoModal();
+    }
   });
   document.getElementById("festivalForm").addEventListener("submit", ev => {
     ev.preventDefault();

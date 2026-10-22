@@ -2560,13 +2560,25 @@ const DIRECT_ATTACHMENT_LINK_RE = /<a[^>]+href="([^"]+\.(pdf|hwpx|hwp))"[^>]*>/g
 // 쓰는 것으로 확인된 CMS)은 다운로드 링크가 "bbs/download.php?...&nonce=..." 형태라
 // href에 확장자가 없고, 파일명은 링크 "텍스트"에만 있음(울주문화재단 실측 확인) — 이
 // 경우를 위한 보조 패턴. href 기반으로 못 찾았을 때만 보조로 쓴다.
-const ATTACHMENT_TEXT_LINK_RE = /<a[^>]+href="([^"]+)"[^>]*>\s*([^<]{1,200}?\.(pdf|hwpx|hwp))\s*<\/a>/gi;
+// href가 "#..." 같은 페이지 내 앵커(클릭은 onclick의 JS가 처리)인 경우는 실제
+// 다운로드 URL이 아니므로 제외 — 영주시청·경주시청(openDownloadFiles 계열)이 바로
+// 이런 구조라, 이 규칙이 없으면 onclick을 무시하고 쓸모없는 "#downFiles_NNN"을
+// 다운로드 URL로 잘못 채택해 더 구체적인 OPENDOWNLOADFILES_RE 분기까지 못 갔음
+// (영주시청 자원재활용 한마당 모집 공고 실측으로 발견).
+const ATTACHMENT_TEXT_LINK_RE = /<a[^>]+href="([^"#][^"]*)"[^>]*>\s*([^<]{1,200}?\.(pdf|hwpx|hwp))\s*<\/a>/gi;
 // eminwon(경주 등 NTIS 계열 게시판)의 첨부파일은 onclick="goDownLoad('표시이름','저장이름',
 // '경로',파일ID)"로 다운로드되고, 실제 다운로드 URL은 그 사이트의 외부 js(utility.js)에
 // 박혀 있는 "eminwon.<도메인>/emwp/jsp/ofr/FileDown.jsp?..." 패턴으로 역추적해 확인함
 // (경주 윈터포차라이트 PDF를 실제로 받아 pdf-parse로 100% 정확하게 읽어냄 — 비용 보고
 // 단계에서 실측 검증 완료).
 const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*\d+\)/g;
+// 2026-10-22 신설: 영주시청·경주시청이 공유하는 CMS(같은 /design/common/js/utility.js)
+// 계열은 onclick="openDownloadFiles(파일ID)"로 다운로드하고, 실제 다운로드 URL은
+// utility.js에 박혀 있는 "/programs/board/download.do?parm_file_uid=<파일ID>" 패턴
+// (실측 확인 — 쿠키·Referer 불필요, goDownLoad와 달리 훨씬 단순함). 파일명은 같은
+// <a> 태그의 title 속성("...파일명.ext 다운로드")에 있음.
+const OPENDOWNLOADFILES_RE =
+  /<a[^>]*onclick="openDownloadFiles\((\d+)[^)]*\)[^"]*"[^>]*title="([^"]+?\.(hwp|hwpx|pdf))\s*다운로드"/gi;
 
 function attachmentKindOf(filename) {
   if (/\.hwpx$/i.test(filename)) return "hwpx";
@@ -2609,6 +2621,19 @@ function extractAttachmentPdfUrls(html, pageUrl) {
       out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind: attachmentKindOf(m[2]) });
     } catch {
       /* ignore malformed href */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  const openDl = new RegExp(OPENDOWNLOADFILES_RE.source, "gi");
+  while ((m = openDl.exec(searchHtml))) {
+    const kind = attachmentKindOf(m[2]);
+    if (!kind) continue;
+    try {
+      const origin = new URL(pageUrl).origin;
+      out.push({ url: `${origin}/programs/board/download.do?parm_file_uid=${m[1]}`, kind });
+    } catch {
+      /* ignore */
     }
   }
   if (out.length) return out.slice(0, 2);
@@ -3420,6 +3445,7 @@ async function main() {
           ulsanEligible: cls.ulsanEligible,
           eligibilityCategory: cls.eligibilityCategory,
           restrictedRegion: cls.restrictedRegion,
+          attachmentParsed: cls.attachmentParsed,
           linkStatus: cls.linkStatus,
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,
@@ -3495,6 +3521,7 @@ async function main() {
           ulsanEligible: cls.ulsanEligible,
           eligibilityCategory: cls.eligibilityCategory,
           restrictedRegion: cls.restrictedRegion,
+          attachmentParsed: cls.attachmentParsed,
           linkStatus: cls.linkStatus,
           linkCheckedAt: cls.linkCheckedAt,
           linkCheckDetail: cls.linkCheckDetail,

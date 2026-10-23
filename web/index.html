@@ -2064,8 +2064,13 @@
     return `<span class="status-pill ${NOTICE_TYPE_PILL_CLASS[type] || "unknown"}">${NOTICE_TYPE_LABEL[type] || "확인필요"}</span>`;
   }
 
+  // 2026-10-24 수정: f.recruitStatus는 수집 시점에 고정된 값이라 시간이 지나도 저절로
+  // 안 바뀜(실측: 마감일이 지난 뒤에도 저장된 값은 "open"으로 남아있는 사례 확인 —
+  // 다만 orgBadge()를 쓰는 공개 화면은 이미 안전함). 이 관리자 검토 화면도 orgBadge()와
+  // 똑같은 기준(날짜 정보가 있으면 getStatus()로 오늘 날짜 기준 재계산, 없을 때만 저장된
+  // recruitStatus를 그대로 사용)으로 통일해 같은 문제가 생기지 않게 한다.
   function recruitStatusBadge(f) {
-    const st = f.recruitStatus || "unknown";
+    const st = (f.applyStart || f.applyEnd) ? getStatus(f) : (f.recruitStatus || "unknown");
     return `<span class="status-pill ${st}">${AUTO_RECRUIT_STATUS_LABEL[st] || "확인필요"}</span>`;
   }
 

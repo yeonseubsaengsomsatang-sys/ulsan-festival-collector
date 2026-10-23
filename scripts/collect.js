@@ -3542,21 +3542,37 @@ async function main() {
     try {
       const html = await fetchText(board.url);
       const candidates = extractCandidates(html, board.url);
-      perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중)`);
       recordBoardResult(board, true);
 
+      // 2026-10-24 신설: "매칭 N건"만으론 그중 몇 건이 실제로 새로 저장됐고 몇 건이
+      // 이미 수집된 글(중복)이라 건너뛰었는지 로그에서 알 수 없었음(요청사항 — GitHub
+      // Actions 로그에서 신규/중복/실패를 구분할 수 있게 개선). 보드 1개 처리가 끝난
+      // 뒤 한 줄로 합쳐서 출력한다.
+      let newCount = 0;
+      let dupCount = 0;
+      let invalidCount = 0;
       for (const c of candidates) {
         // 2026-10-23 신설: "javascript:;" 같은 실행 불가 href가 그대로 섞여 들어오는
         // 경우(실측 — 울주군청 통합검색 페이지의 "실시간 인기검색어" 위젯이 검색결과
         // 목록처럼 보이는 <a href="javascript:;">를 내보냄)를 걸러낸다. 이런 후보는
         // 원문 URL이 영원히 없는 "확인 불가" 데이터만 쌓이게 되므로, seen 등록 전에
         // 미리 제외해 깨진 레코드가 생기지 않게 한다.
-        if (!/^https?:\/\//i.test(c.url)) continue;
-        if (seen[c.url]) continue; // already surfaced in a past run
+        if (!/^https?:\/\//i.test(c.url)) {
+          invalidCount++;
+          continue;
+        }
+        if (seen[c.url]) {
+          dupCount++;
+          continue; // already surfaced in a past run
+        }
         const ckey = canonicalDedupKey(c.url);
-        if (seenCanonical.has(ckey)) continue; // 같은 글이 다른 페이지/파라미터로 재수집되는 것 방지
+        if (seenCanonical.has(ckey)) {
+          dupCount++;
+          continue; // 같은 글이 다른 페이지/파라미터로 재수집되는 것 방지
+        }
         seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
+        newCount++;
 
         // 2026-10-16: 경주·김해·밀양과 동일한 기준(classifyNotice)을 울산 보드에도 적용해
         // 판매부스·체험부스·프리마켓 등 실제 부스 모집만 noticeType="recruit"(우선 검토)로
@@ -3599,6 +3615,9 @@ async function main() {
           memo: `자동수집(GitHub Actions, ${board.org}). ${cls.memo}`,
         });
       }
+      perBoardCounts.push(
+        `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}`
+      );
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
@@ -3689,16 +3708,25 @@ async function main() {
   for (const board of EMINWON_PLAYWRIGHT_BOARDS) {
     try {
       const candidates = await fetchEminwonCandidates(board.listUrl, NEW_SITE_KEYWORD_RE, NOISE_RE);
-      perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (헤드리스 브라우저로 목록 발견)`);
       recordBoardResult(board, true);
 
+      // 2026-10-24 신설: 다른 두 반복문과 동일하게 신규/중복 건수를 구분해 로그에 남김.
+      let newCount = 0;
+      let dupCount = 0;
       for (const c of candidates) {
         const detailUrl = buildEminwonDetailUrl(board.host, c.id);
-        if (seen[detailUrl]) continue;
+        if (seen[detailUrl]) {
+          dupCount++;
+          continue;
+        }
         const ckey = canonicalDedupKey(detailUrl);
-        if (seenCanonical.has(ckey)) continue;
+        if (seenCanonical.has(ckey)) {
+          dupCount++;
+          continue;
+        }
         seenCanonical.add(ckey);
         seen[detailUrl] = { firstSeen: new Date().toISOString(), org: board.org };
+        newCount++;
 
         // 2026-10-23 신설: 목록 화면 제목이 길면 "..."로 잘려 있어(실측: 북구청
         // id=45135) 상세페이지를 한 번 더 받아 전체 제목으로 보정한다. 보정에
@@ -3746,6 +3774,9 @@ async function main() {
           memo: `자동수집(GitHub Actions, ${board.org} — 헤드리스 브라우저로 목록 발견). ${cls.memo}`,
         });
       }
+      perBoardCounts.push(
+        `${board.sourceOrg}: ${candidates.length}건 매칭 (헤드리스 브라우저로 목록 발견) → 신규 ${newCount}건, 중복 ${dupCount}건`
+      );
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (헤드리스 브라우저 목록 발견 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
@@ -3783,6 +3814,16 @@ async function main() {
 
   console.log("=== 게시판별 결과 ===");
   perBoardCounts.forEach((l) => console.log(l));
+
+  // 2026-10-24 신설: "북구청 3종 + eminwon(북구·동구·남구) 3종"의 성공/신규/중복/실패를
+  // 한눈에 볼 수 있게 별도로 모아서 출력(요청사항 — GitHub Actions 로그 가독성 개선).
+  // perBoardCounts에 이미 있는 줄들을 그대로 다시 쓰는 것이라 집계 로직은 중복되지 않음.
+  const bukguRelatedCounts = perBoardCounts.filter((l) => /^(북구청|동구청|남구청)/.test(l));
+  if (bukguRelatedCounts.length) {
+    console.log("\n=== 울산 북구청 3종 + eminwon(북구·동구·남구) 요약 ===");
+    bukguRelatedCounts.forEach((l) => console.log(l));
+  }
+
   console.log(`\n신규 발견: ${newItems.length}건`);
   newItems.forEach((i) => console.log(` - [${i.sourceOrg}] ${i.name} -> ${i.sourceUrl}`));
   console.log(`\n누적 pending 총 ${merged.length}건 (data/collected.json)`);

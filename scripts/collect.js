@@ -34,7 +34,7 @@ const zlib = require("zlib");
 // 분류·첨부파일 분석은 그대로 기존 순수 HTTP 로직을 재사용한다(collect-playwright.js
 // 참고). playwright 자체는 그 모듈 안에서만 지연 로딩하므로, 설치가 안 된 환경에서도
 // 이 기관들만 "fetch_failed"로 분리될 뿐 다른 지역 수집에는 영향이 없다.
-const { fetchEminwonCandidates, buildEminwonDetailUrl } = require("./collect-playwright.js");
+const { fetchEminwonCandidates, buildEminwonDetailUrl, extractEminwonDetailTitle } = require("./collect-playwright.js");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
@@ -3623,10 +3623,22 @@ async function main() {
         seenCanonical.add(ckey);
         seen[detailUrl] = { firstSeen: new Date().toISOString(), org: board.org };
 
-        const cls = await fetchAndClassifyDetail(detailUrl, c.title, board.region, null);
+        // 2026-10-23 신설: 목록 화면 제목이 길면 "..."로 잘려 있어(실측: 북구청
+        // id=45135) 상세페이지를 한 번 더 받아 전체 제목으로 보정한다. 보정에
+        // 실패해도(네트워크 오류 등) 목록 제목으로 계속 진행 — 전체 수집을 막지 않음.
+        let title = c.title;
+        try {
+          const detailHtmlForTitle = await fetchText(detailUrl);
+          const fullTitle = extractEminwonDetailTitle(detailHtmlForTitle);
+          if (fullTitle) title = fullTitle;
+        } catch {
+          /* 보정 실패 — 목록 제목 그대로 사용 */
+        }
+
+        const cls = await fetchAndClassifyDetail(detailUrl, title, board.region, null);
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(detailUrl).digest("base64url").slice(0, 16)}`,
-          name: c.title,
+          name: title,
           region: board.region,
           sourceOrg: board.sourceOrg,
           sourceUrl: detailUrl,

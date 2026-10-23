@@ -81,4 +81,16 @@ function buildEminwonDetailUrl(host, notAncmtMgtNo) {
   return `https://${host}/emwp/gov/mogaha/ntis/web/ofr/action/OfrAction.do?${params.toString()}`;
 }
 
-module.exports = { fetchEminwonCandidates, buildEminwonDetailUrl };
+// 2026-10-23 신설: 목록 화면은 긴 제목을 "..."로 잘라서 보여준다(실측: 북구청
+// id=45135 "...뉴:빌리지사업 도시재생활성화계획 변경 고..." — 서버가 내려주는 목록
+// HTML 자체가 이미 잘려 있어 목록만으로는 전체 제목을 복원할 수 없음). 반면 상세
+// 페이지는 "<th>제목</th><td colspan=3>전체 제목</td>" 형태로 항상 전체 제목을
+// 담고 있음(같은 글의 상세페이지에서 "...변경 고시"까지 전부 확인). 그래서 상세
+// 페이지를 한 번 더 받아 이 자리의 텍스트로 목록 제목을 보정한다.
+const DETAIL_TITLE_RE = /<th[^>]*>\s*제목\s*<\/th>\s*<td[^>]*>([^<]+)<\/td>/;
+function extractEminwonDetailTitle(html) {
+  const m = html.match(DETAIL_TITLE_RE);
+  return m ? m[1].trim() : null;
+}
+
+module.exports = { fetchEminwonCandidates, buildEminwonDetailUrl, extractEminwonDetailTitle };

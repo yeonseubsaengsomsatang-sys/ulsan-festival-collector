@@ -638,5 +638,25 @@
   "https://www.brcn.go.kr/cop/bbs/BBSMSTR_000000000263/selectBoardArticle.do;jsessionid=Z3reBFVz4oa0TLOlWdI8Tuah9yLLy6Q5M2iMGNkUiG1dp0LVTpjwOs3jwygka4oB.brwas2_servlet_engine1?bbsId=BBSMSTR_000000000289&nttId=198977&kind=&mno=sitemap_02&pageIndex=1&searchCnd=&searchWrd=&isExpired=N&moveBbsId=": {
     "firstSeen": "2026-10-22T15:33:32.646Z",
     "org": "충청남도 보령시청"
+  },
+  "https://www.ulju.ulsan.kr/ulju/bbs/view.do?bIdx=70169&ptIdx=145&mId=0404010000": {
+    "firstSeen": "2026-10-23T05:29:01.613Z",
+    "org": "울산광역시 울주군청"
+  },
+  "https://www.changwon.go.kr/cwportal/10310/10429/10432.web?gcode=1011&idx=886249&amode=view&": {
+    "firstSeen": "2026-10-23T05:29:46.939Z",
+    "org": "경상남도 창원특례시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163587Hq0nX7g&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-23T05:32:56.748Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.sejong.go.kr/bbs/R0071/view.do?nttId=B000000163584Pm2uR5f&mno=sub02_01&cmsNoStr=&pageIndex=1&kind=": {
+    "firstSeen": "2026-10-23T05:32:58.244Z",
+    "org": "세종특별자치시청"
+  },
+  "https://www.mokpo.go.kr/www/mokpo_news/press_release/report_material?idx=549633&mode=view": {
+    "firstSeen": "2026-10-23T05:33:41.101Z",
+    "org": "전라남도 목포시청"
   }
 }

@@ -44,8 +44,11 @@ const BOARD_STATUS_PATH = path.join(DATA_DIR, "board_status.json");
 // 2026-10-21: 대형 축제/보도자료뿐 아니라 소규모 프리마켓·주말장터·벼룩시장의 셀러
 // 모집공고도 놓치지 않도록 "주말장터"·"벼룩시장"을 추가(기존 "나눔장터"와 같은 성격의
 // 소규모 장터 용어 — 전국 17개 시도 확대 요청에 따른 보강).
+// 2026-10-23 보강: 울산쇠부리축제(북구) 실측 — "먹거리장터 운영단체 모집"처럼 "부스"
+// 없이 "먹거리장터"만 쓰는 표현도 여기(게시판 단위 1차 키워드 필터)에서 걸려야
+// classifyNotice까지 도달한다. 아래 BOOTH_KEYWORD_RE와 짝을 맞춤.
 const KEYWORD_RE =
-  /(축제|체험\s*부스|판매\s*부스|먹거리\s*부스|식음료\s*부스|프리마켓|플리마켓|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스운영|부스\s*참가|판매자\s*모집|참여상인\s*모집|운영자\s*모집|참가업체\s*모집|참가자\s*모집)/;
+  /(축제|체험\s*부스|판매\s*부스|먹거리\s*부스|식음료\s*부스|먹거리\s*장터|프리마켓|플리마켓|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스운영|부스\s*참가|판매자\s*모집|참여상인\s*모집|운영자\s*모집|참가업체\s*모집|참가자\s*모집)/;
 
 // Titles that structurally match the keyword regex but are almost never a
 // real recruitment notice (menu labels, past-tense wrap-up articles, etc.)
@@ -108,6 +111,20 @@ const EMINWON_PLAYWRIGHT_BOARDS = [
   { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr" },
   { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr" },
 ].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp` }));
+
+// 2026-10-23 신설: 북구청 산하 행사 주관기관(울산쇠부리축제추진위원회) 공식 공지사항 —
+// 순수 HTTP로 서버 렌더링되는 일반 게시판이라(extractSoeburiCandidates 참고) 아래
+// main()의 두 번째 반복문(board.extractor 쓰는 쪽)에 다른 신규 사이트들과 함께 들어감.
+const BUKGU_FESTIVAL_BOARDS = [
+  {
+    org: "울산쇠부리축제추진위원회",
+    sourceOrg: "쇠부리축제 공지사항(북구)",
+    url: "https://soeburi.org/Notice",
+    region: "울산",
+    city: "북구",
+    extractor: extractSoeburiCandidates,
+  },
+];
 
 // ---- 경주시·김해시 확대 (2026-10-15 수동 검증) ----
 // 조사 방법: 각 사이트를 직접 fetch해서 실제 서버 렌더링 HTML에 글 목록이 나오는지
@@ -570,6 +587,36 @@ function extractGangnamCandidates(html, pageUrl) {
     let absUrl;
     try {
       absUrl = new URL(decodeEntities(m[1]), pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[3] });
+  }
+  return out;
+}
+
+// 2026-10-23 신설: 울산쇠부리축제추진위원회(북구청 산하, soeburi.org) 공지사항 —
+// XpressEngine 계열 CMS. 목록은 순수 HTTP로 서버 렌더링됨(실측: 북구청 다른 공지
+// 게시판과 달리 Playwright 불필요). <td class="title"><a href="/Notice/ID...">제목</a>
+// ... <td class="time">YYYY-MM-DD</td> 구조. 실제 "먹거리장터 운영단체 모집 공고",
+// "철철철문화장터(프리마켓) 셀러 모집 공고", "생활문화예술제 나눔장터 참여자 모집" 등
+// 부스/셀러 모집공고가 실제로 이 게시판에 올라옴을 확인하고 등록함(본문은 포스터
+// 이미지뿐이라 날짜·참가비 등 세부항목은 못 뽑을 수 있음 — 그 경우에도 noticeType만
+// 확실하면 날짜 미확인 상태로 노출해 셀러가 원문을 직접 확인하게 하는 기존 동작을
+// 그대로 따름). 공고 상세 안의 첨부 .hwp(신청서)는 기존 fetchHwpText로 그대로 읽힘.
+const SOEBURI_ITEM_RE =
+  /<td class="title">\s*<a href="(\/Notice\/\d+)[^"]*">([^<]+)<\/a>\s*<\/td>[\s\S]{0,300}?<td class="time">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractSoeburiCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(SOEBURI_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(m[1], pageUrl).href;
     } catch {
       continue;
     }
@@ -2014,12 +2061,19 @@ const RECRUIT_TITLE_RE = /(모집|신청자\s*모집|참여자\s*모집|참가�
 // 2026-10-22 보강: "부스 운영업체 모집"/"입점업체 모집"/"참여업체 모집"처럼 "업체"가
 // 중간에 끼는 표현(요청사항 — 자동수집 키워드 개선)을 놓치고 있던 것을 보강. 기존
 // "부스 운영자"/"입점 모집"만으로는 "운영업체"/"입점업체"를 못 잡았음(실측 확인).
+// 2026-10-23 보강: 울산쇠부리축제(북구) 실측 — "먹거리장터 운영단체 모집 공고"처럼
+// "부스"라는 글자 없이 "먹거리장터"만 쓰는 표현을 놓치고 있었음(기존엔 "먹거리\s*부스"만
+// 잡았음). 푸드트럭/먹거리 부스와 같은 의미로 쓰이는 실제 표현이라 추가함.
 const BOOTH_KEYWORD_RE =
-  /(판매\s*부스|체험\s*부스|먹거리\s*부스|식음료\s*부스|프리마켓|플리마켓|푸드트럭|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스\s*참가|부스\s*운영(?:자|업체)|입점\s*(?:모집|업체)|판매자\s*모집|참여상인\s*모집|참가업체\s*모집|참여업체\s*모집)/;
+  /(판매\s*부스|체험\s*부스|먹거리\s*부스|식음료\s*부스|먹거리\s*장터|프리마켓|플리마켓|푸드트럭|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스\s*참가|부스\s*운영(?:자|업체)|입점\s*(?:모집|업체)|판매자\s*모집|참여상인\s*모집|참가업체\s*모집|참여업체\s*모집)/;
 // 이미 끝난 모집/행사(결과·선정·완료·개최 종료) — 제목만으로 general 처리.
 // "성료"가 빠져 있어 "OO축제 성료" 같은 종료 소식이 그대로 섞여 들어오던 문제를
 // 2026-10-16에 실제 수집 결과에서 확인하고 추가함(밀양시청 테스트 중 발견).
-const RESULT_TITLE_RE = /(선정\s*결과|결과\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
+// 2026-10-23 보강: 울산쇠부리축제 실측 — "먹거리장터 운영단체 모집 결과 공고"처럼
+// "선정 결과"가 아니라 "모집 결과"라고만 쓰는 경우도 있어 추가(바로 위 BOOTH_KEYWORD_RE에
+// "먹거리장터"를 추가하면서, 이미 끝난 "모집 결과" 공고까지 recruit로 잘못 분류되지
+// 않게 짝을 맞춤).
+const RESULT_TITLE_RE = /(선정\s*결과|모집\s*결과|결과\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
 // 본문에서 모집/접수/신청 기간 날짜 범위 추출 (2026-10-17: 날짜 표현 다양화 — 실제
 // 수집 데이터에서 "모집기간: YYYY.M.D~YYYY.M.D" 형태 하나만 잡던 기존 정규식이
 // "신청마감 YYYY-MM-DD"(마감일만 언급), "O월 O일부터 O월 O일까지"(연도 없는 한글 표현)
@@ -2222,7 +2276,7 @@ const BOOTH_TYPE_PATTERNS = [
   ["프리마켓", /프리마켓/],
   ["플리마켓", /플리마켓/],
   ["푸드트럭", /푸드트럭/],
-  ["먹거리부스", /먹거리\s*부스|식음료\s*부스/],
+  ["먹거리부스", /먹거리\s*부스|식음료\s*부스|먹거리\s*장터/],
   ["체험부스", /체험\s*부스/],
   ["판매부스", /판매\s*부스|판매자\s*모집|참여상인\s*모집/],
   ["셀러모집", /셀러\s*모집|셀러모집/],
@@ -2608,6 +2662,15 @@ const OPENDOWNLOADFILES_RE =
 // 끼어 있음) 기존 ATTACHMENT_TEXT_LINK_RE([^<]+ 로 텍스트만 찾음)가 못 잡음.
 const JUNGGU_FILE_RE =
   /<a href="(\/board\/download\.ulsan\?[^"]+)"[^>]*class="file"[^>]*>[\s\S]{0,150}?<span>([^<]+\.(pdf|hwpx|hwp))/gi;
+// 2026-10-23 신설: 울산쇠부리축제(soeburi.org, XpressEngine) 첨부파일 — 다운로드
+// href가 "...act=procFileDownload..." 형태(확장자로 끝나지 않음)라 DIRECT_ATTACHMENT_
+// LINK_RE가 못 잡고, 파일명 뒤에 "<span class=\"fileSize\">...</span>"가 바로 붙어 있어
+// (사이에 태그가 끼어 있음) ATTACHMENT_TEXT_LINK_RE([^<]+뒤에 곧장 </a>를 요구)도 못
+// 잡는다(실측 확인). 또한 이 사이트는 "첨부"가 아니라 "붙임"이라는 글자를 쓰므로
+// 2000자 스코핑도 적용되지 않음(아래 extractAttachmentPdfUrls의 attachIdx 계산에서
+// 둘 다 안 걸려 전체 html을 보게 됨 — 의도한 동작).
+const SOEBURI_FILE_RE =
+  /<a href="([^"]*act=procFileDownload[^"]*)"[^>]*>\s*(?:\[[^\]]*\]\s*)?([^<]{1,200}?\.(pdf|hwpx|hwp))/gi;
 
 function attachmentKindOf(filename) {
   if (/\.hwpx$/i.test(filename)) return "hwpx";
@@ -2677,6 +2740,18 @@ function extractAttachmentPdfUrls(html, pageUrl) {
 
   const jungguFile = new RegExp(JUNGGU_FILE_RE.source, "gi");
   while ((m = jungguFile.exec(searchHtml))) {
+    const kind = attachmentKindOf(m[2]);
+    if (!kind) continue;
+    try {
+      out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind });
+    } catch {
+      /* ignore */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  const soeburiFile = new RegExp(SOEBURI_FILE_RE.source, "gi");
+  while ((m = soeburiFile.exec(searchHtml))) {
     const kind = attachmentKindOf(m[2]);
     if (!kind) continue;
     try {
@@ -3212,6 +3287,7 @@ function decodeEntities(s) {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&#039;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -3533,6 +3609,7 @@ async function main() {
   // 사이트마다 목록 마크업이 달라 전용 추출기를 쓰는 곳이 있다(밀양/영주·경산/창원) — 그 외
   // 흐름(상세페이지 분류, dedup, 데이터 저장)은 전부 동일하게 재사용한다.
   for (const board of [
+    ...BUKGU_FESTIVAL_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
     ...YEONGJU_GYEONGSAN_BOARDS,
@@ -3736,6 +3813,7 @@ const ALL_BOARDS = [
   // (아래 나머지 전부, board.extractor || extractPostCandidates 사용)이 서로 다른
   // 추출기를 쓰므로, 외부 점검 스크립트가 어느 쪽을 써야 하는지 구분할 수 있게 표시.
   ...BOARDS.map((b) => ({ ...b, region: b.region || "울산", isUlsanBaseBoard: true })),
+  ...BUKGU_FESTIVAL_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,
   ...YEONGJU_GYEONGSAN_BOARDS,

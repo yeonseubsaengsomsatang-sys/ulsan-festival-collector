@@ -3437,6 +3437,16 @@ async function fetchText(url) {
 // needing a bespoke <tr> regex per site.
 const ANCHOR_RE = /<a\s+[^>]*href="([^"#][^"]*)"[^>]*>([\s\S]{1,200}?)<\/a>/g;
 
+// 2026-10-24 수정: 울산 사이트들의 게시판 목록 페이지에는 사이트 공통 좌측/상단
+// 메뉴 전체가 같은 HTML에 통째로 포함돼 있고, 그 메뉴 항목 중 "나눔장터"(북구청 —
+// 분리수거 교환장터 서비스 소개 메뉴), "축제/행사"(중구청 — 카테고리 메뉴 라벨)처럼
+// KEYWORD_RE에 걸리는 글자가 실제로 있음을 실측으로 확인함. 이런 메뉴 항목은 각
+// 사이트마다 고유한 메뉴 전용 URL 패턴("/lay1/.../sublink.do", "index.ulsan?menuCd=")을
+// 쓰고, 실제 게시글은 전부 "bbs/.../view.do?article_seq="나 "board/view.ulsan?..."
+// 형태라 겹치지 않는다(기존 166건 전수 확인 — 이 두 패턴을 쓰는 레코드는 이 오탐
+// 2건뿐이었음). 그래서 메뉴 전용 URL은 게시글 후보에서 원천적으로 제외한다.
+const MENU_LINK_RE = /\/sublink\.do(?:[?#]|$)|[?&]menuCd=[^&]*$/;
+
 function extractCandidates(html, pageUrl) {
   const out = [];
   let m;
@@ -3452,6 +3462,7 @@ function extractCandidates(html, pageUrl) {
     } catch {
       continue;
     }
+    if (MENU_LINK_RE.test(absUrl)) continue;
     out.push({ title: text, url: absUrl });
   }
   return out;

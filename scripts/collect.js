@@ -28,6 +28,13 @@ const path = require("path");
 // 울산옹기축제 플리마켓 모집 공고 실제 .hwp로 실측 검증).
 const { PDFParse } = require("pdf-parse");
 const zlib = require("zlib");
+// 2026-10-23 신설: 북구청·동구청·남구청의 eminwon(새올전자민원) "고시공고" 목록은
+// 페이지 로드 시 JS가 자동으로 서버에 POST를 보내 채우는 구조라 순수 fetch()로는
+// 빈 틀만 받아진다 — 목록 "발견"에만 헤드리스 브라우저(Playwright)를 쓰고, 상세 조회·
+// 분류·첨부파일 분석은 그대로 기존 순수 HTTP 로직을 재사용한다(collect-playwright.js
+// 참고). playwright 자체는 그 모듈 안에서만 지연 로딩하므로, 설치가 안 된 환경에서도
+// 이 기관들만 "fetch_failed"로 분리될 뿐 다른 지역 수집에는 영향이 없다.
+const { fetchEminwonCandidates, buildEminwonDetailUrl } = require("./collect-playwright.js");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
@@ -86,8 +93,21 @@ const BOARDS = [
   // ---- 울산광역시청 (INFERRED: bbs/view.do -> bbs/list.do convention) ----
   { org: "울산광역시청", sourceOrg: "울산시청 울산소식", url: "https://www.ulsan.go.kr/u/rep/bbs/list.do?bbsId=BBS_0000000000000003&mId=001004001001000000" },
 
-  // ---- SKIPPED: 남구청 고시공고(eminwon, POST/세션 필요) — 확실한 GET 엔드포인트 확보 전까지 제외 ----
+  // ---- 북구청·동구청·남구청 고시공고(eminwon) — 2026-10-23: 목록 발견용 헤드리스
+  // 브라우저 + 상세조회용 고정 GET URL 조합으로 해결(EMINWON_PLAYWRIGHT_BOARDS 참고).
+  // 과거엔 "POST/세션 필요"로 제외했던 보드였음.
 ];
+
+// 2026-10-23 신설: 북구청·동구청·남구청 eminwon "고시공고" 목록 — 일반 BOARDS와 달리
+// 목록 자체를 Playwright로 렌더링해야 해서(위 require 주석 참고) main()의 기존 두
+// 반복문과는 별도의 세 번째 루프로 처리한다. ALL_BOARDS(진단 스크립트가 "board.url을
+// 그대로 fetch 가능"하다고 가정하고 쓰는 목록)에는 포함하지 않음 — 이 보드들은 목록
+// 발견에 Playwright가 필요해 그 가정이 깨지기 때문.
+const EMINWON_PLAYWRIGHT_BOARDS = [
+  { org: "울산광역시 북구청", sourceOrg: "북구청 고시공고(eminwon)", host: "eminwon.bukgu.ulsan.kr" },
+  { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr" },
+  { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr" },
+].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp` }));
 
 // ---- 경주시·김해시 확대 (2026-10-15 수동 검증) ----
 // 조사 방법: 각 사이트를 직접 fetch해서 실제 서버 렌더링 HTML에 글 목록이 나오는지
@@ -2571,7 +2591,10 @@ const ATTACHMENT_TEXT_LINK_RE = /<a[^>]+href="([^"#][^"]*)"[^>]*>\s*([^<]{1,200}
 // 박혀 있는 "eminwon.<도메인>/emwp/jsp/ofr/FileDown.jsp?..." 패턴으로 역추적해 확인함
 // (경주 윈터포차라이트 PDF를 실제로 받아 pdf-parse로 100% 정확하게 읽어냄 — 비용 보고
 // 단계에서 실측 검증 완료).
-const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*\d+\)/g;
+// 2026-10-23 수정: 북구청 eminwon(헤드리스 브라우저로 렌더링해 실측)은 같은
+// goDownLoad() 함수를 인자 3개(파일ID 없이)로만 호출함 — 기존 4번째 숫자 인자를
+// 선택적으로 바꿔 두 형태 모두 잡음(URL 조립에는 원래부터 1~3번째 인자만 씀).
+const GODOWNLOAD_RE = /goDownLoad\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']+)'(?:\s*,\s*\d+)?\)/g;
 // 2026-10-22 신설: 영주시청·경주시청이 공유하는 CMS(같은 /design/common/js/utility.js)
 // 계열은 onclick="openDownloadFiles(파일ID)"로 다운로드하고, 실제 다운로드 URL은
 // utility.js에 박혀 있는 "/programs/board/download.do?parm_file_uid=<파일ID>" 패턴
@@ -2664,15 +2687,26 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   }
   if (out.length) return out.slice(0, 2);
 
+  // 2026-10-23 수정: eminwon 상세 페이지는 goDownLoad() 함수 "정의"(실제 데이터가
+  // 아닌 코드) 안에 "첨부"라는 글자가 먼저 나오고, 실제 호출(실제 파일명)은 그보다
+  // 수천 자 뒤에 있어(실측: 북구청 id=45217 — "첨부" 1773번째 글자, 실제 호출은
+  // 8041번째 글자) 위 2000자 윈도(searchHtml)로는 못 찾는다. GODOWNLOAD_RE는 이
+  // 함수 호출 형태 자체가 매우 구체적(파일명 3~4개 인자)이라 다른 영역에서 우연히
+  // 매칭될 위험이 거의 없으므로, 이 패턴만 전체 html에서 찾는다(다른 패턴들의 2000자
+  // 스코핑 동작은 그대로 유지 — 회귀 위험 없음).
   const godown = new RegExp(GODOWNLOAD_RE.source, "g");
-  while ((m = godown.exec(searchHtml))) {
+  while ((m = godown.exec(html))) {
     const [, userFileNm, sysFileNm, filePath] = m;
     const kind = attachmentKindOf(userFileNm);
     if (!kind) continue; // 이미지 등 지원 안 하는 형식 — 확인 필요로 남김
     try {
-      const host = new URL(pageUrl).hostname.replace(/^www\./, "");
+      // 2026-10-23 수정: pageUrl이 이미 eminwon.* 호스트(이번에 새로 추가한 북구청·
+      // 동구청·남구청 고시공고 상세 URL)인 경우 "eminwon."을 또 붙이면
+      // "eminwon.eminwon.xxx"가 돼버림 — 이미 eminwon.으로 시작하면 그대로 쓴다.
+      const rawHost = new URL(pageUrl).hostname.replace(/^www\./, "");
+      const host = rawHost.startsWith("eminwon.") ? rawHost : `eminwon.${rawHost}`;
       const url =
-        `https://eminwon.${host}/emwp/jsp/ofr/FileDown.jsp?` +
+        `https://${host}/emwp/jsp/ofr/FileDown.jsp?` +
         `user_file_nm=${encodeURI(decodeEntities(userFileNm))}` +
         `&sys_file_nm=${encodeURI(decodeEntities(sysFileNm))}` +
         `&file_path=${encodeURI(decodeEntities(filePath))}`;
@@ -3567,6 +3601,64 @@ async function main() {
       }
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(board, false, describeFetchError(err));
+    }
+  }
+
+  // ---- 북구청·동구청·남구청 eminwon 고시공고: 목록 발견은 Playwright, 그 다음은
+  // 전부 기존 순수 HTTP 분류/첨부파일 로직 재사용(collect-playwright.js 상단 주석 참고).
+  // Playwright/크로미움이 설치 안 된 환경에서도 이 기관들만 fetch_failed로 분리되고
+  // 나머지 수집은 그대로 진행되도록 기관별 try/catch로 감싼다.
+  for (const board of EMINWON_PLAYWRIGHT_BOARDS) {
+    try {
+      const candidates = await fetchEminwonCandidates(board.listUrl, NEW_SITE_KEYWORD_RE, NOISE_RE);
+      perBoardCounts.push(`${board.sourceOrg}: ${candidates.length}건 매칭 (헤드리스 브라우저로 목록 발견)`);
+      recordBoardResult(board, true);
+
+      for (const c of candidates) {
+        const detailUrl = buildEminwonDetailUrl(board.host, c.id);
+        if (seen[detailUrl]) continue;
+        const ckey = canonicalDedupKey(detailUrl);
+        if (seenCanonical.has(ckey)) continue;
+        seenCanonical.add(ckey);
+        seen[detailUrl] = { firstSeen: new Date().toISOString(), org: board.org };
+
+        const cls = await fetchAndClassifyDetail(detailUrl, c.title, board.region, null);
+        newItems.push({
+          id: `gh-${require("crypto").createHash("sha256").update(detailUrl).digest("base64url").slice(0, 16)}`,
+          name: c.title,
+          region: board.region,
+          sourceOrg: board.sourceOrg,
+          sourceUrl: detailUrl,
+          applyStart: cls.applyStart,
+          applyEnd: cls.applyEnd,
+          festivalStart: cls.festivalStart,
+          festivalEnd: cls.festivalEnd,
+          applyLink: cls.applyLink,
+          venue: cls.venue,
+          boothCount: cls.boothCount,
+          fee: cls.fee,
+          facilities: cls.facilities,
+          applyMethod: cls.applyMethod,
+          boothType: cls.boothType,
+          eligibility: cls.eligibility,
+          ulsanEligible: cls.ulsanEligible,
+          eligibilityCategory: cls.eligibilityCategory,
+          restrictedRegion: cls.restrictedRegion,
+          attachmentParsed: cls.attachmentParsed,
+          linkStatus: cls.linkStatus,
+          linkCheckedAt: cls.linkCheckedAt,
+          linkCheckDetail: cls.linkCheckDetail,
+          collectedAt: new Date().toISOString(),
+          status: decideAutoPublishStatus(cls),
+          organizerType: "official",
+          noticeType: cls.noticeType,
+          recruitStatus: cls.recruitStatus,
+          memo: `자동수집(GitHub Actions, ${board.org} — 헤드리스 브라우저로 목록 발견). ${cls.memo}`,
+        });
+      }
+    } catch (err) {
+      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (헤드리스 브라우저 목록 발견 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
     }
   }

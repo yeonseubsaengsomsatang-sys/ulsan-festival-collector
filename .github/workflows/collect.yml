@@ -22,6 +22,9 @@ jobs:
       - name: Install dependencies (pdf-parse — free, no API key)
         run: npm ci
 
+      - name: Install Playwright Chromium (울산 북구·동구·남구청 eminwon 고시공고 목록 발견용)
+        run: npx playwright install --with-deps chromium
+
       - name: Run collector
         run: node scripts/collect.js
 

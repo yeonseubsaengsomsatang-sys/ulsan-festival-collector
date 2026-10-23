@@ -2250,11 +2250,19 @@
   }
 
   let regionBoothFilter = "all";
+  // 2026-10-24 신설: "시·군·구" 필터(울산 지역 화면에서 "북구"만 보기 등) — 기본값
+  // "all"은 기존 동작과 100% 동일. f.city(게시판 출처 구·군)와 f.eventCity(실제
+  // 행사 개최지, 알 때만 채워짐) 중 하나라도 선택한 구·군과 일치하면 보여준다 —
+  // 둘 다 없는 기존 데이터는 필터가 "전체"일 때만 보임(추측해서 구·군을 채우지 않음).
+  let regionCityFilter = "all";
 
   function renderRegion(region, tab) {
     DETAIL_LOOKUP = {};
     const regionItems = getAllFestivals().filter(f => f.region === region);
-    const items = (regionBoothFilter === "all" ? regionItems : regionItems.filter(f => {
+    const cityFiltered = regionCityFilter === "all" ? regionItems : regionItems.filter(f =>
+      f.city === regionCityFilter || f.eventCity === regionCityFilter
+    );
+    const items = (regionBoothFilter === "all" ? cityFiltered : cityFiltered.filter(f => {
       const cat = boothCategory(f);
       return cat && cat.key === regionBoothFilter;
     })).map(f => ({ f, status: getStatus(f) }));
@@ -2329,10 +2337,27 @@
     const boothFilterOptions = `<option value="all" ${regionBoothFilter === "all" ? "selected" : ""}>전체 유형</option>` +
       BOOTH_CATEGORY_DEFS.map(d => `<option value="${d.key}" ${d.key === regionBoothFilter ? "selected" : ""}>${d.label}</option>`).join("");
 
+    // 2026-10-24 신설: 이 지역 데이터에 실제로 존재하는 city/eventCity 값만 모아
+    // 선택지로 보여준다(추측으로 목록을 만들지 않음 — 데이터에 없는 구·군은 아예
+    // 선택지에 나타나지 않음).
+    const cityOptionSet = new Set();
+    regionItems.forEach(f => {
+      if (f.city) cityOptionSet.add(f.city);
+      if (f.eventCity) cityOptionSet.add(f.eventCity);
+    });
+    const cityFilterSelect = cityOptionSet.size > 0 ? `
+      <label for="regionCityFilter">시·군·구</label>
+      <select id="regionCityFilter">
+        <option value="all" ${regionCityFilter === "all" ? "selected" : ""}>전체</option>
+        ${[...cityOptionSet].sort().map(c => `<option value="${c}" ${c === regionCityFilter ? "selected" : ""}>${c}</option>`).join("")}
+      </select>
+    ` : "";
+
     document.getElementById("main").innerHTML = `
       <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>${region}</div>
       <div class="page-head"><h1 class="page-title">${region}</h1></div>
       <div class="filter-bar">
+        ${cityFilterSelect}
         <label for="regionBoothFilter">부스 유형</label>
         <select id="regionBoothFilter">${boothFilterOptions}</select>
       </div>
@@ -2341,6 +2366,14 @@
       ${bodyHtml}
       <footer>직접 추가한 축제는 이 브라우저에 저장되어 여기서 수정·삭제할 수 있습니다. (예시 데이터는 공개 목록에 표시되지 않습니다.)</footer>
     `;
+
+    const cityFilterEl = document.getElementById("regionCityFilter");
+    if (cityFilterEl) {
+      cityFilterEl.addEventListener("change", ev => {
+        regionCityFilter = ev.target.value;
+        renderRegion(region, activeTab);
+      });
+    }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {

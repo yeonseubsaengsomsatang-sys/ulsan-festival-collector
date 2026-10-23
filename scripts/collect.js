@@ -58,12 +58,15 @@ const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체�
 
 const BOARDS = [
   // ---- 북구청 (VERIFIED 2026-09-24: raw HTML confirmed server-rendered) ----
-  { org: "울산광역시 북구청", sourceOrg: "북구청 알림사항", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C83/A/1/list.do" },
-  { org: "울산광역시 북구청", sourceOrg: "북구청 북구공보", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T1903C104/A/1/list.do" },
-  { org: "울산광역시 북구청", sourceOrg: "북구청 타기관소식", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/1/list.do" },
+  // 2026-10-24 신설: city 필드 추가 — 홈페이지 "시·군·구" 필터(북구 전용 보기)가
+  // 이 값으로 걸러낸다. 게시판을 운영하는 기관이 명확히 특정 구·군 소속일 때만
+  // 채움(울산시청처럼 시 전체 공지는 특정 구·군으로 단정할 수 없어 비워둠).
+  { org: "울산광역시 북구청", sourceOrg: "북구청 알림사항", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C83/A/1/list.do", city: "북구" },
+  { org: "울산광역시 북구청", sourceOrg: "북구청 북구공보", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T1903C104/A/1/list.do", city: "북구" },
+  { org: "울산광역시 북구청", sourceOrg: "북구청 타기관소식", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/1/list.do", city: "북구" },
 
   // ---- 중구청 (INFERRED: view.ulsan -> list.ulsan by the site's own naming convention) ----
-  { org: "울산광역시 중구청", sourceOrg: "중구청 새소식", url: "https://www.junggu.ulsan.kr/board/list.ulsan?boardId=BBS_0000057&menuCd=DOM_000000102003001000&paging=ok&startPage=1" },
+  { org: "울산광역시 중구청", sourceOrg: "중구청 새소식", url: "https://www.junggu.ulsan.kr/board/list.ulsan?boardId=BBS_0000057&menuCd=DOM_000000102003001000&paging=ok&startPage=1", city: "중구" },
 
   // ---- 동구청 (FIXED 2026-10-05: ?searchWrd= does nothing — the site's real search
   // submits via POST with a CSRF token, so GET keyword search was silently returning
@@ -74,6 +77,7 @@ const BOARDS = [
       org: "울산광역시 동구청",
       sourceOrg: bbsId === "BBSMSTR_000000000323" ? "동구청 알림사항" : "동구청 보도자료",
       url: `https://www.donggu.ulsan.kr/cop/bbs/selectBoardList.do?bbsId=${bbsId}&pageIndex=${page}`,
+      city: "동구",
     }))
   ),
 
@@ -84,6 +88,7 @@ const BOARDS = [
     org: "울산광역시 남구청",
     sourceOrg: "남구청 보도자료",
     url: `https://www.ulsannamgu.go.kr/cop/bbs/selectBoardList.do?bbsId=press&pageIndex=${page}`,
+    city: "남구",
   })),
 
   // ---- 울주군청 (VERIFIED working search endpoint per site testing 2026-09-24) ----
@@ -91,6 +96,7 @@ const BOARDS = [
     org: "울산광역시 울주군청",
     sourceOrg: "울주군청 통합검색",
     url: `https://www.ulju.ulsan.kr/search/front/Search.jsp?searchKey=total&qt=${encodeURIComponent(kw)}`,
+    city: "울주",
   })),
 
   // ---- 울산광역시청 (INFERRED: bbs/view.do -> bbs/list.do convention) ----
@@ -107,9 +113,9 @@ const BOARDS = [
 // 그대로 fetch 가능"하다고 가정하고 쓰는 목록)에는 포함하지 않음 — 이 보드들은 목록
 // 발견에 Playwright가 필요해 그 가정이 깨지기 때문.
 const EMINWON_PLAYWRIGHT_BOARDS = [
-  { org: "울산광역시 북구청", sourceOrg: "북구청 고시공고(eminwon)", host: "eminwon.bukgu.ulsan.kr" },
-  { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr" },
-  { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr" },
+  { org: "울산광역시 북구청", sourceOrg: "북구청 고시공고(eminwon)", host: "eminwon.bukgu.ulsan.kr", city: "북구" },
+  { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr", city: "동구" },
+  { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr", city: "남구" },
 ].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp` }));
 
 // 2026-10-23 신설: 북구청 산하 행사 주관기관(울산쇠부리축제추진위원회) 공식 공지사항 —
@@ -2185,6 +2191,19 @@ function extractVenue(text) {
   const m = text.match(VENUE_RE);
   return m ? cleanValue(m[1]) : null;
 }
+
+// 2026-10-24 신설: "출처(city, 어느 구청·군청 게시판에서 수집했는지)"와 "실제 행사
+// 개최지(eventCity)"는 다를 수 있다(예: 울주문화재단이 올린 글이라도 행사 자체는
+// 다른 지역일 가능성) — 둘을 구분해 기록하기 위한 최소 추출. 장소(venue) 텍스트에
+// 울산 5개 구·군 이름이 "명시적으로" 들어있을 때만 값을 채우고, 없으면 추측하지
+// 않고 null로 남긴다(예: "강동몽돌해변"처럼 구·군 이름 없이 지명만 있는 경우는
+// 못 잡아도 안전하게 null — 지역 매핑 사전을 만들어 추측하지 않는다는 원칙 유지).
+const ULSAN_DISTRICT_RE = /(북구|중구|동구|남구|울주군?)/;
+function extractEventCity(venueText) {
+  if (!venueText) return null;
+  const m = venueText.match(ULSAN_DISTRICT_RE);
+  return m ? m[1].replace(/^울주군$/, "울주") : null;
+}
 function extractBoothCount(text) {
   const m = text.match(BOOTH_COUNT_RE);
   return m ? cleanValue(m[1]) : null;
@@ -3586,6 +3605,8 @@ async function main() {
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
           region: "울산",
+          city: board.city || null,
+          eventCity: extractEventCity(cls.venue),
           sourceOrg: board.sourceOrg,
           sourceUrl: c.url,
           applyStart: cls.applyStart,
@@ -3745,6 +3766,8 @@ async function main() {
           id: `gh-${require("crypto").createHash("sha256").update(detailUrl).digest("base64url").slice(0, 16)}`,
           name: title,
           region: board.region,
+          city: board.city || null,
+          eventCity: extractEventCity(cls.venue),
           sourceOrg: board.sourceOrg,
           sourceUrl: detailUrl,
           applyStart: cls.applyStart,
@@ -3883,6 +3906,7 @@ module.exports = {
   extractEventPeriod,
   detectEligibility,
   extractVenue,
+  extractEventCity,
   extractBoothCount,
   extractFee,
   extractFacilities,

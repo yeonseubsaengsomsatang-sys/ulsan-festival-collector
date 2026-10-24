@@ -286,18 +286,8 @@
     "boards": 1,
     "okBoards": 0,
     "failedBoards": 1,
-    "lastError": "HTTP 403",
-    "checkedAt": "2026-10-24T10:46:38.883Z"
-  },
-  {
-    "org": "울산광역시 북구청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 4,
-    "okBoards": 0,
-    "failedBoards": 4,
-    "lastError": "page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.bukgu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
-    "checkedAt": "2026-10-24T10:46:38.883Z"
+    "lastError": "HTTP 403 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
+    "checkedAt": "2026-10-24T10:56:33.839Z"
   },
   {
     "org": "전라남도 목포시청",
@@ -568,6 +558,16 @@
     "failedBoards": 0,
     "lastError": null,
     "checkedAt": "2026-10-24T05:57:56.587Z"
+  },
+  {
+    "org": "울산광역시 북구청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 4,
+    "okBoards": 4,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-10-24T10:56:33.839Z"
   },
   {
     "org": "울주문화재단",

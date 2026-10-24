@@ -4,7 +4,15 @@ on:
   schedule:
     # 14:00 KST daily = 05:00 UTC same day
     - cron: "0 5 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "수집 범위 (all = 전체 지역 그대로, bukgu = 울산 북구 관련 게시판만)"
+        type: choice
+        options:
+          - all
+          - bukgu
+        default: all
 
 permissions:
   contents: write
@@ -26,6 +34,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run collector
+        env:
+          COLLECT_SCOPE: ${{ github.event.inputs.scope == 'bukgu' && 'bukgu' || '' }}
         run: node scripts/collect.js
 
       - name: Commit updated data (if changed)

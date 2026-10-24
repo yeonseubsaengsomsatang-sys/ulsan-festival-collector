@@ -47,12 +47,22 @@ const BOARD_STATUS_PATH = path.join(DATA_DIR, "board_status.json");
 // 2026-10-23 보강: 울산쇠부리축제(북구) 실측 — "먹거리장터 운영단체 모집"처럼 "부스"
 // 없이 "먹거리장터"만 쓰는 표현도 여기(게시판 단위 1차 키워드 필터)에서 걸려야
 // classifyNotice까지 도달한다. 아래 BOOTH_KEYWORD_RE와 짝을 맞춤.
+// 2026-10-24 보강: 요청사항 — 푸드트럭·아파트 행사·행정복지센터 주관 장터/체험부스
+// 모집공고도 놓치지 않도록 추가. "아파트"·"행정복지센터"는 단독으로는 무관한 공지에도
+// 흔히 등장하는 일반 명사라(예: "OO행정복지센터 민원 안내"), 뒤에 장터/체험/모집 등
+// 실제 행사성 단어가 붙은 조합만 매치하도록 좁혀서 오탐을 막는다.
 const KEYWORD_RE =
-  /(축제|체험\s*부스|판매\s*부스|먹거리\s*부스|식음료\s*부스|먹거리\s*장터|프리마켓|플리마켓|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스운영|부스\s*참가|판매자\s*모집|참여상인\s*모집|운영자\s*모집|참가업체\s*모집|참가자\s*모집)/;
+  /(축제|체험\s*부스|판매\s*부스|먹거리\s*부스|식음료\s*부스|먹거리\s*장터|프리마켓|플리마켓|나눔장터|주말장터|벼룩시장|셀러\s*모집|셀러모집|부스\s*모집|부스운영|부스\s*참가|판매자\s*모집|참여상인\s*모집|운영자\s*모집|참가업체\s*모집|참가자\s*모집|푸드트럭(\s*모집)?|아파트\s*(축제|행사|나눔장터|플리마켓|장터)|행정복지센터[^.\n]{0,15}(모집|장터|체험|부스|축제))/;
 
 // Titles that structurally match the keyword regex but are almost never a
 // real recruitment notice (menu labels, past-tense wrap-up articles, etc.)
 const NOISE_RE = /(성황리|마무리|종료|안내드립니다$|바랍니다$|메뉴|사이트맵)/;
+
+// 2026-10-24 신설(요청사항): "학교는 제외" — 초·중·고·대학교, 유치원, 어린이집이
+// 주관/대상인 모집공고는 이 프로젝트의 수집 대상(축제·프리마켓·먹거리장터·행정복지센터·
+// 아파트 행사·푸드트럭·판매부스·체험부스)이 아니므로, 제목에 학교 관련 단어가 있으면
+// 다른 키워드와 매치되더라도 최종적으로 걸러낸다(예: "OO고등학교 축제 체험부스 모집").
+const SCHOOL_EXCLUDE_RE = /(유치원|어린이집|초등학교|중학교|고등학교|대학교|학교)/;
 
 const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체험부스", "판매부스", "모집"];
 
@@ -3532,7 +3542,21 @@ function dedupeByCanonicalUrl(items) {
   return out;
 }
 
+// 2026-10-24 신설(요청사항): "울산 북구 관련 수집 경로만 우선 실행" — 기본 동작(cron 일정,
+// 전체 지역 수집)은 그대로 두고, COLLECT_SCOPE=bukgu 환경변수가 설정됐을 때만 북구 관련
+// 게시판(북구청 3종 + 북구 eminwon + 쇠부리축제)만 돌리는 opt-in 모드를 추가한다. 다른
+// 지역의 코드·데이터는 전혀 건드리지 않음 — workflow_dispatch 수동 실행에서만 켤 수 있고,
+// 매일 자동 실행(cron)은 기존처럼 전체 지역을 그대로 수집한다.
+const BUKGU_ONLY = process.env.COLLECT_SCOPE === "bukgu";
+function isBukguRelatedBoard(board) {
+  return board.city === "북구" || /북구|쇠부리/.test(board.org);
+}
+
 async function main() {
+  if (BUKGU_ONLY) {
+    console.log("=== COLLECT_SCOPE=bukgu — 울산 북구 관련 게시판만 수집합니다 ===\n");
+  }
+
   const seen = fs.existsSync(SEEN_PATH) ? JSON.parse(fs.readFileSync(SEEN_PATH, "utf8")) : {};
   const existingCollected = fs.existsSync(OUT_PATH) ? JSON.parse(fs.readFileSync(OUT_PATH, "utf8")) : [];
   const stillPendingUrls = new Set(existingCollected.map((i) => i.url));
@@ -3541,6 +3565,7 @@ async function main() {
 
   const newItems = [];
   const perBoardCounts = [];
+  let schoolExcludedTotal = 0;
 
   // 2026-10-19: "실제 수집에 성공한 기관과 실패한 기관을 구분"하기 위한 기관(org) 단위
   // 집계. 같은 기관이 게시판 여러 개(북구청 3개, 울주군청 키워드별 7개 등)로 등록돼 있으니
@@ -3568,7 +3593,7 @@ async function main() {
     orgStatus.set(key, prev);
   }
 
-  for (const board of BOARDS) {
+  for (const board of BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
     try {
       const html = await fetchText(board.url);
       const candidates = extractCandidates(html, board.url);
@@ -3581,6 +3606,7 @@ async function main() {
       let newCount = 0;
       let dupCount = 0;
       let invalidCount = 0;
+      let schoolCount = 0;
       for (const c of candidates) {
         // 2026-10-23 신설: "javascript:;" 같은 실행 불가 href가 그대로 섞여 들어오는
         // 경우(실측 — 울주군청 통합검색 페이지의 "실시간 인기검색어" 위젯이 검색결과
@@ -3590,6 +3616,11 @@ async function main() {
         if (!/^https?:\/\//i.test(c.url)) {
           invalidCount++;
           continue;
+        }
+        if (SCHOOL_EXCLUDE_RE.test(c.title)) {
+          schoolCount++;
+          schoolExcludedTotal++;
+          continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
         }
         if (seen[c.url]) {
           dupCount++;
@@ -3648,7 +3679,7 @@ async function main() {
         });
       }
       perBoardCounts.push(
-        `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}`
+        `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}${schoolCount ? `, 학교제외 ${schoolCount}건` : ""}`
       );
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
@@ -3676,7 +3707,7 @@ async function main() {
     ...NATIONWIDE_PHASE8_BOARDS,
     ...NATIONWIDE_PHASE9_BOARDS,
     ...NATIONWIDE_PHASE10_BOARDS,
-  ]) {
+  ].filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
     try {
       const html = await fetchText(board.url);
       const extractFn = board.extractor || ((h, u) => extractPostCandidates(h, u, NEW_SITE_KEYWORD_RE));
@@ -3685,6 +3716,10 @@ async function main() {
       recordBoardResult(board, true);
 
       for (const c of candidates) {
+        if (SCHOOL_EXCLUDE_RE.test(c.title)) {
+          schoolExcludedTotal++;
+          continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
+        }
         if (seen[c.url]) continue;
         const ckey = canonicalDedupKey(c.url);
         if (seenCanonical.has(ckey)) continue;
@@ -3737,7 +3772,7 @@ async function main() {
   // 전부 기존 순수 HTTP 분류/첨부파일 로직 재사용(collect-playwright.js 상단 주석 참고).
   // Playwright/크로미움이 설치 안 된 환경에서도 이 기관들만 fetch_failed로 분리되고
   // 나머지 수집은 그대로 진행되도록 기관별 try/catch로 감싼다.
-  for (const board of EMINWON_PLAYWRIGHT_BOARDS) {
+  for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
     try {
       const candidates = await fetchEminwonCandidates(board.listUrl, NEW_SITE_KEYWORD_RE, NOISE_RE);
       recordBoardResult(board, true);
@@ -3746,6 +3781,10 @@ async function main() {
       let newCount = 0;
       let dupCount = 0;
       for (const c of candidates) {
+        if (SCHOOL_EXCLUDE_RE.test(c.title)) {
+          schoolExcludedTotal++;
+          continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
+        }
         const detailUrl = buildEminwonDetailUrl(board.host, c.id);
         if (seen[detailUrl]) {
           dupCount++;
@@ -3846,7 +3885,18 @@ async function main() {
   fs.writeFileSync(OUT_PATH, JSON.stringify(merged, null, 2));
   fs.writeFileSync(BOARD_STATUS_PATH, JSON.stringify(boardStatusList, null, 2));
 
-  console.log("=== 게시판별 결과 ===");
+  // 2026-10-24 신설(요청사항): "수집 성공, 실패, 신규 공고 건수를 각각 구분해서 로그에
+  // 표시" — 아래에 이미 기관별/보드별 상세 로그가 있지만, 한눈에 성공·실패·신규만 보고
+  // 싶을 때를 위해 맨 위에 요약 한 줄을 둔다.
+  const okOrgCountEarly = [...orgStatus.values()].filter((o) => o.okBoards > 0).length;
+  const failedOrgCountEarly = [...orgStatus.values()].filter((o) => o.okBoards === 0).length;
+  console.log("=== 전체 요약 ===");
+  console.log(
+    `성공 ${okOrgCountEarly}개 기관, 실패 ${failedOrgCountEarly}개 기관, 신규 공고 ${newItems.length}건` +
+      (schoolExcludedTotal ? `, 학교 제외 ${schoolExcludedTotal}건` : "")
+  );
+
+  console.log("\n=== 게시판별 결과 ===");
   perBoardCounts.forEach((l) => console.log(l));
 
   // 2026-10-24 신설: "북구청 3종 + eminwon(북구·동구·남구) 3종"의 성공/신규/중복/실패를

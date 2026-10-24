@@ -3628,11 +3628,14 @@ async function main() {
     orgStatus.set(key, prev);
   }
 
-  for (const board of BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
-    try {
-      const html = await fetchText(board.url);
-      const candidates = extractCandidates(html, board.url);
-      recordBoardResult(board, true);
+  // 2026-10-24 리팩터(요청사항 — 북구청 간헐적 CONNECT_TIMEOUT에 대해 "같은 방식의
+  // 즉시 재시도"가 아니라 다른 전략을 시도하기 위한 준비): 보드 1개 처리 로직을 함수로
+  // 뽑아서, 아래 본 루프와 맨 뒤의 "지연 재시도 패스"(processStandardBoard) 양쪽에서
+  // 재사용한다. 동작 자체는 그대로이고, 코드만 재사용 가능하게 함수로 옮긴 것.
+  async function processStandardBoard(board) {
+    const html = await fetchText(board.url);
+    const candidates = extractCandidates(html, board.url);
+    recordBoardResult(board, true);
 
       // 2026-10-24 신설: "매칭 N건"만으론 그중 몇 건이 실제로 새로 저장됐고 몇 건이
       // 이미 수집된 글(중복)이라 건너뛰었는지 로그에서 알 수 없었음(요청사항 — GitHub
@@ -3716,6 +3719,11 @@ async function main() {
       perBoardCounts.push(
         `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}${schoolCount ? `, 학교제외 ${schoolCount}건` : ""}`
       );
+  }
+
+  for (const board of BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
+    try {
+      await processStandardBoard(board);
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
@@ -3814,10 +3822,10 @@ async function main() {
   // 전부 기존 순수 HTTP 분류/첨부파일 로직 재사용(collect-playwright.js 상단 주석 참고).
   // Playwright/크로미움이 설치 안 된 환경에서도 이 기관들만 fetch_failed로 분리되고
   // 나머지 수집은 그대로 진행되도록 기관별 try/catch로 감싼다.
-  for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
-    try {
-      const candidates = await fetchEminwonCandidates(board.listUrl, NEW_SITE_KEYWORD_RE, NOISE_RE);
-      recordBoardResult(board, true);
+  // 2026-10-24 리팩터: 표준 보드와 동일한 이유로 함수화 — 맨 뒤 지연 재시도 패스에서 재사용.
+  async function processEminwonBoard(board) {
+    const candidates = await fetchEminwonCandidates(board.listUrl, NEW_SITE_KEYWORD_RE, NOISE_RE);
+    recordBoardResult(board, true);
 
       // 2026-10-24 신설: 다른 두 반복문과 동일하게 신규/중복 건수를 구분해 로그에 남김.
       let newCount = 0;
@@ -3892,10 +3900,60 @@ async function main() {
       perBoardCounts.push(
         `${board.sourceOrg}: ${candidates.length}건 매칭 (헤드리스 브라우저로 목록 발견) → 신규 ${newCount}건, 중복 ${dupCount}건`
       );
+  }
+
+  for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
+    try {
+      await processEminwonBoard(board);
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (헤드리스 브라우저 목록 발견 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
     }
+  }
+
+  // 2026-10-24 신설(요청사항 — "같은 방식으로 반복 재시도 말고 다른 방식을 시도"):
+  // 북구청(www.bukgu.ulsan.kr + eminwon.bukgu.ulsan.kr) CONNECT_TIMEOUT은 실제
+  // GitHub Actions 3회 재검증 결과 지속적 차단이 아니라 간헐적 네트워크 문제로 확인됨
+  // (한 번은 전부 성공, 다른 두 번은 전부 실패 — 몇 분 간격으로 상태가 바뀜). RSS·공개
+  // API 등 대체 경로는 조사했지만 존재하지 않아(위 BOARDS 주석 참고) 적용할 "다른 공식
+  // 경로"가 없으므로, 대신 "같은 경로를 짧은 간격으로 3번 재시도"하던 기존 방식과는
+  // 다르게 — 전체 수집이 다 끝난 뒤 충분히 긴 간격을 두고 딱 한 번 더 시도하는 지연
+  // 재시도 패스를 추가한다. 북구청 전 보드(4개: 알림사항·북구공보·타기관소식·eminwon)가
+  // 이번 실행에서 전부 실패했을 때만 실행 — 평소엔 아무 영향 없음. 쇠부리축제는 여기
+  // 포함하지 않음: HTTP 403이 3회 연속 재현된 지속적 차단이라 재시도로 해결될 문제가
+  // 아니기 때문(의미 없는 재시도로 CI 시간을 낭비하지 않음).
+  const SECOND_PASS_DELAY_MS = 90000;
+  const bukguOfficeStatus = orgStatus.get("울산광역시 북구청");
+  // recordBoardResult()가 orgStatus 안의 객체를 그 자리에서 변형하므로(같은 참조),
+  // 재시도 전 수치를 먼저 변수로 복사해둔다 — 안 그러면 "전/후" 비교 로그가 둘 다
+  // 재시도 후 값을 가리키게 된다.
+  const beforeRetryBoards = bukguOfficeStatus ? bukguOfficeStatus.boards : 0;
+  const beforeRetryOk = bukguOfficeStatus ? bukguOfficeStatus.okBoards : 0;
+  if (bukguOfficeStatus && bukguOfficeStatus.okBoards === 0) {
+    console.log(
+      `\n=== 북구청 전 보드(${beforeRetryBoards}개) 1차 시도 전부 실패 — ${SECOND_PASS_DELAY_MS / 1000}초 대기 후 지연 재시도 (간헐적 네트워크 문제 대응, 쇠부리축제는 지속적 차단이라 제외) ===`
+    );
+    await sleep(SECOND_PASS_DELAY_MS);
+    for (const board of BOARDS.filter((b) => b.org === "울산광역시 북구청")) {
+      try {
+        await processStandardBoard(board);
+      } catch (err) {
+        perBoardCounts.push(`[지연 재시도] ${board.sourceOrg}: FETCH FAILED — ${describeFetchError(err)}`);
+        recordBoardResult(board, false, describeFetchError(err));
+      }
+    }
+    for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => b.org === "울산광역시 북구청")) {
+      try {
+        await processEminwonBoard(board);
+      } catch (err) {
+        perBoardCounts.push(`[지연 재시도] ${board.sourceOrg}: FETCH FAILED (헤드리스 브라우저) — ${describeFetchError(err)}`);
+        recordBoardResult(board, false, describeFetchError(err));
+      }
+    }
+    const afterRetry = orgStatus.get("울산광역시 북구청");
+    console.log(
+      `=== 지연 재시도 결과: 북구청 okBoards ${beforeRetryOk}→${afterRetry.okBoards} (총 ${afterRetry.boards}회 시도, 1차 ${beforeRetryBoards}회+재시도 ${afterRetry.boards - beforeRetryBoards}회) ===\n`
+    );
   }
 
   // Prune anything older than 45 days from the public feed — by then it's

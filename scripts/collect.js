@@ -3866,9 +3866,18 @@ async function main() {
     [...existingCollected, ...newItems].filter((i) => new Date(i.collectedAt).getTime() >= cutoff)
   );
 
-  // 기관 목록을 지역별로 보기 좋게 정렬 — 실패(ok=false)부터, 그다음 지역명 순.
-  const boardStatusList = [...orgStatus.values()]
-    .map((o) => ({
+  // 2026-10-24 수정(버그 발견 — COLLECT_SCOPE=bukgu로 북구만 돌렸더니 기존 board_status.json
+  // 안의 다른 60여개 기관 상태가 전부 사라지는 문제를 실제 GitHub Actions 검증 중 발견함):
+  // board_status.json을 이번 실행에서 "실제로 처리한" 기관(orgStatus)만으로 통째로 덮어쓰면
+  // 안 되고, 이번에 처리하지 않은 기관은 기존 파일의 마지막 상태를 그대로 보존해야 한다.
+  // (전체 범위로 돌릴 때는 매번 전체 기관을 다 처리하므로 기존에는 이 문제가 드러나지
+  // 않았음 — 부분 범위 실행을 추가하면서 비로소 드러난 케이스.)
+  const existingBoardStatus = fs.existsSync(BOARD_STATUS_PATH)
+    ? JSON.parse(fs.readFileSync(BOARD_STATUS_PATH, "utf8"))
+    : [];
+  const boardStatusByOrg = new Map(existingBoardStatus.map((o) => [o.org, o]));
+  for (const o of orgStatus.values()) {
+    boardStatusByOrg.set(o.org, {
       org: o.org,
       region: o.region,
       status: o.okBoards > 0 ? "ok" : "fetch_failed",
@@ -3877,8 +3886,12 @@ async function main() {
       failedBoards: o.failedBoards,
       lastError: o.okBoards > 0 ? null : o.lastError,
       checkedAt: new Date().toISOString(),
-    }))
-    .sort((a, b) => (a.status === b.status ? a.region.localeCompare(b.region, "ko") : a.status === "fetch_failed" ? -1 : 1));
+    });
+  }
+  // 기관 목록을 지역별로 보기 좋게 정렬 — 실패(ok=false)부터, 그다음 지역명 순.
+  const boardStatusList = [...boardStatusByOrg.values()].sort((a, b) =>
+    a.status === b.status ? a.region.localeCompare(b.region, "ko") : a.status === "fetch_failed" ? -1 : 1
+  );
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(SEEN_PATH, JSON.stringify(seen, null, 2));

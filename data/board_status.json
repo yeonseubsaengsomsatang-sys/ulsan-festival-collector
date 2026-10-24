@@ -287,7 +287,17 @@
     "okBoards": 0,
     "failedBoards": 1,
     "lastError": "HTTP 403",
-    "checkedAt": "2026-10-24T10:41:23.611Z"
+    "checkedAt": "2026-10-24T10:46:38.883Z"
+  },
+  {
+    "org": "울산광역시 북구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 4,
+    "okBoards": 0,
+    "failedBoards": 4,
+    "lastError": "page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.bukgu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
+    "checkedAt": "2026-10-24T10:46:38.883Z"
   },
   {
     "org": "전라남도 목포시청",
@@ -558,16 +568,6 @@
     "failedBoards": 0,
     "lastError": null,
     "checkedAt": "2026-10-24T05:57:56.587Z"
-  },
-  {
-    "org": "울산광역시 북구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 4,
-    "okBoards": 4,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-10-24T10:41:23.611Z"
   },
   {
     "org": "울주문화재단",

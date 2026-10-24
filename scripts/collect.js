@@ -71,6 +71,16 @@ const BOARDS = [
   // 2026-10-24 신설: city 필드 추가 — 홈페이지 "시·군·구" 필터(북구 전용 보기)가
   // 이 값으로 걸러낸다. 게시판을 운영하는 기관이 명확히 특정 구·군 소속일 때만
   // 채움(울산시청처럼 시 전체 공지는 특정 구·군으로 단정할 수 없어 비워둠).
+  //
+  // 2026-10-24 조사(요청사항 — CONNECT_TIMEOUT 대체 경로 조사): GitHub Actions에서
+  // 독립된 두 번 실행 중 한 번은 이 3개 게시판 전부 정상 응답(run #40), 다른 한 번은
+  // 전부 CONNECT_TIMEOUT(run #41, 3분 간격) — 사이트가 지속적으로 막힌 게 아니라
+  // 간헐적인 연결 문제. 대체 경로도 점검함: ?rss=Y 파라미터는 무시되고 평범한 HTML이
+  // 그대로 내려오고, /rss/<게시판ID>.xml은 200이지만 실제로는 "이미지를 찾을 수
+  // 없습니다" 에러 페이지(진짜 RSS 아님) — 이 CMS는 RSS를 제공하지 않음. 공공데이터
+  // 포털(data.go.kr)에도 북구청 공지사항·고시공고 실시간 API는 없음(정적 스냅샷
+  // 데이터셋만 존재). 즉 대체 경로가 없고, 현재 재시도(3회) 전략이 최선 — 간헐적
+  // 문제라 매일 자동 수집에서는 대부분 통과될 것으로 보임.
   { org: "울산광역시 북구청", sourceOrg: "북구청 알림사항", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C83/A/1/list.do", city: "북구" },
   { org: "울산광역시 북구청", sourceOrg: "북구청 북구공보", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T1903C104/A/1/list.do", city: "북구" },
   { org: "울산광역시 북구청", sourceOrg: "북구청 타기관소식", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/1/list.do", city: "북구" },
@@ -131,6 +141,30 @@ const EMINWON_PLAYWRIGHT_BOARDS = [
 // 2026-10-23 신설: 북구청 산하 행사 주관기관(울산쇠부리축제추진위원회) 공식 공지사항 —
 // 순수 HTTP로 서버 렌더링되는 일반 게시판이라(extractSoeburiCandidates 참고) 아래
 // main()의 두 번째 반복문(board.extractor 쓰는 쪽)에 다른 신규 사이트들과 함께 들어감.
+//
+// 2026-10-24 조사(요청사항 — "기존 방법으로 반복 재시도 말고 합법적인 대체 경로를
+// 조사"): GitHub Actions에서 독립된 두 번 실행(run #40, #41) 모두 soeburi.org가
+// HTTP 403을 반환함. 반면 이 저장소 작업환경(로컬 네트워크)에서는 http/https/www
+// 세 가지 변형 모두 즉시(200ms 이하) 정상 200 응답 — 사이트 자체가 막힌 게 아니라
+// GitHub Actions의 공개된 클라우드 IP 대역을 호스팅사 방화벽이 차단하는 것으로 보임
+// (응답 헤더가 Cloudflare 등 WAF 없이 평범한 nginx라 호스팅사 자체 방화벽 규칙으로
+// 추정). 접근 제한을 우회하지 않는 선에서 아래 대체 경로를 실제로 점검함:
+//   - RSS(https://soeburi.org/?act=rss&mid=Notice): 실제로 응답은 오지만 본문이
+//     "<description>피드(Feed) 기능이 잠겨 있습니다.</description>" — 사이트 운영자가
+//     RSS 기능 자체를 공식적으로 잠가둔 상태. 사용 불가.
+//   - 공공데이터포털(data.go.kr)·울산시 데이터포털: 쇠부리축제/북구청 관련 데이터셋은
+//     전부 정적 스냅샷 파일(제조업체 현황 등)이고, 공지사항·모집공고를 실시간 제공하는
+//     API는 없음.
+//   - 북구청 "타기관소식" 게시판(이미 수집 중)이 쇠부리축제 공고를 미러링하는지 직접
+//     확인 — 현재 시점 응답에는 "쇠부리" 문자열이 인스타그램 링크(@bukgu_soeburi)로만
+//     등장하고 실제 공고 미러링은 없음. 안정적인 대체 경로로 볼 수 없음.
+//   - 비공식 우회(프록시·IP 위장 등)는 요청에 따라 시도하지 않음.
+// 결론: 합법적으로 접근 가능한 대체 경로를 찾지 못함 — 아래 accessUnavailableNote로
+// 명시해 실패 시 로그/상태에 "수집 불가(대체 경로 없음)"임을 분명히 남긴다(재시도는
+// 계속하되, 사람이 볼 때 "언젠가 재시도하면 될 것"처럼 보이지 않게 함).
+const SOEBURI_NO_ALTERNATIVE_NOTE =
+  "수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). " +
+  "대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.";
 const BUKGU_FESTIVAL_BOARDS = [
   {
     org: "울산쇠부리축제추진위원회",
@@ -139,6 +173,7 @@ const BUKGU_FESTIVAL_BOARDS = [
     region: "울산",
     city: "북구",
     extractor: extractSoeburiCandidates,
+    accessUnavailableNote: SOEBURI_NO_ALTERNATIVE_NOTE,
   },
 ];
 
@@ -3763,8 +3798,15 @@ async function main() {
         });
       }
     } catch (err) {
-      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
-      recordBoardResult(board, false, describeFetchError(err));
+      // 2026-10-24 신설(요청사항): 대체 경로를 조사했는데도 못 찾은 보드(board.
+      // accessUnavailableNote)는 실패할 때 "언젠가 재시도하면 될 것" 같은 일반
+      // fetch_failed 문구 대신 "수집 불가"임을 명확히 덧붙인다 — 억지로 성공
+      // 처리하지 않고, 사람이 board_status.json/로그만 보고도 바로 알 수 있게.
+      const detail = board.accessUnavailableNote
+        ? `${describeFetchError(err)} [${board.accessUnavailableNote}]`
+        : describeFetchError(err);
+      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${detail}`);
+      recordBoardResult(board, false, detail);
     }
   }
 

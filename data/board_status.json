@@ -287,7 +287,7 @@
     "okBoards": 0,
     "failedBoards": 1,
     "lastError": "HTTP 403 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
-    "checkedAt": "2026-10-24T10:56:33.839Z"
+    "checkedAt": "2026-10-24T12:05:40.970Z"
   },
   {
     "org": "전라남도 목포시청",
@@ -567,7 +567,7 @@
     "okBoards": 4,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-10-24T10:56:33.839Z"
+    "checkedAt": "2026-10-24T12:05:40.970Z"
   },
   {
     "org": "울주문화재단",

@@ -1,9 +1,11 @@
 name: Collect Ulsan festival/booth postings
 
 on:
-  schedule:
-    # 14:00 KST daily = 05:00 UTC same day
-    - cron: "0 5 * * *"
+  # 2026-10-24: 프로젝트 보류 — 몇 달 뒤 재개 예정. 자동 일일 수집(cron)은 꺼두고,
+  # 수동 실행(workflow_dispatch)만 남겨둔다. 재개할 때는 아래 schedule 블록의 주석을
+  # 풀면 됨(원래 값: "0 5 * * *" = 14:00 KST daily).
+  # schedule:
+  #   - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       scope:

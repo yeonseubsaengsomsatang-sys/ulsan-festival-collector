@@ -14,7 +14,7 @@
 // 브라우저 바이너리가 없는 환경)에서도 collect.js의 나머지 수집은 전혀 영향받지
 // 않고, 이 기관들만 "fetch_failed"로 분리돼 보고되게 하기 위함.
 
-const LIST_WAIT_TIMEOUT_MS = 20000;
+const LIST_WAIT_TIMEOUT_MS = 40000; // 2026-11-03: 20s→40s (느린 구청 서버 대응)
 
 function loadChromium() {
   return require("playwright").chromium;
@@ -36,6 +36,11 @@ async function fetchEminwonCandidates(listUrl, keywordRe, noiseRe) {
   try {
     const page = await browser.newPage();
     await page.goto(listUrl, { waitUntil: "networkidle", timeout: LIST_WAIT_TIMEOUT_MS });
+    // 2026-11-03 수정(버그 — 점검 요청으로 발견): 목록은 페이지 로드 1~2초 뒤에 JS가
+    // 그린다. 예전엔 0.5초만 기다려 북구 목록을 항상 0건으로 읽었음(로그상 "0건 매칭"이라
+    // 공고가 없는 것처럼 보였음). 글 링크가 실제로 나타날 때까지 최대 15초 기다리고,
+    // 그래도 안 나타나면 "목록 0건"이 아니라 실패로 처리해 board_status에 드러나게 한다.
+    await page.waitForSelector("a[onclick*='searchDetail']", { timeout: 15000 });
     await page.waitForTimeout(500);
     const rows = await page.$$eval("a[onclick*='searchDetail']", (els) =>
       els.map((e) => ({ text: e.textContent.trim(), onclick: e.getAttribute("onclick") }))

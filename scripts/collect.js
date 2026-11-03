@@ -64,6 +64,31 @@ const NOISE_RE = /(성황리|마무리|종료|안내드립니다$|바랍니다$|
 // 다른 키워드와 매치되더라도 최종적으로 걸러낸다(예: "OO고등학교 축제 체험부스 모집").
 const SCHOOL_EXCLUDE_RE = /(유치원|어린이집|초등학교|중학교|고등학교|대학교|학교)/;
 
+// 2026-11-03 신설(요청사항 — 울산 외 지역 혼입 방지): 울산 게시판에도 다른 지역 행사
+// 안내가 섞여 올라온다(실측: 울주군청 검색에 "제8회 진안고원 김치보쌈축제 안내"). 제목에
+// 다른 시·도/시·군 이름이 있고 울산 지명은 하나도 없을 때만 제외한다. 일반 단어와 겹치는
+// 지명(예산·영광·고령·영양·상주·공주·음성·구리·장수·성남 등)은 오탐 방지를 위해 뺐다.
+const OTHER_REGION_RE = new RegExp(
+  "(" +
+    [
+      "서울", "부산", "대구", "인천", "광주", "대전", "세종", "경기도", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+      "수원", "고양", "용인", "부천", "안산", "안양", "남양주", "화성", "평택", "의정부", "시흥", "파주", "김포", "광명", "군포", "하남", "오산", "이천", "안성", "의왕", "양평", "여주", "동두천", "과천", "가평", "연천", "포천", "양주",
+      "춘천", "원주", "강릉", "태백", "속초", "삼척", "홍천", "횡성", "영월", "평창", "정선", "철원", "화천", "양구", "인제", "양양",
+      "청주", "충주", "제천", "옥천", "증평", "진천", "괴산", "단양",
+      "천안", "보령", "아산", "서산", "논산", "계룡", "당진", "금산", "서천", "청양", "홍성", "태안",
+      "전주", "군산", "익산", "정읍", "남원", "김제", "완주", "진안", "무주", "임실", "순창", "고창", "부안",
+      "목포", "여수", "순천", "나주", "광양", "담양", "곡성", "구례", "고흥", "보성", "화순", "장흥", "강진", "해남", "영암", "무안", "함평", "장성", "완도", "신안",
+      "포항", "경주", "김천", "안동", "구미", "영주", "영천", "문경", "경산", "의성", "청송", "영덕", "청도", "성주", "칠곡", "예천", "봉화", "울진", "울릉",
+      "창원", "진주", "통영", "사천", "김해", "밀양", "거제", "양산", "의령", "함안", "창녕", "고성", "남해", "하동", "산청", "함양", "거창", "합천", "서귀포",
+    ].join("|") +
+    ")"
+);
+const ULSAN_PLACE_RE =
+  /(울산|울주|중구|남구|동구|북구|태화|장생포|언양|온산|방어진|일산|성남동|삼산|범서|웅촌|두동|두서|상북|삼남|청량|서생|강동|농소|호계|달천|병영|학성|대왕암|간절곶|반구대|외고산|옹기|쇠부리|처용)/;
+function isOutsideUlsanTitle(title) {
+  return OTHER_REGION_RE.test(title) && !ULSAN_PLACE_RE.test(title);
+}
+
 const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체험부스", "판매부스", "모집"];
 
 const BOARDS = [
@@ -81,12 +106,39 @@ const BOARDS = [
   // 포털(data.go.kr)에도 북구청 공지사항·고시공고 실시간 API는 없음(정적 스냅샷
   // 데이터셋만 존재). 즉 대체 경로가 없고, 현재 재시도(3회) 전략이 최선 — 간헐적
   // 문제라 매일 자동 수집에서는 대부분 통과될 것으로 보임.
-  { org: "울산광역시 북구청", sourceOrg: "북구청 알림사항", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C83/A/1/list.do", city: "북구" },
-  { org: "울산광역시 북구청", sourceOrg: "북구청 북구공보", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T1903C104/A/1/list.do", city: "북구" },
-  { org: "울산광역시 북구청", sourceOrg: "북구청 타기관소식", url: "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/1/list.do", city: "북구" },
+  //
+  // 2026-11-03 수정(버그 — 점검 요청으로 발견): 주소의 "/A/1/"은 게시판 번호이고 1번은
+  // 알림사항이다. 북구공보·타기관소식도 "/A/1/"로 등록돼 있어 처음부터 세 게시판 모두
+  // 알림사항 목록만 읽고 있었음(실제 브라우저로도 확인). 사이트 메뉴의 실제 주소는
+  // 타기관소식 /A/25/, 북구공보 /A/26/. 최근 글만 보던 것도 3쪽(30개)으로 넓힘.
+  ...[
+    ["북구청 알림사항", "S1T62C83/A/1"],
+    ["북구청 북구공보", "S1T1903C104/A/26"],
+    ["북구청 타기관소식", "S1T62C101/A/25"],
+  ].flatMap(([sourceOrg, path]) =>
+    [1, 2, 3].map((page) => ({
+      org: "울산광역시 북구청",
+      sourceOrg,
+      url: `https://www.bukgu.ulsan.kr/lay1/bbs/${path}/list.do?rows=10&cpage=${page}`,
+      city: "북구",
+    }))
+  ),
 
   // ---- 중구청 (INFERRED: view.ulsan -> list.ulsan by the site's own naming convention) ----
-  { org: "울산광역시 중구청", sourceOrg: "중구청 새소식", url: "https://www.junggu.ulsan.kr/board/list.ulsan?boardId=BBS_0000057&menuCd=DOM_000000102003001000&paging=ok&startPage=1", city: "중구" },
+  // 2026-11-03 보강(점검 요청): 새소식 1쪽만 보던 것을 3쪽으로 넓히고, 사이트 메뉴에서
+  // 확인한 보도자료(BBS_0000090)·타기관소식(BBS_0000093)을 추가함(실제 fetch로 글 목록 확인).
+  ...[
+    ["중구청 새소식", "BBS_0000057", "DOM_000000102003001000"],
+    ["중구청 보도자료", "BBS_0000090", "DOM_000000102003002000"],
+    ["중구청 타기관소식", "BBS_0000093", "DOM_000000102003005000"],
+  ].flatMap(([sourceOrg, boardId, menuCd]) =>
+    [1, 2, 3].map((page) => ({
+      org: "울산광역시 중구청",
+      sourceOrg,
+      url: `https://www.junggu.ulsan.kr/board/list.ulsan?boardId=${boardId}&menuCd=${menuCd}&paging=ok&startPage=${page}`,
+      city: "중구",
+    }))
+  ),
 
   // ---- 동구청 (FIXED 2026-10-05: ?searchWrd= does nothing — the site's real search
   // submits via POST with a CSRF token, so GET keyword search was silently returning
@@ -133,10 +185,14 @@ const BOARDS = [
 // 그대로 fetch 가능"하다고 가정하고 쓰는 목록)에는 포함하지 않음 — 이 보드들은 목록
 // 발견에 Playwright가 필요해 그 가정이 깨지기 때문.
 const EMINWON_PLAYWRIGHT_BOARDS = [
-  { org: "울산광역시 북구청", sourceOrg: "북구청 고시공고(eminwon)", host: "eminwon.bukgu.ulsan.kr", city: "북구" },
+  // 2026-11-03: 북구는 기본 목록이 "고시"만 보여줘(전체 17건) 공고가 빠짐 — 중구청
+  // 홈페이지가 쓰는 것과 같은 "list_gubun=A&not_ancmt_se_code=01,02,04"(고시+공고 전체)를
+  // 쓴다(실측: 28,914건). 중구 고시공고는 이번에 새로 추가.
+  { org: "울산광역시 북구청", sourceOrg: "북구청 고시공고(eminwon)", host: "eminwon.bukgu.ulsan.kr", city: "북구", query: "?list_gubun=A&not_ancmt_se_code=01,02,04" },
+  { org: "울산광역시 중구청", sourceOrg: "중구청 고시공고(eminwon)", host: "eminwon.junggu.ulsan.kr", city: "중구", query: "?list_gubun=A&not_ancmt_se_code=01,02,04" },
   { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr", city: "동구" },
   { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr", city: "남구" },
-].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp` }));
+].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp${b.query || ""}` }));
 
 // 2026-10-23 신설: 북구청 산하 행사 주관기관(울산쇠부리축제추진위원회) 공식 공지사항 —
 // 순수 HTTP로 서버 렌더링되는 일반 게시판이라(extractSoeburiCandidates 참고) 아래
@@ -3685,6 +3741,7 @@ async function main() {
   const newItems = [];
   const perBoardCounts = [];
   let schoolExcludedTotal = 0;
+  let outsideExcludedTotal = 0;
 
   // 2026-10-19: "실제 수집에 성공한 기관과 실패한 기관을 구분"하기 위한 기관(org) 단위
   // 집계. 같은 기관이 게시판 여러 개(북구청 3개, 울주군청 키워드별 7개 등)로 등록돼 있으니
@@ -3729,6 +3786,7 @@ async function main() {
       let dupCount = 0;
       let invalidCount = 0;
       let schoolCount = 0;
+      let outsideCount = 0;
       for (const c of candidates) {
         // 2026-10-23 신설: "javascript:;" 같은 실행 불가 href가 그대로 섞여 들어오는
         // 경우(실측 — 울주군청 통합검색 페이지의 "실시간 인기검색어" 위젯이 검색결과
@@ -3743,6 +3801,11 @@ async function main() {
           schoolCount++;
           schoolExcludedTotal++;
           continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
+        }
+        if (isOutsideUlsanTitle(c.title)) {
+          outsideCount++;
+          outsideExcludedTotal++;
+          continue; // 요청사항 — 울산 외 지역 행사 안내 제외
         }
         if (seen[c.url]) {
           dupCount++;
@@ -3801,7 +3864,7 @@ async function main() {
         });
       }
       perBoardCounts.push(
-        `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}${schoolCount ? `, 학교제외 ${schoolCount}건` : ""}`
+        `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}${schoolCount ? `, 학교제외 ${schoolCount}건` : ""}${outsideCount ? `, 타지역제외 ${outsideCount}건` : ""}`
       );
   }
 
@@ -3847,6 +3910,10 @@ async function main() {
         if (SCHOOL_EXCLUDE_RE.test(c.title)) {
           schoolExcludedTotal++;
           continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
+        }
+        if (board.region === "울산" && isOutsideUlsanTitle(c.title)) {
+          outsideExcludedTotal++;
+          continue; // 요청사항 — 울산 게시판에 올라온 타지역 행사 안내 제외
         }
         if (seen[c.url]) continue;
         const ckey = canonicalDedupKey(c.url);
@@ -3919,6 +3986,10 @@ async function main() {
         if (SCHOOL_EXCLUDE_RE.test(c.title)) {
           schoolExcludedTotal++;
           continue; // 요청사항 — 학교 주관/대상 모집공고는 수집 대상에서 제외
+        }
+        if (isOutsideUlsanTitle(c.title)) {
+          outsideExcludedTotal++;
+          continue; // 요청사항 — 울산 외 지역 행사 안내 제외
         }
         const detailUrl = buildEminwonDetailUrl(board.host, c.id);
         if (seen[detailUrl]) {
@@ -4095,7 +4166,8 @@ async function main() {
   console.log("=== 전체 요약 ===");
   console.log(
     `성공 ${okOrgCountEarly}개 기관, 실패 ${failedOrgCountEarly}개 기관, 신규 공고 ${newItems.length}건` +
-      (schoolExcludedTotal ? `, 학교 제외 ${schoolExcludedTotal}건` : "")
+      (schoolExcludedTotal ? `, 학교 제외 ${schoolExcludedTotal}건` : "") +
+      (outsideExcludedTotal ? `, 울산 외 지역 제외 ${outsideExcludedTotal}건` : "")
   );
 
   console.log("\n=== 게시판별 결과 ===");
@@ -4171,6 +4243,7 @@ module.exports = {
   detectEligibility,
   extractVenue,
   extractEventCity,
+  isOutsideUlsanTitle,
   extractBoothCount,
   extractFee,
   extractFacilities,

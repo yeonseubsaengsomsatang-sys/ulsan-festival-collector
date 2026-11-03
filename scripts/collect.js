@@ -221,17 +221,18 @@ const EMINWON_PLAYWRIGHT_BOARDS = [
 const SOEBURI_NO_ALTERNATIVE_NOTE =
   "수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). " +
   "대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.";
-const BUKGU_FESTIVAL_BOARDS = [
-  {
-    org: "울산쇠부리축제추진위원회",
-    sourceOrg: "쇠부리축제 공지사항(북구)",
-    url: "https://soeburi.org/Notice",
-    region: "울산",
-    city: "북구",
-    extractor: extractSoeburiCandidates,
-    accessUnavailableNote: SOEBURI_NO_ALTERNATIVE_NOTE,
-  },
-];
+// 2026-11-03 수정(점검 요청): 1쪽(20개 글)만 보던 것을 2쪽까지 넓힘 — 2026-02-10
+// "철철철문화장터(프리마켓) 셀러 모집"·"먹거리장터 운영단체 모집" 공고가 2쪽에 있어
+// 누락됐던 것을 실측으로 확인. GitHub Actions에서의 HTTP 403은 그대로 "수집 실패"로 남는다.
+const BUKGU_FESTIVAL_BOARDS = ["https://soeburi.org/Notice", "https://soeburi.org/Notice?page=2"].map((url) => ({
+  org: "울산쇠부리축제추진위원회",
+  sourceOrg: "쇠부리축제 공지사항(북구)",
+  url,
+  region: "울산",
+  city: "북구",
+  extractor: extractSoeburiCandidates,
+  accessUnavailableNote: SOEBURI_NO_ALTERNATIVE_NOTE,
+}));
 
 // 2026-11-03 신설: 울산문화관광재단(uctf.or.kr) 공지사항 — 울산 크리스마스 마켓 참여상인
 // 모집 공고(공고 제2026-252호)가 실제로 이 게시판에 올라왔는데 기존 수집 대상에 없었음.

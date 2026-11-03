@@ -1,0 +1,64 @@
+name: Deploy homepage (GitHub Pages)
+
+# 2026-11-03 신설: web/index.html과 공개 데이터(data/collected.json, data/board_status.json)를
+# GitHub Pages로 배포한다 — 컴퓨터를 꺼도 PC·휴대폰에서 같은 주소로 접속 가능.
+# 수집 워크플로가 끝날 때마다(workflow_run) 다시 배포해 최신 데이터를 반영한다.
+# (수집 봇의 커밋은 GITHUB_TOKEN으로 push되어 push 이벤트를 다시 일으키지 않기 때문에
+# workflow_run으로 연결함.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "data/collected.json"
+      - "data/board_status.json"
+      - ".github/workflows/pages.yml"
+  workflow_run:
+    workflows: ["Collect Ulsan festival/booth postings"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Build site folder (web/ + 공개 데이터만)
+        run: |
+          mkdir -p _site/web _site/data
+          cp -r web/. _site/web/
+          cp data/collected.json data/board_status.json _site/data/
+          # 주소 루트(/) 접속 시 기존 홈페이지(web/)로 이동 — #region-울산-open 같은 해시 유지
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="ko"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>축제 신청 캘린더</title>
+          <script>location.replace("web/index.html" + location.hash);</script>
+          <meta http-equiv="refresh" content="0; url=web/index.html">
+          </head><body><a href="web/index.html">축제 신청 캘린더로 이동</a></body></html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

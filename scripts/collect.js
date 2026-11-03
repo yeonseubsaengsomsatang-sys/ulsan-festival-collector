@@ -177,6 +177,51 @@ const BUKGU_FESTIVAL_BOARDS = [
   },
 ];
 
+// 2026-11-03 신설: 울산문화관광재단(uctf.or.kr) 공지사항 — 울산 크리스마스 마켓 참여상인
+// 모집 공고(공고 제2026-252호)가 실제로 이 게시판에 올라왔는데 기존 수집 대상에 없었음.
+// 화면은 JS(Vue)로 그려지지만, 그 화면이 쓰는 공개 JSON API(/api/notices?page=N)가 제목·
+// 본문·첨부파일 경로를 그대로 주므로 순수 HTTP로 수집한다(실측 확인). 첨부파일은
+// "?name=파일명"이 없으면 HTTP 400이라 붙여서 넘긴다.
+function extractUctfCandidates(jsonText) {
+  // NEW_SITE_KEYWORD_RE는 이 파일 아래쪽에서 정의되므로 호출 시점에 만든다.
+  const UCTF_KEYWORD_RE = new RegExp(NEW_SITE_KEYWORD_RE.source + "|(마켓|야시장|장터).{0,15}(모집|공모)");
+  const out = [];
+  let data;
+  try {
+    data = JSON.parse(jsonText);
+  } catch {
+    return out;
+  }
+  for (const n of (data && data.content) || []) {
+    const title = cleanTitle(String(n.title || "").replace(/\s+/g, " ").trim());
+    if (!n.id || title.length < 4 || title.length > 200) continue;
+    if (!UCTF_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    const paths = String(n.filePath || "").split("&").filter(Boolean);
+    const names = String(n.fileName || "").split("&");
+    const files = paths
+      .map((p, i) => {
+        const name = names[i] || p.split("/").pop();
+        return `<a href="${p}?name=${encodeURIComponent(name)}">${name}</a>`;
+      })
+      .join(" ");
+    out.push({
+      title,
+      url: `https://www.uctf.or.kr/board/notice/view/${n.id}`,
+      postedDate: normalizePostedDate(n.registrationDatetime),
+      detailHtml: `<h1>${title}</h1>${n.content || ""}<div>게시판 상태: ${n.state || ""}</div><div class="file">첨부파일 ${files}</div>`,
+    });
+  }
+  return out;
+}
+const ULSAN_FOUNDATION_BOARDS = [0, 1, 2].map((page) => ({
+  org: "울산문화관광재단",
+  sourceOrg: "울산문화관광재단 공지사항",
+  url: `https://www.uctf.or.kr/api/notices?page=${page}`,
+  region: "울산",
+  city: null,
+  extractor: extractUctfCandidates,
+}));
+
 // ---- 경주시·김해시 확대 (2026-10-15 수동 검증) ----
 // 조사 방법: 각 사이트를 직접 fetch해서 실제 서버 렌더링 HTML에 글 목록이 나오는지
 // 확인하고, 나온 경우에만 등록함(추측 URL 없음). 조사 결과:
@@ -2290,7 +2335,7 @@ function extractEventPeriod(text) {
   let m;
   while ((m = re.exec(text))) {
     const label = m[1].replace(/\s+/g, "");
-    if (/모집|접수|신청/.test(label)) continue;
+    if (/모집|접수|신청|제출/.test(label)) continue;
     const [, , y, mo, d, ey, emo, ed] = m;
     const endYear = ey || y;
     const endMonth = emo || mo;
@@ -2520,6 +2565,32 @@ function extractDateRange(bodyText, postedDate) {
       // 필요"로만 보임, 실측으로 발견) — 항상 YYYY-MM-DD로 통일한다.
       out.applyStart = normalizePostedDate(rangeMatch[1]);
       out.applyEnd = normalizePostedDate(rangeMatch[2]);
+      out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
+      return out;
+    }
+  }
+
+  // 2026-11-03 신설: "서류제출 기간: 2026. 10. 23.(금)~11. 6.(금)"처럼 끝 날짜에 연도가 없는
+  // 라벨형 모집기간을 먼저 찾는다. 이게 없으면 아래 "O월 O일~O월 O일" 패턴이 본문에서
+  // 먼저 나오는 행사기간을 모집기간으로 잘못 잡는 사례가 있었음(울산 크리스마스 마켓 공고 실측).
+  {
+    const labeledRe = new RegExp(LABELED_DATE_RANGE_RE.source, "g");
+    let lm;
+    while ((lm = labeledRe.exec(bodyText))) {
+      const label = lm[1].replace(/s+/g, "");
+      if (!/모집|접수|신청|제출/.test(label)) continue;
+      const [, , y, mo, d, ey, emo, ed] = lm;
+      let endYear = ey ? +ey : +y;
+      const endMonth = emo || mo;
+      const start = new Date(Date.UTC(+y, +mo - 1, +d));
+      let end = new Date(Date.UTC(endYear, +endMonth - 1, +ed));
+      if (!ey && end < start) {
+        endYear += 1;
+        end = new Date(Date.UTC(endYear, +endMonth - 1, +ed));
+      }
+      if (isNaN(start) || isNaN(end) || end < start) continue;
+      out.applyStart = `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+      out.applyEnd = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(ed).padStart(2, "0")}`;
       out.recruitStatus = today < start ? "upcoming" : today > end ? "closed" : "open";
       return out;
     }
@@ -3237,7 +3308,7 @@ async function fetchAttachmentPdfText(html, pageUrl) {
   return texts.length ? texts.join("\n").slice(0, 8000) : null;
 }
 
-async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
+async function fetchAndClassifyDetail(detailUrl, title, region, postedDate, preloadedHtml = null) {
   const result = {
     applyStart: null,
     applyEnd: null,
@@ -3269,7 +3340,9 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate) {
   let bodyText = "";
   let fetchFailNote = "";
   try {
-    rawHtml = await fetchText(detailUrl);
+    // 2026-11-03: preloadedHtml — 상세페이지가 JS로만 그려지는 사이트(울산문화관광재단)는
+    // 목록 API가 준 본문·첨부파일 정보를 그대로 넘겨받아 분류한다.
+    rawHtml = preloadedHtml != null ? preloadedHtml : await fetchText(detailUrl);
     bodyText = stripHtml(rawHtml);
   } catch (err) {
     fetchFailNote = `상세페이지 접속 실패(${err.message}) — 본문은 확인 못 하고 제목만으로 분류함. `;
@@ -3583,6 +3656,14 @@ function dedupeByCanonicalUrl(items) {
 // 지역의 코드·데이터는 전혀 건드리지 않음 — workflow_dispatch 수동 실행에서만 켤 수 있고,
 // 매일 자동 실행(cron)은 기존처럼 전체 지역을 그대로 수집한다.
 const BUKGU_ONLY = process.env.COLLECT_SCOPE === "bukgu";
+// 2026-11-03 신설(요청사항): COLLECT_SCOPE=ulsan — 울산 게시판(region "울산")만 수집.
+// 매일 자동 실행(cron)의 기본 범위. 다른 지역의 기존 데이터·기관 상태는 그대로 보존.
+const ULSAN_ONLY = process.env.COLLECT_SCOPE === "ulsan";
+function inScope(board) {
+  if (BUKGU_ONLY) return isBukguRelatedBoard(board);
+  if (ULSAN_ONLY) return (board.region || "울산") === "울산";
+  return true;
+}
 function isBukguRelatedBoard(board) {
   return board.city === "북구" || /북구|쇠부리/.test(board.org);
 }
@@ -3590,6 +3671,9 @@ function isBukguRelatedBoard(board) {
 async function main() {
   if (BUKGU_ONLY) {
     console.log("=== COLLECT_SCOPE=bukgu — 울산 북구 관련 게시판만 수집합니다 ===\n");
+  }
+  if (ULSAN_ONLY) {
+    console.log("=== COLLECT_SCOPE=ulsan — 울산 게시판만 수집합니다 ===\n");
   }
 
   const seen = fs.existsSync(SEEN_PATH) ? JSON.parse(fs.readFileSync(SEEN_PATH, "utf8")) : {};
@@ -3721,7 +3805,7 @@ async function main() {
       );
   }
 
-  for (const board of BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
+  for (const board of BOARDS.filter(inScope)) {
     try {
       await processStandardBoard(board);
     } catch (err) {
@@ -3735,6 +3819,7 @@ async function main() {
   // 흐름(상세페이지 분류, dedup, 데이터 저장)은 전부 동일하게 재사용한다.
   for (const board of [
     ...BUKGU_FESTIVAL_BOARDS,
+    ...ULSAN_FOUNDATION_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
     ...YEONGJU_GYEONGSAN_BOARDS,
@@ -3750,7 +3835,7 @@ async function main() {
     ...NATIONWIDE_PHASE8_BOARDS,
     ...NATIONWIDE_PHASE9_BOARDS,
     ...NATIONWIDE_PHASE10_BOARDS,
-  ].filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
+  ].filter(inScope)) {
     try {
       const html = await fetchText(board.url);
       const extractFn = board.extractor || ((h, u) => extractPostCandidates(h, u, NEW_SITE_KEYWORD_RE));
@@ -3769,7 +3854,7 @@ async function main() {
         seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
-        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null, c.detailHtml || null);
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
@@ -3902,7 +3987,7 @@ async function main() {
       );
   }
 
-  for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => !BUKGU_ONLY || isBukguRelatedBoard(b))) {
+  for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter(inScope)) {
     try {
       await processEminwonBoard(board);
     } catch (err) {
@@ -3963,7 +4048,11 @@ async function main() {
   const PRUNE_MS = 45 * 24 * 60 * 60 * 1000;
   const cutoff = Date.now() - PRUNE_MS;
   const merged = dedupeByCanonicalUrl(
-    [...existingCollected, ...newItems].filter((i) => new Date(i.collectedAt).getTime() >= cutoff)
+    // 2026-11-03 수정(요청사항 — 기존 데이터 삭제 금지): 부분 범위(ulsan/bukgu) 실행에서는
+    // 45일 정리를 하지 않고, 전체 실행에서도 사람이 승인한(approved) 항목은 지우지 않는다.
+    [...existingCollected, ...newItems].filter(
+      (i) => ULSAN_ONLY || BUKGU_ONLY || i.status === "approved" || new Date(i.collectedAt).getTime() >= cutoff
+    )
   );
 
   // 2026-10-24 수정(버그 발견 — COLLECT_SCOPE=bukgu로 북구만 돌렸더니 기존 board_status.json
@@ -4052,6 +4141,7 @@ const ALL_BOARDS = [
   // 추출기를 쓰므로, 외부 점검 스크립트가 어느 쪽을 써야 하는지 구분할 수 있게 표시.
   ...BOARDS.map((b) => ({ ...b, region: b.region || "울산", isUlsanBaseBoard: true })),
   ...BUKGU_FESTIVAL_BOARDS,
+  ...ULSAN_FOUNDATION_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,
   ...YEONGJU_GYEONGSAN_BOARDS,

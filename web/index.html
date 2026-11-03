@@ -1451,18 +1451,31 @@
     pendingAutoCache = merged.filter(f => f.status !== "approved" && f.status !== "rejected" && !f.duplicateOf);
   }
 
+  // 2026-11-03: 로컬 서버(http://localhost 등)로 열었을 때는 이 저장소의 로컬
+  // data/*.json을 먼저 읽어, 방금 수집한 결과가 GitHub에 올리기 전에도 바로 보이게 한다.
+  // file://로 열거나 로컬 파일이 없으면(예: Netlify 배포본) 기존처럼 GitHub 데이터를 읽는다.
+  async function fetchDataJson(name) {
+    if (location.protocol !== "file:") {
+      try {
+        const local = await fetch("../data/" + name, { cache: "no-store" });
+        if (local.ok) return await local.json();
+      } catch (e) {}
+    }
+    const res = await fetch(GITHUB_RAW_BASE + "/data/" + name, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  }
+
   async function initAutoCollectData() {
     try {
-      const res = await fetch(GITHUB_RAW_BASE + "/data/collected.json", { cache: "no-store" });
-      autoRawItems = res.ok ? await res.json() : [];
+      autoRawItems = await fetchDataJson("collected.json");
     } catch (e) {
       autoRawItems = [];
     }
     recomputeAutoCaches();
     route();
     try {
-      const res2 = await fetch(GITHUB_RAW_BASE + "/data/board_status.json", { cache: "no-store" });
-      const arr = res2.ok ? await res2.json() : [];
+      const arr = await fetchDataJson("board_status.json");
       boardStatusCache = Array.isArray(arr) ? arr.map((o, i) => ({ ...o, id: o.org || String(i) })) : [];
     } catch (e) {
       boardStatusCache = [];

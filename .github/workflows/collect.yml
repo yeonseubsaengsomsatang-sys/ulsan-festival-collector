@@ -1,23 +1,29 @@
 name: Collect Ulsan festival/booth postings
 
 on:
-  # 2026-10-24: 프로젝트 보류 — 몇 달 뒤 재개 예정. 자동 일일 수집(cron)은 꺼두고,
-  # 수동 실행(workflow_dispatch)만 남겨둔다. 재개할 때는 아래 schedule 블록의 주석을
-  # 풀면 됨(원래 값: "0 5 * * *" = 14:00 KST daily).
-  # schedule:
-  #   - cron: "0 5 * * *"
+  # 2026-11-03: 자동 일일 수집 재개(요청사항) — 매일 14:00 KST(= 05:00 UTC).
+  # GitHub 예약 실행은 서버 사정에 따라 10~30분 이상 늦게 시작될 수 있음.
+  # 예약 실행은 울산 게시판만 수집한다(COLLECT_SCOPE=ulsan).
+  schedule:
+    - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       scope:
-        description: "수집 범위 (all = 전체 지역 그대로, bukgu = 울산 북구 관련 게시판만)"
+        description: "수집 범위 (ulsan = 울산 게시판만, bukgu = 울산 북구 관련 게시판만, all = 전체 지역)"
         type: choice
         options:
-          - all
+          - ulsan
           - bukgu
-        default: all
+          - all
+        default: ulsan
 
 permissions:
   contents: write
+
+# 예약 실행과 수동 실행이 겹쳐 data 커밋이 충돌하지 않게 한 번에 하나만 실행.
+concurrency:
+  group: collect
+  cancel-in-progress: false
 
 jobs:
   collect:
@@ -37,7 +43,9 @@ jobs:
 
       - name: Run collector
         env:
-          COLLECT_SCOPE: ${{ github.event.inputs.scope == 'bukgu' && 'bukgu' || '' }}
+          # 예약 실행(schedule)은 입력값이 없으므로 기본값 ulsan. ("all"은 collect.js가
+          # 인식하지 않는 값이라 기존처럼 전체 지역을 수집함)
+          COLLECT_SCOPE: ${{ github.event.inputs.scope || 'ulsan' }}
         run: node scripts/collect.js
 
       - name: Commit updated data (if changed)
@@ -46,4 +54,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add data/seen.json data/collected.json data/board_status.json
           git diff --cached --quiet || git commit -m "chore: daily collection $(date -u +%Y-%m-%d)"
+          git pull --rebase origin main
           git push

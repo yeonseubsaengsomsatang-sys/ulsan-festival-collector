@@ -746,5 +746,17 @@
   "https://www.uctf.or.kr/board/notice/view/202411276468": {
     "firstSeen": "2026-11-03T06:39:27.333Z",
     "org": "울산문화관광재단"
+  },
+  "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/25/view.do?article_seq=314986&cpage=1&rows=10&condition=&keyword=": {
+    "firstSeen": "2026-11-03T07:45:00.717Z",
+    "org": "울산광역시 북구청"
+  },
+  "https://www.bukgu.ulsan.kr/lay1/bbs/S1T62C101/A/25/view.do?article_seq=313593&cpage=3&rows=10&condition=&keyword=": {
+    "firstSeen": "2026-11-03T07:45:05.681Z",
+    "org": "울산광역시 북구청"
+  },
+  "https://www.junggu.ulsan.kr/board/view.ulsan?boardId=BBS_0000090&menuCd=DOM_000000102003002000&orderBy=TMP_FIELD4%20DESC,REGISTER_DATE%20DESC&paging=ok&startPage=3&dataSid=727390": {
+    "firstSeen": "2026-11-03T07:45:17.440Z",
+    "org": "울산광역시 중구청"
   }
 }

@@ -2856,6 +2856,120 @@ function buildTruckgonggoItem(row, detail, nowIso = new Date().toISOString()) {
   };
 }
 
+// ---- 2026-11-08 신설(민간 수집 4차): 센트럴 플랫폼(ucentral.co.kr, 울산 중구 관광 플랫폼) ----
+// 이벤트 목록(find-event.do, 최신순)과 상세(/event/N)는 서버에서 글자로 내려오고 robots.txt가
+// 전체 허용이다. 공방 수업·공연·대관 안내가 대부분이라, 제목에 부스·셀러 표현과 "모집"이 함께
+// 있는(결과 발표 제외) 이벤트만 담는다. 여러 주최자가 올리는 플랫폼이라 항상 관리자 검토 대기.
+const UCENTRAL_BOARD = {
+  org: "센트럴 플랫폼",
+  sourceOrg: "센트럴 플랫폼 이벤트(울산 중구 관광 플랫폼)",
+  region: "울산",
+  city: "중구",
+  sourceCategory: "aggregator",
+  pages: [1, 2, 3].map((p) => `https://www.ucentral.co.kr/find-event.do?sort=latest&page=${p}`),
+};
+function extractUcentralCards(html, pageUrl) {
+  const out = [];
+  const seenIds = new Set();
+  for (const m of html.matchAll(/href="\/event\/(\d+)"[^>]*>([\s\S]{0,900}?)<\/a>/g)) {
+    if (seenIds.has(m[1])) continue;
+    const text = decodeEntities(m[2].replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    seenIds.add(m[1]);
+    out.push({ url: new URL(`/event/${m[1]}`, pageUrl).href, text });
+  }
+  return out;
+}
+function isUcentralSellerRecruit(title) {
+  return BOOTH_KEYWORD_RE.test(title) && RECRUIT_TITLE_RE.test(title) && !RESULT_TITLE_RE.test(title);
+}
+function parseUcentralDetail(html) {
+  const lines = html
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "")
+    .replace(/<[^>]+>/g, "\n")
+    .split("\n")
+    .map((s) => decodeEntities(s).trim())
+    .filter(Boolean);
+  const title = (decodeEntities((html.match(/<meta property="og:title" content="([^"]*)"/) || [])[1] || "")).replace(/\s*-\s*센트럴 플랫폼\s*$/, "").trim();
+  const after = (label) => {
+    const i = lines.indexOf(label);
+    return i !== -1 ? lines[i + 1] || null : null;
+  };
+  const placeIdx = lines.indexOf("장소");
+  const place = placeIdx !== -1 ? lines.slice(placeIdx + 1, placeIdx + 6).filter((l) => !/지도보기|^,$/.test(l)).slice(0, 3).join(" ") : null;
+  const status = lines.includes("모집 중") ? "모집 중" : lines.includes("종료") ? "종료" : null;
+  // 설명 글은 탭 이름(이벤트 정보·공지사항·신청/취소안내)이 두 번 나온 바로 뒤에 있고, 해시태그나
+  // "관리자프로필" 앞에서 끝난다(실측: event/694). 뒤쪽의 플랫폼 공통 신청/취소 안내문은 읽지 않음.
+  const tabIdx = lines.reduce((acc, l, i) => (l === "신청/취소안내" ? acc.concat(i) : acc), []);
+  const descStart = tabIdx.length >= 2 ? tabIdx[1] + 1 : -1;
+  let desc = "";
+  if (descStart !== -1) {
+    const rest = lines.slice(descStart);
+    const end = rest.findIndex((l) => /^#|관리자프로필|주최자의 다른 이벤트/.test(l));
+    desc = rest.slice(0, end === -1 ? 25 : end).filter((l) => l !== "종료" && l !== "모집 중").join("\n");
+  }
+  return { title, period: after("이벤트 기간"), place, fee: after("참가비"), status, desc };
+}
+// "*접수방법\n- 이메일\ntaehwa209@naver.com\n-방문접수: ..."처럼 라벨 뒤 콜론 없이 여러 줄로 적힌
+// 신청방법(실측: event/694) — 라벨 다음 줄부터 다음 "*" 소제목 전까지 최대 4줄만 원문 그대로 잇는다.
+function ucentralApplyMethod(desc) {
+  const lines = (desc || "").split("\n");
+  const i = lines.findIndex((l) => /^\*?\s*(접수|신청)\s*방법\s*$/.test(l));
+  if (i === -1) return null;
+  const body = [];
+  for (const l of lines.slice(i + 1)) {
+    if (/^\*|제출\s*서류/.test(l) || body.length >= 4) break;
+    body.push(l.replace(/^-\s*/, ""));
+  }
+  return body.length ? body.join(" ").slice(0, 120) : null;
+}
+function buildUcentralItem(url, d, nowIso = new Date().toISOString()) {
+  const dates = parseFleamoaDates((d.period || "").replace(/(\d{1,2})\.(\d{1,2})/g, "$1/$2"), nowIso.slice(0, 10));
+  const applyDates = extractDateRange(d.desc.replace(/\s+/g, " "), null);
+  const cityRaw = ((d.place || "").match(/울산(?:광역)?시\s+(\S+?(?:구|군))/) || [])[1] || null;
+  const city = cityRaw ? cityRaw.replace(/^울주군$/, "울주") : UCENTRAL_BOARD.city;
+  return {
+    id: `gh-${require("crypto").createHash("sha256").update(url).digest("base64url").slice(0, 16)}`,
+    name: cleanTitle(d.title),
+    region: "울산",
+    city,
+    sourceOrg: UCENTRAL_BOARD.sourceOrg,
+    sourceCategory: UCENTRAL_BOARD.sourceCategory,
+    sourceUrl: url,
+    originalUrl: null,
+    postedDate: null,
+    applyStart: applyDates.applyStart,
+    applyEnd: applyDates.applyEnd,
+    festivalStart: dates.festivalStart,
+    festivalEnd: dates.festivalEnd,
+    applyLink: url,
+    venue: d.place || null,
+    boothCount: extractBoothCount(d.desc) || null,
+    fee: d.fee || null,
+    facilities: null,
+    applyMethod: extractApplyMethod(d.desc) || ucentralApplyMethod(d.desc),
+    boothType: detectBoothType(`${d.title} ${d.desc}`) || null,
+    eligibility: null,
+    ulsanEligible: "unknown",
+    eligibilityCategory: "unknown",
+    restrictedRegion: null,
+    attachmentParsed: false,
+    linkStatus: "ok",
+    linkCheckedAt: nowIso,
+    linkCheckDetail: null,
+    collectedAt: nowIso,
+    status: "pending",
+    organizerType: "private", // 홈페이지 isOfficial() 기준값(민간). 플랫폼 구분은 sourceCategory로.
+    noticeType: "review",
+    recruitStatus: d.status === "종료" ? "closed" : applyDates.recruitStatus,
+    memo:
+      `자동수집(센트럴 플랫폼 — 울산 중구 관광 플랫폼 이벤트, 여러 주최자가 올리는 플랫폼). ` +
+      `주최 측 원문을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. ` +
+      `플랫폼 표시값: ${[d.status && `상태 ${d.status}`, d.period && `이벤트 기간 ${d.period}`, d.place && `장소 ${d.place}`, d.fee && `참가비 ${d.fee}`].filter(Boolean).join(", ")}. ` +
+      `안내 요약: ${d.desc.replace(/\s+/g, " ").slice(0, 200)}`,
+  };
+}
+
 // 같은 행사가 여러 사이트(관공서·주최기관·모음 사이트)에 올라온 경우를 막는 중복 판정.
 // 주소가 서로 달라 기존 canonicalDedupKey로는 못 거르므로, (1) 원문 링크가 기존 항목 주소와
 // 같거나 (2) 정리한 행사명이 서로 포함 관계(8글자 이상)이고 행사 시작일이 같거나 한쪽이 비어
@@ -4478,6 +4592,40 @@ async function main() {
     }
   }
 
+  // ---- 2026-11-08 신설(민간 수집 4차): 센트럴 플랫폼 셀러·판매자 모집 이벤트(공개 페이지) ----
+  if (inScope(UCENTRAL_BOARD)) {
+    try {
+      let cards = [];
+      for (const pageUrl of UCENTRAL_BOARD.pages) cards = cards.concat(extractUcentralCards(await fetchText(pageUrl), pageUrl));
+      const unique = [...new Map(cards.map((c) => [c.url, c])).values()];
+      let matched = 0;
+      let added = 0;
+      let dup = 0;
+      for (const card of unique) {
+        if (seen[card.url]) continue;
+        if (!isUcentralSellerRecruit(card.text)) continue; // 수업·공연·대관 등은 상세를 열지 않음
+        const d = parseUcentralDetail(await fetchText(card.url));
+        if (!d.title || !isUcentralSellerRecruit(d.title) || isOutsideUlsanTitle(`${d.title} ${d.place || ""}`)) continue;
+        matched++;
+        const item = buildUcentralItem(card.url, d);
+        seen[card.url] = { firstSeen: new Date().toISOString(), org: UCENTRAL_BOARD.org };
+        const o = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (o) {
+          dup++;
+          console.log(`  [중복 건너뜀] 센트럴 플랫폼 "${item.name}" = 기존 "${o.name}" (${o.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(`${UCENTRAL_BOARD.sourceOrg}: 이벤트 ${unique.length}건 중 셀러 모집 ${matched}건 → 신규 ${added}건, 중복 ${dup}건`);
+      recordBoardResult(UCENTRAL_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${UCENTRAL_BOARD.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(UCENTRAL_BOARD, false, describeFetchError(err));
+    }
+  }
+
   // 2026-10-24 신설(요청사항 — "같은 방식으로 반복 재시도 말고 다른 방식을 시도"):
   // 북구청(www.bukgu.ulsan.kr + eminwon.bukgu.ulsan.kr) CONNECT_TIMEOUT은 실제
   // GitHub Actions 3회 재검증 결과 지속적 차단이 아니라 간헐적 네트워크 문제로 확인됨
@@ -4650,6 +4798,10 @@ module.exports = {
   extractTruckgonggoRows,
   parseTruckgonggoDetail,
   buildTruckgonggoItem,
+  extractUcentralCards,
+  isUcentralSellerRecruit,
+  parseUcentralDetail,
+  buildUcentralItem,
   findCrossSourceDuplicate,
   parseFleamoaDates,
   extractCandidates,

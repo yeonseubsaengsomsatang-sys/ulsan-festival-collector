@@ -98,12 +98,15 @@ const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체�
 
 // 2026-11-08 신설: 수집 실패 원인 분류(board_status의 failureType, 실행 요약, 수집 범위 기록에 사용).
 function classifyFailure(msg) {
-  const s = String(msg || "");
+  // 2026-11-08 수정(GitHub Actions 실측 오분류): Playwright 오류의 "Call log"에는 방문하려던 주소가 들어 있어
+  // 주소 속 글자("OfrNotAncmtLSub.jsp"의 "tLS")를 인증서 오류(TLS)로 잘못 판정했음 — Call log 앞부분만 보고,
+  // 인증서 오류는 실제 오류 코드 형태(ERR_TLS_*, CERT_*, *_CERT, SELF_SIGNED, 독립 단어 TLS/SSL/certificate)로만 판정한다.
+  const s = String(msg || "").split(/Call log/i)[0];
   if (/HTTP 403/.test(s)) return "접근 차단(HTTP 403)";
   if (/HTTP 404/.test(s)) return "주소 없음(HTTP 404)";
   const http = s.match(/HTTP (\d{3})/);
   if (http) return `서버 오류(HTTP ${http[1]})`;
-  if (/CERT|certificate|TLS|SSL/i.test(s)) return "인증서 오류";
+  if (/ERR_(?:TLS|SSL)_|\bCERT_[A-Z_]+|[A-Z_]+_CERT\b|SELF_SIGNED|LEAF_SIGNATURE|\b(?:TLS|SSL)\b|certificate/i.test(s)) return "인증서 오류";
   if (/ENOTFOUND|EAI_AGAIN/.test(s)) return "주소 조회 실패(DNS)";
   // 페이지는 열렸는데 목록 요소가 안 나타난 경우(waitForSelector 시간 초과)는 접속 문제가 아니라 구조 변경 의심.
   if (/waitForSelector/i.test(s)) return "페이지 구조 변경 의심";

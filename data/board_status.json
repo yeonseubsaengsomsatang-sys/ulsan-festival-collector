@@ -237,7 +237,7 @@
     "okBoards": 0,
     "failedBoards": 2,
     "lastError": "HTTP 403 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "태화강마두희축제추진위원회",
@@ -247,7 +247,87 @@
     "okBoards": 0,
     "failedBoards": 2,
     "lastError": "HTTP 403",
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
+  },
+  {
+    "org": "울산광역시 중구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 4,
+    "okBoards": 0,
+    "failedBoards": 4,
+    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.junggu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp?list_gubun=A&not_ancmt_se_code=01,02,04\", waiting until \"networkidle\"\n",
+    "checkedAt": "2026-11-08T13:08:52.750Z",
+    "coverage": [
+      "중구청 새소식: 0쪽 읽음, 게시일 ? ~ ?",
+      "중구청 보도자료: 0쪽 읽음, 게시일 ? ~ ?",
+      "중구청 타기관소식: 0쪽 읽음, 게시일 ? ~ ?"
+    ]
+  },
+  {
+    "org": "울산광역시 동구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 3,
+    "okBoards": 0,
+    "failedBoards": 3,
+    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.donggu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
+    "checkedAt": "2026-11-08T13:08:52.750Z",
+    "coverage": [
+      "동구청 알림사항: 0쪽 읽음, 게시일 ? ~ ?",
+      "동구청 보도자료: 0쪽 읽음, 게시일 ? ~ ?"
+    ]
+  },
+  {
+    "org": "울산광역시 남구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 2,
+    "okBoards": 0,
+    "failedBoards": 2,
+    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.ulsannamgu.go.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
+    "checkedAt": "2026-11-08T13:08:52.750Z",
+    "coverage": [
+      "남구청 보도자료: 0쪽 읽음, 게시일 ? ~ ?"
+    ]
+  },
+  {
+    "org": "울산광역시 울주군청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 7,
+    "okBoards": 0,
+    "failedBoards": 7,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-11-08T13:08:52.750Z"
+  },
+  {
+    "org": "울산광역시청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 1,
+    "okBoards": 0,
+    "failedBoards": 1,
+    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
+    "checkedAt": "2026-11-08T13:08:52.750Z",
+    "coverage": [
+      "울산시청 울산소식: 0쪽 읽음, 게시일 ? ~ ?"
+    ]
+  },
+  {
+    "org": "울산광역시 북구청",
+    "region": "울산",
+    "status": "fetch_failed",
+    "boards": 41,
+    "okBoards": 0,
+    "failedBoards": 41,
+    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.bukgu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp?list_gubun=A&not_ancmt_se_code=01,02,04\", waiting until \"networkidle\"\n",
+    "checkedAt": "2026-11-08T13:08:52.750Z",
+    "coverage": [
+      "북구청 알림사항: 0쪽 읽음, 게시일 ? ~ ?",
+      "북구청 북구공보: 0쪽 읽음, 게시일 ? ~ ?",
+      "북구청 타기관소식: 0쪽 읽음, 게시일 ? ~ ?"
+    ]
   },
   {
     "org": "전라남도 목포시청",
@@ -520,66 +600,6 @@
     "checkedAt": "2026-10-24T05:57:56.587Z"
   },
   {
-    "org": "울산광역시 중구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 10,
-    "okBoards": 10,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
-    "org": "울산광역시 동구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 7,
-    "okBoards": 7,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
-    "org": "울산광역시 남구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 4,
-    "okBoards": 4,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
-    "org": "울산광역시 울주군청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 7,
-    "okBoards": 7,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
-    "org": "울산광역시청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 1,
-    "okBoards": 1,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
-    "org": "울산광역시 북구청",
-    "region": "울산",
-    "status": "ok",
-    "boards": 10,
-    "okBoards": 10,
-    "failedBoards": 0,
-    "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
-  },
-  {
     "org": "울주문화재단",
     "region": "울산",
     "status": "ok",
@@ -587,7 +607,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "울산문화관광재단",
@@ -597,7 +617,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "고래문화재단",
@@ -607,7 +627,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "플리모아",
@@ -617,7 +637,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "트럭공고",
@@ -627,7 +647,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "센트럴 플랫폼",
@@ -637,7 +657,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T11:50:01.052Z"
+    "checkedAt": "2026-11-08T13:08:52.750Z"
   },
   {
     "org": "인천광역시청",

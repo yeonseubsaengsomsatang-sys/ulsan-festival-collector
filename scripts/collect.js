@@ -2342,7 +2342,7 @@ const BOOTH_KEYWORD_RE =
 // 2026-11-08 보강(요청사항 — 결과 발표가 모집공고로 승인되지 않게): "공모 심사 결과 공고"(울산공업축제
 // 실측), "체험부스 선정 안내"(마두희 실측), "합격자 발표", "모집 마감 안내", "행사 종료 안내" 등.
 const RESULT_TITLE_RE =
-  /(선정\s*결과|모집\s*결과|심사\s*결과|결과\s*안내|결과\s*공고|결과\s*발표|선정자\s*공고|선정\s*공고|선정\s*안내|합격자|당선작|수상자|입상작|모집\s*마감\s*안내|종료\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
+  /(선정\s*결과|모집\s*결과|심사\s*결과|결과\s*안내|결과\s*공고|결과\s*발표|선정자\s*공고|선정\s*공고|선정\s*안내|선정\s*(?:업체|단체|팀|명단)|합격자|당선작|수상자|입상작|모집\s*마감\s*안내|종료\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
 
 // 2026-11-08 신설(요청사항 — 제목에 "부스"가 없어도 판매·체험업체 모집일 수 있는 표현): 이 표현이
 // 제목에 있으면 "review"(관리자 검토 대기)로만 올린다 — 자동 승인(recruit)으로는 절대 분류하지 않음.
@@ -2828,6 +2828,276 @@ function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
 // 목록(/region/ulsan/)과 상세(/notice/...)는 서버에서 글자로 내려오고 robots.txt가 허용하는
 // 경로라 일반 HTTP로 읽는다. 연락처(로그인해야 보임)와 금지 경로(/api/, /login/ 등)는 쓰지 않는다.
 // 단체 대화방 글을 옮긴 "원문 확인 필요" 공고가 대부분이라 항상 관리자 검토 대기로 둔다.
+// ---- 2026-11-08 신설(신규 수집처 3단계): "공고문 파일"을 하나의 공고로 보는 수집처 공통 처리 ----
+// 게시판 없이 홈페이지에 공고문 HWP/PDF만 걸어 두는 사이트(울산대공원 장미축제 — 팝업에 2026 푸드트럭
+// 공개모집 공고문 HWP)를 위해, 파일 본문 첫 줄들로 제목을 만들고 기존 분류·추출 함수를 그대로 쓴다.
+// 과거 공고 대량 등록을 막으려고 행사일·신청 마감일 중 늦은 날짜가 최근 RECENT_DOC_DAYS일 이내인 것만 담는다.
+const RECENT_DOC_DAYS = 180;
+function titleFromDocText(text, fallback) {
+  const lines = (text || "").split("\n").map((s) => s.replace(/\s+/g, " ").trim()).filter((l) => l.length >= 4);
+  const head = lines.slice(0, 3);
+  const i = head.findIndex((l) => RECRUIT_TITLE_RE.test(l));
+  if (i === -1) return fallback;
+  return (i > 0 ? `${head[i - 1]} ${head[i]}` : head[i]).slice(0, 120);
+}
+// 공고문 파일 전용 보조 추출(공통 함수는 바꾸지 않음): "신청기간 : 2026. 4. 8.(수) 10:00 부터 4. 22.(수) 18:00 까지",
+// "축제일정 : 2026년 5월 20일(수) ~ 5월 25일(월)"처럼 시각이 끼거나 년·월·일로 쓴 라벨형 기간(장미축제 실측).
+const DOC_DATE = String.raw`(\d{4})\s*[.년]\s*(\d{1,2})\s*[.월]\s*(\d{1,2})\s*[.일]?\s*(?:\([^)]{1,3}\))?\s*(?:\d{1,2}:\d{2})?`;
+const DOC_END = String.raw`(?:(\d{4})\s*[.년]\s*)?(?:(\d{1,2})\s*[.월]\s*)?(\d{1,2})\s*[.일]?\s*(?:\([^)]{1,3}\))?`;
+function parseDocLabeledRange(text, labelSrc) {
+  const re = new RegExp(`(?:${labelSrc})\\s*[:：]?\\s*${DOC_DATE}\\s*(?:~|-|부터)\\s*${DOC_END}`);
+  const m = text.match(re);
+  if (!m) return null;
+  const [, y, mo, d, ey, emo, ed] = m;
+  const pad = (n) => String(n).padStart(2, "0");
+  const start = `${y}-${pad(mo)}-${pad(d)}`;
+  let end = `${ey || y}-${pad(emo || mo)}-${pad(ed)}`;
+  if (end < start && !ey) end = `${+y + 1}-${pad(emo || mo)}-${pad(ed)}`;
+  if (isNaN(Date.parse(start)) || isNaN(Date.parse(end))) return null;
+  // 끝 날짜가 시작보다 앞서면(울산경제일자리진흥원 2026 공고 실측: "2026. 5. 13.(수) ~ 2025. 6. 10.(수)") 표기 오류 의심.
+  if (end < start) return { invalid: true, raw: m[0].trim() };
+  return { start, end };
+}
+const DOC_APPLY_LABEL = String.raw`(?:신청|접수|모집)\s*기\s*간`;
+const DOC_EVENT_LABEL = String.raw`(?:축제|행사)\s*(?:일정|기간|일시)|운영\s*(?:일자|기간)`;
+const DOC_FEE_RE = /(?:참\s*여\s*비|참\s*가\s*비|부\s*스\s*비|입\s*점\s*비)\s*(?:[:：]|\))\s*([^\n]{1,40})/;
+const DOC_QUALIFIED_RE =
+  /(?:참가|신청|참여)\s*자격[^가-힣]{0,6}(?=[^]{0,200}?(?:입점|졸업기업|수료기업|수행기업|입주기업|회원사|사회적경제기업|사회적기업|협동조합|마을기업|자활기업))/;
+const DOC_RESIDENT_RE =/([가-힣]{2,6}(?:광역시|특별시|시|군|구))에\s*주민등록을\s*두(?:고|고서)?\s*거주/;
+
+// 원문에서 iso 날짜를 "YYYY. M. D(요일)"/"YYYY년 M월 D일(요일)" 형태로 찾아 요일이 실제와 다르면 원문 표기를 돌려준다.
+function docWeekdayMismatch(flat, iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  const re = new RegExp(String.raw`${y}\s*[.년]\s*${m}\s*[.월]\s*${d}\s*[.일]?\s*\(([일월화수목금토])\)`);
+  const hit = flat.match(re);
+  if (!hit) return null;
+  return KO_WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()] === hit[1] ? null : hit[0];
+}
+// 라벨만 한 줄에 있고 값이 다음 줄들에 있는 경우("5. 접수방법" 다음 줄) — 다음 1~2줄을 원문 그대로 잇는다.
+function docNextLineAfter(text, labelLineRe) {
+  const lines = (text || "").split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const i = lines.findIndex((l) => labelLineRe.test(l));
+  if (i === -1 || !lines[i + 1]) return null;
+  return lines.slice(i + 1, i + 3).join(" ").replace(/^[-•·]\s*/, "").slice(0, 120);
+}
+function buildDocNoticeItem(board, url, title, text, nowIso = new Date().toISOString(), links = {}) {
+  const flat = text.replace(/\s+/g, " ");
+  const cls = classifyNotice(title, flat);
+  const dates = extractDateRange(flat, null);
+  const apply = parseDocLabeledRange(flat, DOC_APPLY_LABEL);
+  const preNotes = [];
+  if (apply && apply.invalid) {
+    // 라벨이 분명한 신청기간인데 날짜 앞뒤가 맞지 않음 — 공통 추출값(행사기간일 수 있음)도 쓰지 않고 미확인으로 둔다.
+    preNotes.push(`원문 신청기간 "${apply.raw}"의 끝 날짜가 시작보다 앞서 표기 오류가 의심됨 — 모집기간은 미확인으로 둠.`);
+    dates.applyStart = null;
+    dates.applyEnd = null;
+    dates.recruitStatus = "unknown";
+  } else if (apply) {
+    // 라벨이 분명한 신청기간이 있으면 공통 추출(행사기간을 모집기간으로 잡을 수 있음)보다 우선한다.
+    const today = new Date(nowIso.slice(0, 10));
+    dates.applyStart = apply.start;
+    dates.applyEnd = apply.end;
+    dates.recruitStatus = today < new Date(apply.start) ? "upcoming" : today > new Date(apply.end) ? "closed" : "open";
+  }
+  const period = extractEventPeriod(text);
+  const ev = parseDocLabeledRange(flat, DOC_EVENT_LABEL);
+  if (ev && !period.festivalStart) {
+    period.festivalStart = ev.start;
+    period.festivalEnd = ev.end;
+  }
+  const elig = detectEligibility(flat, "울산");
+  // 특정 자격이 있어야 신청 가능한 공고(입점·졸업·수료·수행기업, 사회적경제기업, 협동조합 등) — 원문 자격 문구를
+  // 그대로 보여 주고 eligibilityCategory "qualified_only"로 둔다(홈페이지는 "확인 필요 — 원문 문구"로 표시).
+  if (!elig.eligibility) {
+    const q = flat.match(DOC_QUALIFIED_RE);
+    if (q) {
+      Object.assign(elig, {
+        eligibility: flat.slice(q.index, q.index + 160).replace(/\s+/g, " ").trim(),
+        ulsanEligible: "unknown",
+        eligibilityCategory: "qualified_only",
+        restrictedRegion: null,
+      });
+    }
+  }
+  const resident = !elig.eligibility && flat.match(DOC_RESIDENT_RE);
+  if (resident) {
+    Object.assign(elig, {
+      eligibility: flat.slice(Math.max(0, resident.index - 10), resident.index + resident[0].length + 20).trim(),
+      ulsanEligible: /울산/.test(resident[1]) ? "yes" : "no",
+      eligibilityCategory: "local_only",
+      restrictedRegion: resident[1],
+    });
+  }
+  const feeMatch = text.match(DOC_FEE_RE);
+  // 원문 날짜의 요일이 실제 달력과 다르면(울산연극협회 2026 공고 실측: "2025. 8. 14(금)" — 2025-08-14는 목요일)
+  // 표기 오류 가능성이 있어 그 날짜를 쓰지 않고 메모로만 남긴다(추측으로 연도를 고치지 않음).
+  const dateNotes = [];
+  for (const [startKey, endKey, label] of [["festivalStart", "festivalEnd", "행사"], ["applyStart", "applyEnd", "모집"]]) {
+    const holder = startKey === "festivalStart" ? period : dates;
+    const bad = docWeekdayMismatch(flat, holder[startKey]) || docWeekdayMismatch(flat, holder[endKey]);
+    if (bad) {
+      dateNotes.push(`원문 ${label} 날짜 "${bad}"의 요일이 달력과 달라 표기 오류가 의심됨 — ${label}기간은 미확인으로 둠.`);
+      holder[startKey] = null;
+      holder[endKey] = null;
+      if (label === "모집") dates.recruitStatus = "unknown";
+    }
+  }
+  const methodFallback = !extractApplyMethod(text) ? docNextLineAfter(text, /^\s*(?:\d+\.\s*)?(?:접수|신청)\s*방법\s*$/) : null;
+  const result = {
+    noticeType: cls.noticeType,
+    boothType: cls.boothType,
+    applyStart: dates.applyStart,
+    applyEnd: dates.applyEnd,
+    recruitStatus: dates.recruitStatus,
+  };
+  return {
+    id: `gh-${require("crypto").createHash("sha256").update(url).digest("base64url").slice(0, 16)}`,
+    name: cleanTitle(title),
+    region: "울산",
+    city: board.city || null,
+    sourceOrg: board.sourceOrg,
+    sourceCategory: board.sourceCategory,
+    sourceUrl: links.sourceUrl || url,
+    postedDate: links.postedDate || null,
+    applyStart: dates.applyStart,
+    applyEnd: dates.applyEnd,
+    festivalStart: period.festivalStart,
+    festivalEnd: period.festivalEnd,
+    applyLink: links.sourceUrl || board.pageUrl,
+    venue: extractVenue(text),
+    boothCount: extractBoothCount(text),
+    fee: extractFee(text) || (feeMatch ? cleanValue(feeMatch[1]) : null),
+    facilities: extractFacilities(text),
+    applyMethod: extractApplyMethod(text) || methodFallback,
+    boothType: cls.boothType,
+    eligibility: elig.eligibility,
+    ulsanEligible: elig.ulsanEligible,
+    eligibilityCategory: elig.eligibilityCategory,
+    restrictedRegion: elig.restrictedRegion,
+    attachmentParsed: true,
+    linkStatus: "ok",
+    linkCheckedAt: nowIso,
+    linkCheckDetail: null,
+    collectedAt: nowIso,
+    // 2026-11-08(요청사항): 신규 수집처(장미축제·울산연극협회·울산경제일자리진흥원)의 공고는 모집공고로 확실히
+    // 분류돼도 자동 승인하지 않고 관리자 검토 대기로 둔다. 분류 결과(noticeType)는 그대로 남겨 검토에 쓴다.
+    status: "pending",
+    autoPublishCandidate: decideAutoPublishStatus(result) === "approved",
+    organizerType: "official",
+    noticeType: cls.noticeType,
+    recruitStatus: dates.recruitStatus,
+    memo:
+      `자동수집(${board.org} 공식 홈페이지에 게시된 공고문 파일을 직접 분석). ${cls.reason} 신규 수집처라 관리자 승인 전까지 검토 대기.` +
+      `${elig.eligibility ? ` 참가자격 근거: "${elig.eligibility}"${elig.restrictedRegion ? ` (제한 지역: ${elig.restrictedRegion})` : ""}.` : ""}` +
+      `${[...preNotes, ...dateNotes].length ? ` ${[...preNotes, ...dateNotes].join(" ")}` : ""}` +
+      `${elig.eligibilityCategory === "qualified_only" ? " ※ 특정 자격(입점·수료기업 등)이 있어야 신청 가능 — 일반 개인사업자 신청 가능 여부는 원문 확인 필요." : ""}` +
+      ` 공고문 파일: ${url}${links.sourceUrl ? ` (원문 게시글: ${links.sourceUrl})` : ""}`,
+  };
+}
+function isRecentDocNotice(item, now = Date.now()) {
+  const latest = [item.festivalEnd, item.festivalStart, item.applyEnd].filter(Boolean).sort().pop();
+  return !!latest && Date.parse(latest) >= now - RECENT_DOC_DAYS * 86400000;
+}
+
+// 울산대공원 장미축제 — 게시판 없는 한 페이지 홈페이지(http만 응답). 공고문 파일 링크(./download/, ./images/pop/)만 읽는다.
+const ROSE_FESTIVAL_BOARD = {
+  org: "울산대공원 장미축제 준비사무국",
+  sourceOrg: "울산대공원 장미축제 홈페이지(남구)",
+  region: "울산",
+  city: "남구",
+  sourceCategory: "organizer",
+  pageUrl: "http://www.ulsanrosefestival.com/",
+};
+function extractDocLinks(html, pageUrl) {
+  const out = [];
+  for (const m of html.matchAll(/href=["']([^"']+\.(?:hwp|hwpx|pdf))["']/gi)) {
+    try {
+      const url = new URL(m[1].replace(/ /g, "%20"), pageUrl).href;
+      if (!out.some((o) => o.url === url)) out.push({ url, kind: attachmentKindOf(m[1]), fileName: decodeURIComponent(m[1].split("/").pop()) });
+    } catch {
+      /* ignore */
+    }
+  }
+  return out;
+}
+
+// ---- 2026-11-08 신설(신규 수집처 3단계): 울산연극협회 소식통 공지사항(태화강대숲납량축제 체험부스 모집) ----
+// EUC-KR 페이지라 공통 fetchText(UTF-8 해석)를 쓰지 않고 이 함수로만 읽는다. 시간 제한·재시도는 공통과 같음.
+async function fetchTextEucKr(url) {
+  let lastErr;
+  for (let attempt = 0; attempt <= FETCH_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": BROWSER_UA }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return new TextDecoder("euc-kr").decode(Buffer.from(await res.arrayBuffer()));
+    } catch (err) {
+      lastErr = err;
+      if (/HTTP 4\d\d/.test(err.message)) break; // 403·404 등은 재시도해도 같음
+      if (attempt < FETCH_MAX_RETRIES) await sleep(FETCH_RETRY_DELAY_MS);
+    }
+  }
+  throw lastErr;
+}
+const THEATRE_BOARD = {
+  org: "울산연극협회",
+  sourceOrg: "울산연극협회 공지사항(태화강대숲납량축제)",
+  region: "울산",
+  city: "중구",
+  sourceCategory: "organizer",
+  pages: [1, 2].map((p) => `http://www.ulsantheatre.or.kr/news_01.html?botype=LIS_B01_01&page=${p}`),
+};
+// 목록 행: <a href="/news_01.html?query=view&...&bid=N">제목</a> … <div ...>YY.MM.DD</div>
+const THEATRE_ROW_RE =
+  /<a href="(\/news_01\.html\?query=view[^"]*?bid=(\d+))"\s*>([^<]+)<\/a>[\s\S]{0,400}?>(\d{2})\.(\d{2})\.(\d{2})</g;
+function extractTheatreRows(html, pageUrl) {
+  const out = [];
+  for (const m of html.matchAll(new RegExp(THEATRE_ROW_RE.source, "g"))) {
+    out.push({
+      url: new URL(`/news_01.html?query=view&table=LimBo&botype=LIS_B01_01&bid=${m[2]}`, pageUrl).href,
+      title: decodeEntities(m[3]).replace(/\s+/g, " ").trim(),
+      postedDate: `20${m[4]}-${m[5]}-${m[6]}`,
+    });
+  }
+  return out;
+}
+// 첨부: <a href="/nc_board/download.php?table=LimBo&bid=N&num=1"><img …> 파일명.hwp</a> (아이콘이 끼어 있어 공통 규칙이 못 잡음)
+const THEATRE_FILE_RE = /<a href="(\/nc_board\/download\.php\?[^"]+)"[^>]*>(?:\s*<img[^>]*>)?\s*([^<]+?\.(?:pdf|hwpx|hwp))\s*<\/a>/gi;
+function isBoothRelatedTitle(title) {
+  return BOOTH_KEYWORD_RE.test(title) || BOOTH_CANDIDATE_TITLE_RE.test(title) || /부스/.test(title);
+}
+
+// ---- 2026-11-08 신설(신규 수집처 3단계): 울산경제일자리진흥원 사업공고(uepa.or.kr → ubpi.or.kr) ----
+// 기업 지원사업 공고가 대부분이고 플리마켓·판매전 참가기업 모집은 1년에 몇 번뿐이라, 목록 1쪽 + 제목 검색
+// (공개 GET 검색)으로 부스 관련 글만 찾고, 본문 대신 첨부 공고문(HWP)을 분석한다.
+const UBPI_BOARD = {
+  org: "울산경제일자리진흥원",
+  sourceOrg: "울산경제일자리진흥원 사업공고",
+  region: "울산",
+  city: null,
+  sourceCategory: "organizer",
+  pages: [
+    "https://www.ubpi.or.kr/sub/?mcode=0403010000",
+    ...["플리마켓", "마켓", "판매전", "부스", "셀러", "입점"].map(
+      (kw) => `https://www.ubpi.or.kr/sub/?mcode=0403010000&kd=title&kw=${encodeURIComponent(kw)}`
+    ),
+  ],
+};
+// 목록 행: <a href="...mcode=0403010000...&no=N...">제목</a> … YYYY-MM-DD
+function extractUbpiRows(html, pageUrl) {
+  const out = [];
+  for (const m of html.matchAll(/<a[^>]+href=["']([^"']*mcode=0403010000[^"']*?no=(\d+)[^"']*)["'][^>]*>([\s\S]{0,300}?)<\/a>([\s\S]{0,400}?)(20\d\d-\d\d-\d\d)/g)) {
+    const title = decodeEntities(m[3].replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+    if (title.length < 4) continue;
+    out.push({ url: new URL(`/sub/?mcode=0403010000&no=${m[2]}`, pageUrl).href, title, postedDate: m[5] });
+  }
+  return out;
+}
+// 첨부: <a href="/_Inc/download.php?gb=supportdata&f_idx=N">파일명.hwp ( Size : …)</a> — 이미지 첨부는 건너뜀
+// 파일명 안에 괄호가 있을 수 있어("플리마켓(2회)…hwp" 실측) 크기 표시 "( Size" 앞까지를 파일명으로 본다.
+// 실제 마크업: <a href="/_Inc/download.php?…"><span>파일명.hwp (<strong>Size</strong> : …</span></a>
+const UBPI_FILE_RE = /<a[^>]+href=["'](\/_Inc\/download\.php\?[^"']+)["'][^>]*>\s*(?:<span>)?\s*([^<]+?\.(?:pdf|hwpx|hwp))\s*\(\s*(?:<strong>)?\s*Size/gi;
+
 const TRUCKGONGGO_BOARD = {
   org: "트럭공고",
   sourceOrg: "트럭공고 울산 푸드트럭 모집",
@@ -4741,6 +5011,160 @@ async function main() {
     }
   }
 
+  // ---- 2026-11-08 신설(신규 수집처 3단계): 울산대공원 장미축제 홈페이지의 공고문 파일 ----
+  // 다른 수집처와 독립된 try/catch — 접속 실패해도 실패로 기록만 하고 다음 수집처로 넘어간다.
+  if (inScope(ROSE_FESTIVAL_BOARD)) {
+    try {
+      const docs = extractDocLinks(await fetchText(ROSE_FESTIVAL_BOARD.pageUrl), ROSE_FESTIVAL_BOARD.pageUrl);
+      let added = 0;
+      let old = 0;
+      let unreadable = 0;
+      let deadLinks = 0;
+      let dup = 0;
+      for (const doc of docs) {
+        if (seen[doc.url]) continue;
+        const text = doc.kind === "pdf" ? await fetchPdfText(doc.url) : doc.kind === "hwpx" ? await fetchHwpxText(doc.url) : await fetchHwpText(doc.url);
+        if (!text) {
+          // 문서 대신 HTML 화면이 오면 서버에 파일이 없는 깨진 링크(장미축제 2024 파일 실측) — 한 번만 기록하고 다시 시도하지 않음.
+          // 그 밖의 실패(일시 장애 등)는 seen에 넣지 않아 다음 실행에서 다시 시도한다.
+          const head = await fetch(doc.url, { headers: { "User-Agent": BROWSER_UA }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+            .then(async (r) => Buffer.from(await r.arrayBuffer()).subarray(0, 64).toString("utf8"))
+            .catch(() => "");
+          if (/^s*</.test(head)) {
+            deadLinks++;
+            seen[doc.url] = { firstSeen: new Date().toISOString(), org: ROSE_FESTIVAL_BOARD.org, note: "깨진 링크(파일 없음)" };
+          } else unreadable++;
+          continue;
+        }
+        const item = buildDocNoticeItem(ROSE_FESTIVAL_BOARD, doc.url, titleFromDocText(text, doc.fileName.replace(/\.(hwpx?|pdf)$/i, "")), text);
+        seen[doc.url] = { firstSeen: new Date().toISOString(), org: ROSE_FESTIVAL_BOARD.org };
+        if (!isRecentDocNotice(item)) {
+          old++; // 최근 180일보다 오래된 공고문(과거 공고 대량 등록 방지)
+          continue;
+        }
+        const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (d) {
+          dup++;
+          console.log(`  [중복 건너뜀] 장미축제 "${item.name}" = 기존 "${d.name}" (${d.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(
+        `${ROSE_FESTIVAL_BOARD.sourceOrg}: 공고문 파일 ${docs.length}개 → 신규 ${added}건, 오래된 공고 제외 ${old}건, 중복 ${dup}건${deadLinks ? `, 깨진 링크 ${deadLinks}건` : ""}${unreadable ? `, 파일 분석 실패 ${unreadable}건` : ""}`
+      );
+      recordBoardResult(ROSE_FESTIVAL_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${ROSE_FESTIVAL_BOARD.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(ROSE_FESTIVAL_BOARD, false, describeFetchError(err));
+    }
+  }
+
+  // ---- 2026-11-08 신설(신규 수집처 3단계): 울산연극협회 공지사항(부스 관련 글만, 본문 대신 첨부 공고문 분석) ----
+  if (inScope(THEATRE_BOARD)) {
+    try {
+      let rows = [];
+      for (const pageUrl of THEATRE_BOARD.pages) rows = rows.concat(extractTheatreRows(await fetchTextEucKr(pageUrl), pageUrl));
+      const unique = [...new Map(rows.map((r) => [r.url, r])).values()];
+      let matched = 0;
+      let added = 0;
+      let old = 0;
+      let dup = 0;
+      let noDoc = 0;
+      for (const row of unique) {
+        if (seen[row.url] || !isBoothRelatedTitle(row.title)) continue; // 선거 공보·공연 공지 등은 열지 않음
+        matched++;
+        const view = await fetchTextEucKr(row.url);
+        const file = [...view.matchAll(new RegExp(THEATRE_FILE_RE.source, "gi"))][0];
+        let text = null;
+        let docUrl = null;
+        if (file) {
+          docUrl = new URL(decodeEntities(file[1]), row.url).href;
+          const kind = attachmentKindOf(file[2]);
+          text = kind === "pdf" ? await fetchPdfText(docUrl) : kind === "hwpx" ? await fetchHwpxText(docUrl) : await fetchHwpText(docUrl, { referer: row.url });
+        }
+
+        if (!text) noDoc++; // 첨부가 없거나 못 읽으면 목록 제목·본문만으로 분류(기간 등은 미확인)
+        const item = buildDocNoticeItem(THEATRE_BOARD, docUrl || row.url, row.title, text || "", undefined, { sourceUrl: row.url, postedDate: row.postedDate });
+        if (!text) Object.assign(item, { attachmentParsed: false, memo: `${item.memo} 첨부 공고문을 읽지 못해 본문만으로 분류함 — 원문 확인 필요.` });
+        seen[row.url] = { firstSeen: new Date().toISOString(), org: THEATRE_BOARD.org };
+        if (!isRecentDocNotice(item) && !(row.postedDate && Date.parse(row.postedDate) >= Date.now() - RECENT_DOC_DAYS * 86400000)) {
+          old++; // 최근 180일보다 오래된 글(과거 공고 대량 등록 방지)
+          continue;
+        }
+
+        const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (d) {
+          dup++;
+          console.log(`  [중복 건너뜀] 울산연극협회 "${item.name}" = 기존 "${d.name}" (${d.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(
+        `${THEATRE_BOARD.sourceOrg}: 목록 ${unique.length}건 중 부스 관련 ${matched}건 → 신규 ${added}건, 오래된 글 제외 ${old}건, 중복 ${dup}건${noDoc ? `, 첨부 미확인 ${noDoc}건` : ""}`
+      );
+      recordBoardResult(THEATRE_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${THEATRE_BOARD.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(THEATRE_BOARD, false, describeFetchError(err));
+    }
+  }
+
+  // ---- 2026-11-08 신설(신규 수집처 3단계): 울산경제일자리진흥원 사업공고 중 플리마켓·판매전·부스 관련 글 ----
+  if (inScope(UBPI_BOARD)) {
+    try {
+      let rows = [];
+      for (const pageUrl of UBPI_BOARD.pages) rows = rows.concat(extractUbpiRows(await fetchText(pageUrl), pageUrl));
+      const unique = [...new Map(rows.map((r) => [r.url, r])).values()];
+      let matched = 0;
+      let added = 0;
+      let old = 0;
+      let dup = 0;
+      let noDoc = 0;
+      for (const row of unique) {
+        if (seen[row.url] || !isBoothRelatedTitle(row.title)) continue; // 지원사업·교육·채용 공고는 열지 않음
+        if (!(row.postedDate && Date.parse(row.postedDate) >= Date.now() - RECENT_DOC_DAYS * 86400000)) {
+          old++; // 최근 180일보다 오래된 글은 상세도 열지 않음(과거 공고 대량 등록 방지, seen에도 넣지 않음)
+          continue;
+        }
+        matched++;
+        const view = await fetchText(row.url);
+        const file = [...view.matchAll(new RegExp(UBPI_FILE_RE.source, "gi"))][0];
+        let text = null;
+        let docUrl = null;
+        if (file) {
+          docUrl = new URL(decodeEntities(file[1]), row.url).href;
+          const kind = attachmentKindOf(file[2].trim());
+          text = kind === "pdf" ? await fetchPdfText(docUrl) : kind === "hwpx" ? await fetchHwpxText(docUrl) : await fetchHwpText(docUrl, { referer: row.url });
+        }
+        if (!text) {
+          noDoc++;
+          text = stripHtmlPreserveLines(view); // 첨부를 못 읽으면 본문 요약으로만 분류(기간 등은 미확인일 수 있음)
+        }
+        const item = buildDocNoticeItem(UBPI_BOARD, docUrl || row.url, row.title, text, undefined, { sourceUrl: row.url, postedDate: row.postedDate });
+        seen[row.url] = { firstSeen: new Date().toISOString(), org: UBPI_BOARD.org };
+        const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (d) {
+          dup++;
+          console.log(`  [중복 건너뜀] 울산경제일자리진흥원 "${item.name}" = 기존 "${d.name}" (${d.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(
+        `${UBPI_BOARD.sourceOrg}: 목록·검색 ${unique.length}건 중 부스 관련 최근 글 ${matched}건 → 신규 ${added}건, 오래된 글 제외 ${old}건, 중복 ${dup}건${noDoc ? `, 첨부 미확인 ${noDoc}건` : ""}`
+      );
+      recordBoardResult(UBPI_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${UBPI_BOARD.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(UBPI_BOARD, false, describeFetchError(err));
+    }
+  }
+
   // ---- 2026-11-08 신설(민간 수집 4차): 센트럴 플랫폼 셀러·판매자 모집 이벤트(공개 페이지) ----
   if (inScope(UCENTRAL_BOARD)) {
     try {
@@ -4969,6 +5393,17 @@ const ALL_BOARDS = [
 module.exports = {
   ALL_BOARDS,
   buildFleamoaItem,
+  extractDocLinks,
+  titleFromDocText,
+  buildDocNoticeItem,
+  isRecentDocNotice,
+  ROSE_FESTIVAL_BOARD,
+  THEATRE_BOARD,
+  UBPI_BOARD,
+  extractUbpiRows,
+  fetchTextEucKr,
+  extractTheatreRows,
+  isBoothRelatedTitle,
   extractTruckgonggoRows,
   parseTruckgonggoDetail,
   buildTruckgonggoItem,

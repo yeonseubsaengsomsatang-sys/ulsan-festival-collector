@@ -1824,8 +1824,11 @@
   // 어느 날짜 기준으로 걸지 지정한다(모집중 목록은 마감일, 마감 목록도 마감일 기준).
   // 지역을 고르면 그 지역에 실제로 존재하는 시·군·구만 뽑아 "시군구" 선택지로 보여준다
   // (데이터에 city가 없는 항목이 많으므로, 있는 값만 모아 추측 없이 구성).
+  // 2026-11-08(요청사항): 울산은 공고가 아직 없는 구·군도 시·군·구 목록에 항상 보여준다
+  // (값은 수집 데이터의 city 표기와 동일하게 — "울주"는 "울주군"이 아니라 "울주").
+  const ALWAYS_SHOWN_CITIES = { "울산": ["중구", "남구", "동구", "북구", "울주"] };
   function citiesForRegion(region) {
-    const set = new Set();
+    const set = new Set(ALWAYS_SHOWN_CITIES[region] || []);
     getAllFestivals().forEach(f => {
       if ((region === "all" || f.region === region) && f.city) set.add(f.city);
     });
@@ -2353,7 +2356,7 @@
     // 2026-10-24 신설: 이 지역 데이터에 실제로 존재하는 city/eventCity 값만 모아
     // 선택지로 보여준다(추측으로 목록을 만들지 않음 — 데이터에 없는 구·군은 아예
     // 선택지에 나타나지 않음).
-    const cityOptionSet = new Set();
+    const cityOptionSet = new Set(ALWAYS_SHOWN_CITIES[region] || []);
     regionItems.forEach(f => {
       if (f.city) cityOptionSet.add(f.city);
       if (f.eventCity) cityOptionSet.add(f.eventCity);

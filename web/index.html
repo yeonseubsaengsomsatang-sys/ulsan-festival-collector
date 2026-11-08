@@ -1826,13 +1826,22 @@
   // (데이터에 city가 없는 항목이 많으므로, 있는 값만 모아 추측 없이 구성).
   // 2026-11-08(요청사항): 울산은 공고가 아직 없는 구·군도 시·군·구 목록에 항상 보여준다
   // (값은 수집 데이터의 city 표기와 동일하게 — "울주"는 "울주군"이 아니라 "울주").
-  const ALWAYS_SHOWN_CITIES = { "울산": ["중구", "남구", "동구", "북구", "울주"] };
+  // 2026-11-08(요청사항): 울산 목록 순서는 남구·중구·북구·동구·울주군(고정 목록 순서 그대로),
+  // 그 밖의 값은 뒤에 가나다순. 화면 표시만 "울주군"으로 바꾸고 값은 데이터 표기("울주") 유지.
+  const ALWAYS_SHOWN_CITIES = { "울산": ["남구", "중구", "북구", "동구", "울주"] };
+  const CITY_LABELS = { "울주": "울주군" };
+  function cityLabel(c) { return CITY_LABELS[c] || c; }
+  function orderCities(region, cities) {
+    const fixed = ALWAYS_SHOWN_CITIES[region] || [];
+    const rest = [...cities].filter(c => !fixed.includes(c)).sort();
+    return [...fixed, ...rest];
+  }
   function citiesForRegion(region) {
     const set = new Set(ALWAYS_SHOWN_CITIES[region] || []);
     getAllFestivals().forEach(f => {
       if ((region === "all" || f.region === region) && f.city) set.add(f.city);
     });
-    return [...set].sort();
+    return orderCities(region, set);
   }
 
   function applyListFilters(items, filters, dateField) {
@@ -1867,7 +1876,7 @@
     const cityHtml = showCity ? (() => {
       const cities = citiesForRegion(filters.region || "all");
       const cityOptions = `<option value="all" ${filters.city === "all" ? "selected" : ""}>전체 시·군·구</option>` +
-        cities.map(c => `<option value="${escapeHtml(c)}" ${c === filters.city ? "selected" : ""}>${escapeHtml(c)}</option>`).join("");
+        cities.map(c => `<option value="${escapeHtml(c)}" ${c === filters.city ? "selected" : ""}>${escapeHtml(cityLabel(c))}</option>`).join("");
       return `
         <label for="${idPrefix}City">시·군·구</label>
         <select id="${idPrefix}City" ${cities.length === 0 ? "disabled" : ""}>${cityOptions}</select>
@@ -2365,7 +2374,7 @@
       <label for="regionCityFilter">시·군·구</label>
       <select id="regionCityFilter">
         <option value="all" ${regionCityFilter === "all" ? "selected" : ""}>전체</option>
-        ${[...cityOptionSet].sort().map(c => `<option value="${c}" ${c === regionCityFilter ? "selected" : ""}>${c}</option>`).join("")}
+        ${orderCities(region, cityOptionSet).map(c => `<option value="${c}" ${c === regionCityFilter ? "selected" : ""}>${cityLabel(c)}</option>`).join("")}
       </select>
     ` : "";
 

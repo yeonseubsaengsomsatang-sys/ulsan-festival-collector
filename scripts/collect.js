@@ -296,6 +296,42 @@ function extractMaduheeCandidates(html, pageUrl) {
   }
   return out;
 }
+// 2026-11-08 신설(민간·주최기관 수집 1차 — 승인됨): 고래문화재단 울산고래축제 공식 누리집
+// 공지사항(ulsanwhale.com, 남구). 플리마켓 판매자·푸드트럭 운영자·고래밥상(먹거리) 참여단체·
+// 체험·홍보부스 모집공고가 남구청 게시판이 아니라 이 게시판에 올라오는 것을 실측으로 확인함.
+// 목록은 순수 HTTP로 서버 렌더링(<td class="date">YYYY-MM-DD</td>), 공고문은 첨부 PDF.
+// 상세 주소의 pg=(목록 쪽수) 값은 쪽마다 달라 같은 글이 두 주소로 잡히지 않도록 떼어낸다.
+// sourceCategory: "organizer" — 관공서 게시판과 구분해 관리하기 위한 출처 구분값.
+const WHALE_ITEM_RE =
+  /<a href="(\/menu_03\/03\.jsp\?prc=view&(?:amp;)?n=(\d+))[^"]*">([^<]+)<\/a>[\s\S]{0,200}?<td class="date">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractWhaleFestivalCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(WHALE_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = cleanTitle(decodeEntities(m[3]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(`/menu_03/03.jsp?prc=view&n=${m[2]}`, pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[4] });
+  }
+  return out;
+}
+const NAMGU_FESTIVAL_BOARDS = [1, 2].map((page) => ({
+  org: "고래문화재단",
+  sourceOrg: "울산고래축제 공지사항(남구)",
+  url: `https://www.ulsanwhale.com/menu_03/03.jsp?pg=${page}`,
+  region: "울산",
+  city: "남구",
+  sourceCategory: "organizer",
+  extractor: extractWhaleFestivalCandidates,
+}));
+
 const JUNGGU_FESTIVAL_BOARDS = [1, 2].map((page) => ({
   org: "태화강마두희축제추진위원회",
   sourceOrg: "마두희축제 공지사항(중구)",
@@ -2261,7 +2297,10 @@ const BOOTH_KEYWORD_RE =
 // "선정 결과"가 아니라 "모집 결과"라고만 쓰는 경우도 있어 추가(바로 위 BOOTH_KEYWORD_RE에
 // "먹거리장터"를 추가하면서, 이미 끝난 "모집 결과" 공고까지 recruit로 잘못 분류되지
 // 않게 짝을 맞춤).
-const RESULT_TITLE_RE = /(선정\s*결과|모집\s*결과|결과\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
+// 2026-11-08 보강(울산고래축제 실측): "플리마켓 모집 최종 결과 공고", "푸드트럭 선정자 공고문",
+// "운영자 선정 공고"처럼 "결과 공고"/"선정자 공고"/"선정 공고"로 쓰는 결과 발표가 모집공고로
+// 잘못 분류돼 자동 승인될 뻔함 — 결과 발표 표현으로 추가.
+const RESULT_TITLE_RE = /(선정\s*결과|모집\s*결과|결과\s*안내|결과\s*공고|선정자\s*공고|선정\s*공고|마감되었|종료되었|성황리|성료|마무리)/;
 // 본문에서 모집/접수/신청 기간 날짜 범위 추출 (2026-10-17: 날짜 표현 다양화 — 실제
 // 수집 데이터에서 "모집기간: YYYY.M.D~YYYY.M.D" 형태 하나만 잡던 기존 정규식이
 // "신청마감 YYYY-MM-DD"(마감일만 언급), "O월 O일부터 O월 O일까지"(연도 없는 한글 표현)
@@ -2344,8 +2383,11 @@ const LABELED_DATE_RANGE_RE =
 // 경우가 실제로 많음(경주 사례로 확인) — 이 경우 공고가 이미 게시됐다는 사실 자체가
 // "시작됨"의 증거이므로, 기존 "마감일만 있는 경우"(unknown 유지)보다 한 단계 더 확실하게
 // open/closed를 판정할 수 있다.
+// 2026-11-08 보강(울산고래축제 실측): "접수기간 : 공고일로부터 ~ 2026. 9. 18."처럼 "공고일로부터",
+// "모집기간 ⦁공고일 ~ 9월 21일(월)"처럼 글머리 기호와 한글 월/일 표기도 인식한다.
+// 그룹: (연도)(월)(일) 또는 한글 표기일 때 (연도4)(월5)(일6).
 const APPLY_PERIOD_ANNOUNCE_RE =
-  /(?:접수|신청|모집)\s*(?:기간|기한)?\s*\)?\s*[:：]?\s*공고일\s*(?:~|-|부터)\s*(?:(\d{4})[.\-/]\s*)?(\d{1,2})[.\-/]\s*(\d{1,2})\.?\s*(?:\([^)]{0,4}\))?/;
+  /(?:접수|신청|모집)\s*(?:기간|기한)?\s*\)?\s*[:：⦁·•]?\s*공고일\s*(?:로부터)?\s*(?:~|-|부터)\s*(?:(?:(\d{4})[.\-/]\s*)?(\d{1,2})[.\-/]\s*(\d{1,2})\.?|(?:(\d{4})\s*년\s*)?(\d{1,2})\s*월\s*(\d{1,2})\s*일)\s*(?:\([^)]{0,4}\))?/;
 // "OO시/군/구에 사업장을 둔(두고)" 식으로 특정 지자체를 참가 전제조건으로 못박는 표현은
 // "만"/"한정" 같은 명시적 단어가 없어도 사실상 관내 한정이다(경주 사례로 실측 확인 —
 // 기존 ELIGIBILITY_OUTSIDE_NO_RE는 "만/한정" 트레일링을 요구해 이 표현을 놓쳤음).
@@ -2647,6 +2689,9 @@ function extractDateRange(bodyText, postedDate) {
   // 추측하지 않고 그대로 통과한다(최종적으로 "확인 필요"로 남음).
   const referenceDate = postedDate || extractPostedDateFromBody(bodyText) || extractSelfDeclaredNoticeDate(bodyText);
 
+  // 2026-11-08: 라벨이 명확한 "접수기간: 공고일 ~ 마감일"을 가장 먼저 확인(위 applyAnnouncePeriod 참고).
+  if (applyAnnouncePeriod(bodyText, postedDate, referenceDate, out, today)) return out;
+
   const rangeMatch = bodyText.match(DATE_RANGE_RE);
   if (rangeMatch) {
     const start = parseKoDate(rangeMatch[1]);
@@ -2742,28 +2787,37 @@ function extractDateRange(bodyText, postedDate) {
   // "이미 마감됐는지"만 판정한다(2026-10-22 수정: postedDate 없이 "open"이라 단정하던
   // 이전 동작은 "신청 시작일을 확인할 수 있는 항목만 모집중으로 분류" 요구사항과
   // 어긋나서 더 엄격하게 고침).
-  const announceMatch = bodyText.match(APPLY_PERIOD_ANNOUNCE_RE);
-  if (announceMatch) {
-    const [, endYearRaw, endMonth, endDay] = announceMatch;
-    // 2026-10-22 수정: 연도가 본문에 명시되지 않은 경우, 실행 시점 연도를 쓰던 것을
-    // referenceDate(공고 게시일) 기준 보정으로 바꿈 — 위 kmd 분기들과 같은 이유.
-    const end = endYearRaw
-      ? parseKoMonthDay(endMonth, endDay, +endYearRaw)
-      : resolveYearlessMonthDay(endMonth, endDay, referenceDate);
-    if (end) {
-      out.applyStart = normalizePostedDate(postedDate) || extractSelfDeclaredNoticeDate(bodyText);
-      out.applyEnd = `${end.getUTCFullYear()}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
-      if (today > end) {
-        out.recruitStatus = "closed";
-      } else if (out.applyStart) {
-        out.recruitStatus = "open";
-      } else {
-        out.recruitStatus = "unknown";
-      }
-    }
-  }
+  applyAnnouncePeriod(bodyText, postedDate, referenceDate, out, today);
 
   return out;
+}
+
+// "모집/접수/신청 기간: 공고일 ~ 마감일" 처리(기존 extractDateRange 맨 끝 분기를 함수로 뺌).
+// 2026-11-08: extractDateRange 맨 앞에서도 호출한다 — 이 표현은 라벨이 명확한 모집기간인데,
+// 기존에는 본문에 먼저 나오는 행사기간 범위(DATE_RANGE_RE)가 모집기간으로 잘못 잡혔음
+// (울산고래축제 플리마켓 공고 실측: 모집 2026-10-15~10-18로 잘못 기록될 뻔함).
+function applyAnnouncePeriod(bodyText, postedDate, referenceDate, out, today) {
+  const announceMatch = bodyText.match(APPLY_PERIOD_ANNOUNCE_RE);
+  if (!announceMatch) return false;
+  const endYearRaw = announceMatch[1] || announceMatch[4];
+  const endMonth = announceMatch[2] || announceMatch[5];
+  const endDay = announceMatch[3] || announceMatch[6];
+  // 2026-10-22 수정: 연도가 본문에 명시되지 않은 경우, 실행 시점 연도를 쓰던 것을
+  // referenceDate(공고 게시일) 기준 보정으로 바꿈 — 위 kmd 분기들과 같은 이유.
+  const end = endYearRaw
+    ? parseKoMonthDay(endMonth, endDay, +endYearRaw)
+    : resolveYearlessMonthDay(endMonth, endDay, referenceDate);
+  if (!end) return false;
+  out.applyStart = normalizePostedDate(postedDate) || extractSelfDeclaredNoticeDate(bodyText);
+  out.applyEnd = `${end.getUTCFullYear()}-${String(endMonth).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
+  if (today > end) {
+    out.recruitStatus = "closed";
+  } else if (out.applyStart) {
+    out.recruitStatus = "open";
+  } else {
+    out.recruitStatus = "unknown";
+  }
+  return true;
 }
 
 // 관외(타지역) 사업자 참가 가능 여부 판정 (2026-10-17 신설). boardRegion은 게시판이
@@ -3420,7 +3474,7 @@ async function fetchAttachmentPdfText(html, pageUrl) {
   return texts.length ? texts.join("\n").slice(0, 8000) : null;
 }
 
-async function fetchAndClassifyDetail(detailUrl, title, region, postedDate, preloadedHtml = null) {
+async function fetchAndClassifyDetail(detailUrl, title, region, postedDate, preloadedHtml = null, opts = {}) {
   const result = {
     applyStart: null,
     applyEnd: null,
@@ -3463,7 +3517,26 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate, prel
     result.linkCheckDetail = linkErr.detail;
   }
 
-  const cls = classifyNotice(title, bodyText);
+  let cls = classifyNotice(title, bodyText);
+  // 2026-11-08 신설: 행사 주최기관 게시판(opts.attachmentReview)에서만 — 제목이 "고래밥상 참여단체
+  // 모집"처럼 부스 단어 없이 일반 모집으로 보이고 본문은 첨부 공고문뿐인 경우, 첨부에 부스 관련
+  // 표현이 있으면 "review"(관리자 검토 대기)로 올린다. 자동 승인 대상(recruit)으로는 절대 바꾸지 않음.
+  if (
+    opts.attachmentReview &&
+    cls.noticeType === "general" &&
+    rawHtml &&
+    RECRUIT_TITLE_RE.test(title) &&
+    !RESULT_TITLE_RE.test(title)
+  ) {
+    const attText = await fetchAttachmentPdfText(rawHtml, detailUrl);
+    if (attText && BOOTH_KEYWORD_RE.test(attText)) {
+      cls = {
+        noticeType: "review",
+        boothType: detectBoothType(attText),
+        reason: "제목은 일반 모집으로 보이지만 첨부 공고문에 부스 관련 표현이 있어 사람 확인 필요.",
+      };
+    }
+  }
   result.noticeType = cls.noticeType;
   result.boothType = cls.boothType;
 
@@ -3939,6 +4012,7 @@ async function main() {
   for (const board of [
     ...BUKGU_FESTIVAL_BOARDS,
     ...JUNGGU_FESTIVAL_BOARDS,
+    ...NAMGU_FESTIVAL_BOARDS,
     ...ULSAN_FOUNDATION_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
@@ -3978,13 +4052,17 @@ async function main() {
         seenCanonical.add(ckey);
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
-        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null, c.detailHtml || null);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null, c.detailHtml || null, {
+          attachmentReview: board.sourceCategory === "organizer",
+        });
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
           name: c.title,
           region: board.region,
           city: board.city,
           sourceOrg: board.sourceOrg,
+          // 2026-11-08: 민간·주최기관 수집처만 출처 구분값을 남긴다(기존 보드 항목 형식은 그대로).
+          ...(board.sourceCategory ? { sourceCategory: board.sourceCategory } : {}),
           sourceUrl: c.url,
           postedDate: c.postedDate || null,
           applyStart: cls.applyStart,
@@ -4271,6 +4349,7 @@ const ALL_BOARDS = [
   ...BOARDS.map((b) => ({ ...b, region: b.region || "울산", isUlsanBaseBoard: true })),
   ...BUKGU_FESTIVAL_BOARDS,
   ...JUNGGU_FESTIVAL_BOARDS,
+  ...NAMGU_FESTIVAL_BOARDS,
   ...ULSAN_FOUNDATION_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,

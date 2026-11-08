@@ -98,4 +98,64 @@ function extractEminwonDetailTitle(html) {
   return m ? m[1].trim() : null;
 }
 
-module.exports = { fetchEminwonCandidates, buildEminwonDetailUrl, extractEminwonDetailTitle };
+// 2026-11-08 신설(민간 수집 2차 — 승인됨): 플리모아(fleamoa.com) "외부마켓소식" 울산 공고.
+// 화면을 브라우저 안에서 그리는 사이트라, 일반 방문자처럼 공개 페이지를 열어 "화면에 보이는
+// 글자"만 읽는다. 로그인하지 않고, robots.txt가 막은 경로(/my, /apply 등)는 열지 않으며,
+// 사이트 내부 데이터 주소를 직접 호출하지 않는다. 지역 필터(울산)는 화면의 필터 버튼으로 고른다.
+const FLEAMOA_NEWS_URL = "https://fleamoa.com/market-news.html";
+const FLEAMOA_FIELD_LABELS = ["일시", "장소", "부스비", "부스 규격", "모집 부스", "선정 방식"];
+
+async function fetchFleamoaUlsanMarkets() {
+  const chromium = loadChromium();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ locale: "ko-KR" });
+    await page.goto(FLEAMOA_NEWS_URL, { waitUntil: "domcontentloaded", timeout: LIST_WAIT_TIMEOUT_MS });
+    await page.waitForSelector('a[href*="market-detail"]', { timeout: 30000 });
+    await page.getByText("지역 전체 ▾").click();
+    await page.locator("#rfSheet").getByText(/^울산/).first().click();
+    await page.locator("#rfSheet").getByText("적용하기").click();
+    await page.waitForTimeout(2500);
+
+    const cards = new Map();
+    for (const tab of ["모집중", "마감"]) {
+      await page.locator(`button:has-text("${tab}")`).first().click();
+      await page.waitForTimeout(2500);
+      const found = await page.$$eval('a[href*="market-detail"]', (els) =>
+        els.map((e) => ({ href: e.href, text: e.innerText.replace(/\s+/g, " ").trim() }))
+      );
+      for (const c of found) {
+        if (!/울산/.test(c.text)) continue; // 필터가 풀려도 울산 아닌 카드는 절대 담지 않음
+        if (!cards.has(c.href)) cards.set(c.href, { ...c, tab });
+      }
+    }
+
+    const out = [];
+    for (const card of cards.values()) {
+      await page.goto(card.href, { waitUntil: "domcontentloaded", timeout: LIST_WAIT_TIMEOUT_MS });
+      await page.waitForSelector("h1, h2", { timeout: 20000 });
+      await page.waitForTimeout(2500);
+      const d = await page.evaluate((labels) => {
+        const title = ((document.querySelector("h1") || document.querySelector("h2") || {}).innerText || "").trim();
+        const lines = document.body.innerText.split("\n").map((s) => s.trim()).filter(Boolean);
+        const fields = {};
+        for (const label of labels) {
+          const i = lines.indexOf(label);
+          if (i !== -1 && lines[i + 1] && !labels.includes(lines[i + 1])) fields[label] = lines[i + 1];
+        }
+        const introIdx = lines.indexOf("마켓 소개");
+        const intro = introIdx !== -1 ? lines.slice(introIdx + 1, introIdx + 4).join(" ") : "";
+        const subtitle = lines.find((l) => /^울산\s/.test(l) && l.includes("·")) || "";
+        const src = (lines.find((l) => /^출처:/.test(l)) || "").replace(/^출처:\s*/, "").replace(/\s*·.*$/, "");
+        const originalUrl = [...document.querySelectorAll("a")].filter((a) => /원문/.test(a.innerText)).map((a) => a.href)[0] || null;
+        return { title, fields, intro, subtitle, src, originalUrl };
+      }, FLEAMOA_FIELD_LABELS);
+      out.push({ url: card.href, tab: card.tab, listText: card.text, ...d });
+    }
+    return out;
+  } finally {
+    await browser.close();
+  }
+}
+
+module.exports = { fetchEminwonCandidates, buildEminwonDetailUrl, extractEminwonDetailTitle, fetchFleamoaUlsanMarkets };

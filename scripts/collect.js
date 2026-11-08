@@ -34,7 +34,12 @@ const zlib = require("zlib");
 // 분류·첨부파일 분석은 그대로 기존 순수 HTTP 로직을 재사용한다(collect-playwright.js
 // 참고). playwright 자체는 그 모듈 안에서만 지연 로딩하므로, 설치가 안 된 환경에서도
 // 이 기관들만 "fetch_failed"로 분리될 뿐 다른 지역 수집에는 영향이 없다.
-const { fetchEminwonCandidates, buildEminwonDetailUrl, extractEminwonDetailTitle } = require("./collect-playwright.js");
+const {
+  fetchEminwonCandidates,
+  buildEminwonDetailUrl,
+  extractEminwonDetailTitle,
+  fetchFleamoaUlsanMarkets,
+} = require("./collect-playwright.js");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
@@ -2676,6 +2681,117 @@ function resolveYearlessMonthDay(month, day, referenceDateStr) {
   return candidate;
 }
 
+// ---- 2026-11-08 신설(민간 수집 2차): 모음 사이트(플리모아) 공고 → 수집 항목 변환 ----
+// 모음 사이트 공고는 원문(네이버 블로그·카페 등)을 사람이 확인하기 전까지 사실관계를 보장할 수
+// 없으므로 항상 status "pending"(관리자 검토 대기), noticeType "review"로 둔다(자동 승인 금지).
+// 날짜·부스비는 화면에 적힌 값만 쓰고, "운영자 문의"처럼 값이 없으면 비워 둔다(추측 금지).
+const FLEAMOA_BOARD = {
+  org: "플리모아",
+  sourceOrg: "플리모아 외부마켓소식(울산)",
+  region: "울산",
+  city: null,
+  sourceCategory: "aggregator",
+};
+// 연도 없는 "M/D(요일)"은 요일이 계산 결과와 맞을 때만 채운다 — 실측: "10/21(토)"는 2026년이면
+// 수요일이라 다른 해 행사일 가능성이 있어 비워 둠(추측 금지).
+const KO_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+function parseFleamoaDates(text, todayIso) {
+  const none = { festivalStart: null, festivalEnd: null };
+  const m = (text || "").match(/(\d{1,2})\/(\d{1,2})(?:\(([일월화수목금토])\))?(?:\s*~\s*(\d{1,2})\/(\d{1,2}))?/);
+  if (!m) return none;
+  const start = resolveYearlessMonthDay(m[1], m[2], todayIso);
+  if (!start) return none;
+  if (m[3] && KO_WEEKDAYS[start.getUTCDay()] !== m[3]) return none;
+  m.splice(3, 1); // 아래 m[3], m[4]가 끝 날짜(월, 일)를 가리키도록 요일 그룹 제거
+  let end = m[3] ? resolveYearlessMonthDay(m[3], m[4], todayIso) : start;
+  if (end && end < start) end = parseKoMonthDay(m[3], m[4], start.getUTCFullYear() + 1);
+  const iso = (d) => (d ? d.toISOString().slice(0, 10) : null);
+  return { festivalStart: iso(start), festivalEnd: iso(end) };
+}
+function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
+  const title = cleanTitle((m.title || m.listText || "").replace(/\s+/g, " ").trim());
+  const f = m.fields || {};
+  const cityRaw = ((m.subtitle || m.listText || "").match(/울산\s+(\S+?)(?:\s|·|$)/) || [])[1] || null;
+  const city = cityRaw ? cityRaw.replace(/^울주군$/, "울주") : null;
+  const dates = parseFleamoaDates(f["일시"] || m.subtitle, nowIso.slice(0, 10));
+  const fee = f["부스비"] && !/문의|미정|확인|협의/.test(f["부스비"]) ? f["부스비"] : null;
+  const desc = [
+    f["일시"] && `일시 ${f["일시"]}`,
+    f["장소"] && `장소 ${f["장소"]}`,
+    f["부스비"] && `부스비 ${f["부스비"]}`,
+    f["모집 부스"] && `모집 부스 ${f["모집 부스"]}`,
+    f["선정 방식"] && `선정 ${f["선정 방식"]}`,
+  ].filter(Boolean).join(", ");
+  return {
+    id: `gh-${require("crypto").createHash("sha256").update(m.url).digest("base64url").slice(0, 16)}`,
+    name: title,
+    region: "울산",
+    city,
+    sourceOrg: FLEAMOA_BOARD.sourceOrg,
+    sourceCategory: FLEAMOA_BOARD.sourceCategory,
+    sourceUrl: m.url,
+    originalUrl: m.originalUrl || null,
+    postedDate: null,
+    applyStart: null,
+    applyEnd: null,
+    festivalStart: dates.festivalStart,
+    festivalEnd: dates.festivalEnd,
+    applyLink: m.originalUrl || m.url,
+    venue: f["장소"] || null,
+    boothCount: null,
+    fee,
+    facilities: f["부스 규격"] && !/문의/.test(f["부스 규격"]) ? f["부스 규격"] : null,
+    applyMethod: null,
+    boothType: detectBoothType(`${title} ${m.intro || ""}`) || null,
+    eligibility: null,
+    ulsanEligible: "unknown",
+    eligibilityCategory: "unknown",
+    restrictedRegion: null,
+    attachmentParsed: false,
+    linkStatus: "ok",
+    linkCheckedAt: nowIso,
+    linkCheckDetail: null,
+    collectedAt: nowIso,
+    status: "pending",
+    organizerType: "private", // 홈페이지 isOfficial() 기준값(민간). 모음 사이트 구분은 sourceCategory로.
+    noticeType: "review",
+    recruitStatus: m.tab === "마감" ? "closed" : "unknown",
+    memo:
+      `자동수집(플리모아 외부마켓소식 — 모음 사이트 공고, 원문${m.src ? `: ${m.src}` : ""}). ` +
+      `원문을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. ` +
+      `플리모아 표시값: ${desc || "없음"}.${m.originalUrl ? ` 원문 링크: ${m.originalUrl}` : ""}`,
+  };
+}
+
+// 같은 행사가 여러 사이트(관공서·주최기관·모음 사이트)에 올라온 경우를 막는 중복 판정.
+// 주소가 서로 달라 기존 canonicalDedupKey로는 못 거르므로, (1) 원문 링크가 기존 항목 주소와
+// 같거나 (2) 정리한 행사명이 서로 포함 관계(8글자 이상)이고 행사 시작일이 같거나 한쪽이 비어
+// 있을 때 중복으로 본다. 모음 사이트 항목에만 적용(기존 수집 흐름은 그대로).
+function normalizeEventName(s) {
+  return (s || "")
+    .replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, "")
+    .replace(/20\d\d년?|제\s*\d+\s*회/g, "")
+    .replace(/[^가-힣a-zA-Z0-9]/g, "")
+    .replace(/(모집공고|모집안내|모집|공고|안내|셀러|판매자|참가자|참여자|참가팀|운영자)/g, "");
+}
+function normalizeLink(u) {
+  return (u || "").replace(/^https?:\/\/(m\.|www\.)?/, "").replace(/\/+$/, "");
+}
+function findCrossSourceDuplicate(item, others) {
+  const link = normalizeLink(item.originalUrl);
+  const name = normalizeEventName(item.name);
+  for (const o of others) {
+    if (o.id === item.id) continue;
+    if (link && (normalizeLink(o.sourceUrl) === link || normalizeLink(o.applyLink) === link)) return o;
+    if (o.region !== item.region) continue;
+    const on = normalizeEventName(o.name);
+    if (name.length >= 8 && on.length >= 8 && (name.includes(on) || on.includes(name))) {
+      if (!item.festivalStart || !o.festivalStart || item.festivalStart === o.festivalStart) return o;
+    }
+  }
+  return null;
+}
+
 // 본문에서 신청기간을 뽑아내는 3단계 폴백 — 위에서 아래로 시도하며, 먼저 성공한 패턴을
 // 쓴다. 1), 2)는 시작일·마감일이 둘 다 확정될 때만 open/upcoming/closed를 계산하고,
 // 3)은 마감일만 있으므로 "이미 지났는지"만 판정하며 그 전이면 "모집중"이라 단정하지
@@ -4202,6 +4318,34 @@ async function main() {
     }
   }
 
+  // ---- 2026-11-08 신설(민간 수집 2차): 플리모아 외부마켓소식 울산 공고(공개 화면만 읽음) ----
+  // 전부 관리자 검토 대기로 들어가고, 다른 사이트에 이미 있는 같은 행사는 건너뛴다.
+  if (inScope(FLEAMOA_BOARD)) {
+    try {
+      const markets = await fetchFleamoaUlsanMarkets();
+      let added = 0;
+      let dup = 0;
+      for (const m of markets) {
+        if (seen[m.url]) continue;
+        const item = buildFleamoaItem(m);
+        seen[m.url] = { firstSeen: new Date().toISOString(), org: FLEAMOA_BOARD.org };
+        const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (d) {
+          dup++;
+          console.log(`  [중복 건너뜀] 플리모아 "${item.name}" = 기존 "${d.name}" (${d.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(`${FLEAMOA_BOARD.sourceOrg}: 울산 ${markets.length}건 (헤드리스 브라우저) → 신규 ${added}건, 타사이트 중복 ${dup}건`);
+      recordBoardResult(FLEAMOA_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${FLEAMOA_BOARD.sourceOrg}: FETCH FAILED (헤드리스 브라우저) — ${describeFetchError(err)}`);
+      recordBoardResult(FLEAMOA_BOARD, false, describeFetchError(err));
+    }
+  }
+
   // 2026-10-24 신설(요청사항 — "같은 방식으로 반복 재시도 말고 다른 방식을 시도"):
   // 북구청(www.bukgu.ulsan.kr + eminwon.bukgu.ulsan.kr) CONNECT_TIMEOUT은 실제
   // GitHub Actions 3회 재검증 결과 지속적 차단이 아니라 간헐적 네트워크 문제로 확인됨
@@ -4370,6 +4514,9 @@ const ALL_BOARDS = [
 
 module.exports = {
   ALL_BOARDS,
+  buildFleamoaItem,
+  findCrossSourceDuplicate,
+  parseFleamoaDates,
   extractCandidates,
   extractPostCandidates,
   NEW_SITE_KEYWORD_RE,

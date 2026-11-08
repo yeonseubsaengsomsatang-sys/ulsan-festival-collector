@@ -96,6 +96,22 @@ function isOutsideUlsanTitle(title) {
 
 const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체험부스", "판매부스", "모집"];
 
+// 2026-11-08 신설: 수집 실패 원인 분류(board_status의 failureType, 실행 요약, 수집 범위 기록에 사용).
+function classifyFailure(msg) {
+  const s = String(msg || "");
+  if (/HTTP 403/.test(s)) return "접근 차단(HTTP 403)";
+  if (/HTTP 404/.test(s)) return "주소 없음(HTTP 404)";
+  const http = s.match(/HTTP (\d{3})/);
+  if (http) return `서버 오류(HTTP ${http[1]})`;
+  if (/CERT|certificate|TLS|SSL/i.test(s)) return "인증서 오류";
+  if (/ENOTFOUND|EAI_AGAIN/.test(s)) return "주소 조회 실패(DNS)";
+  // 페이지는 열렸는데 목록 요소가 안 나타난 경우(waitForSelector 시간 초과)는 접속 문제가 아니라 구조 변경 의심.
+  if (/waitForSelector/i.test(s)) return "페이지 구조 변경 의심";
+  if (/CONNECT_TIMEOUT|ETIMEDOUT|Timeout|timed out|aborted/i.test(s)) return "접속 시간 초과";
+  if (/ECONNRESET|socket hang up|ECONNREFUSED/i.test(s)) return "연결 끊김";
+  return "기타";
+}
+
 // 2026-11-08 신설: 날짜 기준 쪽 넘김용 게시판 묶음 — 1..maxPages 쪽 URL을 만들되, 실제로 몇 쪽까지
 // 읽을지는 main()의 BOARDS 반복문이 각 쪽의 게시일을 보고 정한다(최근 7일 이상 확보 시 중단).
 function pagedBoards({ org, sourceOrg, city, minPages, maxPages, pageUrl }) {
@@ -4404,37 +4420,61 @@ async function main() {
   // 읽은 날짜 범위는 게시판마다 로그와 수집 상태(coverage)에 남기고, 7일을 못 채우면 "범위 부족"으로 표시.
   const COVERAGE_DAYS = 7;
   const coverageCutoff = new Date(Date.now() - COVERAGE_DAYS * 86400000).toISOString().slice(0, 10);
-  const pageGroups = new Map(); // pageGroup -> { covered, pagesRead, newest, oldest, board }
-  for (const board of BOARDS.filter(inScope)) {
-    const g = board.pageGroup ? pageGroups.get(board.pageGroup) || { covered: false, pagesRead: 0, newest: null, oldest: null, board } : null;
-    if (g) pageGroups.set(board.pageGroup, g);
-    if (g && g.covered) continue; // 이미 7일 이상을 읽은 게시판의 나머지 쪽
-    try {
-      const html = await processStandardBoard(board);
-      if (g) {
-        g.pagesRead = board.page;
-        const dates = listPageDates(html);
-        if (dates.length) {
-          g.newest = !g.newest || dates[dates.length - 1] > g.newest ? dates[dates.length - 1] : g.newest;
-          g.oldest = !g.oldest || dates[0] < g.oldest ? dates[0] : g.oldest;
+  const pageGroups = new Map(); // pageGroup -> 이번 실행(또는 지연 재시도)에서의 쪽 넘김 상태
+  // 2026-11-08 수정(GitHub Actions 실측 — 접속 장애 날 북구청 지연 재시도가 36개 쪽 주소를 하나씩 다시
+  // 두드려 약 25분이 걸림): 1차 수집과 지연 재시도가 같은 함수를 쓴다. 게시판마다 1쪽부터 읽고, 접속에
+  // 성공한 게시판만 다음 쪽으로 넘어가며, 어느 쪽에서든 접속에 실패하면 그 게시판의 남은 쪽은 요청하지 않는다.
+  async function runPagedBoards(boards, logPrefix = "") {
+    const started = new Set();
+    for (const board of boards) {
+      let g = null;
+      if (board.pageGroup) {
+        if (!started.has(board.pageGroup)) {
+          started.add(board.pageGroup); // 이번 호출에서 처음 만난 게시판 — 상태를 새로 시작(재시도 시 1쪽부터)
+          pageGroups.set(board.pageGroup, { covered: false, failed: false, failedAt: null, error: null, pagesRead: 0, newest: null, oldest: null, retried: !!logPrefix, board });
         }
-        // 최근 60일 안의 날짜가 3개 미만인 쪽은 대부분 오래된 글이라는 뜻 — 범위 충족으로 본다.
-        const reached = dates.length < 3 || dates[0] <= coverageCutoff;
-        if (board.page >= board.minPages && reached) g.covered = true;
+        g = pageGroups.get(board.pageGroup);
+        if (g.covered) continue; // 7일을 확보했거나 접속에 실패한 게시판의 나머지 쪽
       }
-    } catch (err) {
-      perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
-      recordBoardResult(board, false, describeFetchError(err));
-      if (g) g.covered = true; // 접속 실패 시 같은 게시판의 다음 쪽을 계속 두드리지 않음
+      try {
+        const html = await processStandardBoard(board);
+        if (g) {
+          g.pagesRead = board.page;
+          const dates = listPageDates(html);
+          if (dates.length) {
+            g.newest = !g.newest || dates[dates.length - 1] > g.newest ? dates[dates.length - 1] : g.newest;
+            g.oldest = !g.oldest || dates[0] < g.oldest ? dates[0] : g.oldest;
+          }
+          // 최근 60일 안의 날짜가 3개 미만인 쪽은 대부분 오래된 글이라는 뜻 — 범위 충족으로 본다.
+          const reached = dates.length < 3 || dates[0] <= coverageCutoff;
+          if (board.page >= board.minPages && reached) g.covered = true;
+        }
+      } catch (err) {
+        perBoardCounts.push(`${logPrefix}${board.sourceOrg}${board.page ? ` ${board.page}쪽` : ""}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+        recordBoardResult(board, false, describeFetchError(err));
+        if (g) Object.assign(g, { covered: true, failed: true, failedAt: board.page, error: describeFetchError(err) });
+      }
     }
   }
-  for (const [groupKey, g] of pageGroups) {
-    const enough = g.covered && (!g.oldest || g.oldest <= coverageCutoff || g.pagesRead < g.board.maxPages);
-    const note = `${groupKey}: ${g.pagesRead}쪽 읽음, 게시일 ${g.oldest || "?"} ~ ${g.newest || "?"}${enough ? "" : ` — 범위 부족(최근 ${COVERAGE_DAYS}일 미만, 최대 ${g.board.maxPages}쪽 도달)`}`;
-    perBoardCounts.push(`[수집 범위] ${note}`);
-    const o = orgStatus.get(g.board.org);
-    if (o) (o.coverage = o.coverage || []).push(note);
+  // 수집 범위 기록 — 지연 재시도까지 끝난 뒤 한 번만 쓴다(재시도한 게시판은 재시도 결과 기준).
+  function writeCoverageNotes() {
+    for (const [groupKey, g] of pageGroups) {
+      const tag = g.retried ? " [지연 재시도 결과]" : "";
+      let note;
+      if (g.failed && g.pagesRead === 0) {
+        note = `${groupKey}: 접속 실패로 범위 미확인 (${classifyFailure(g.error)} — 1쪽부터 실패, 추가 쪽 요청 안 함)${tag}`;
+      } else if (g.failed) {
+        note = `${groupKey}: ${g.pagesRead}쪽까지 읽음(게시일 ${g.oldest || "?"} ~ ${g.newest || "?"}), ${g.failedAt}쪽에서 접속 실패 — 범위 일부 미확인 (${classifyFailure(g.error)})${tag}`;
+      } else {
+        const enough = !g.oldest || g.oldest <= coverageCutoff || g.pagesRead < g.board.maxPages;
+        note = `${groupKey}: ${g.pagesRead}쪽 읽음, 게시일 ${g.oldest || "?"} ~ ${g.newest || "?"}${enough ? "" : ` — 범위 부족(최근 ${COVERAGE_DAYS}일 미만, 최대 ${g.board.maxPages}쪽 도달)`}${tag}`;
+      }
+      perBoardCounts.push(`[수집 범위] ${note}`);
+      const o = orgStatus.get(g.board.org);
+      if (o) (o.coverage = o.coverage || []).push(note);
+    }
   }
+  await runPagedBoards(BOARDS.filter(inScope));
 
   // ---- 경주·김해·밀양·영주·경산·창원·하동 확대분: 실제 모집 여부까지 분류해서 기록 ----
   // 사이트마다 목록 마크업이 달라 전용 추출기를 쓰는 곳이 있다(밀양/영주·경산/창원) — 그 외
@@ -4758,14 +4798,9 @@ async function main() {
       `\n=== 북구청 전 보드(${beforeRetryBoards}개) 1차 시도 전부 실패 — ${SECOND_PASS_DELAY_MS / 1000}초 대기 후 지연 재시도 (간헐적 네트워크 문제 대응, 쇠부리축제는 지속적 차단이라 제외) ===`
     );
     await sleep(SECOND_PASS_DELAY_MS);
-    for (const board of BOARDS.filter((b) => b.org === "울산광역시 북구청")) {
-      try {
-        await processStandardBoard(board);
-      } catch (err) {
-        perBoardCounts.push(`[지연 재시도] ${board.sourceOrg}: FETCH FAILED — ${describeFetchError(err)}`);
-        recordBoardResult(board, false, describeFetchError(err));
-      }
-    }
+    // 2026-11-08 수정: 쪽 주소 36개를 전부 두드리지 않고, 1차 수집과 같은 규칙(1쪽 실패 시 그 게시판 중단,
+    // 성공한 게시판만 날짜 기준으로 다음 쪽)으로 다시 시도한다.
+    await runPagedBoards(BOARDS.filter((b) => b.org === "울산광역시 북구청"), "[지연 재시도] ");
     for (const board of EMINWON_PLAYWRIGHT_BOARDS.filter((b) => b.org === "울산광역시 북구청")) {
       try {
         await processEminwonBoard(board);
@@ -4779,6 +4814,7 @@ async function main() {
       `=== 지연 재시도 결과: 북구청 okBoards ${beforeRetryOk}→${afterRetry.okBoards} (총 ${afterRetry.boards}회 시도, 1차 ${beforeRetryBoards}회+재시도 ${afterRetry.boards - beforeRetryBoards}회) ===\n`
     );
   }
+  writeCoverageNotes();
 
   // Prune anything older than 45 days from the public feed — by then it's
   // either been reviewed (localStorage on the reviewer's own browser) or
@@ -4813,6 +4849,8 @@ async function main() {
       okBoards: o.okBoards,
       failedBoards: o.failedBoards,
       lastError: o.okBoards > 0 ? null : o.lastError,
+      // 2026-11-08: 실패 원인 분류(접속 시간 초과 / 접근 차단(403) / 주소 없음(404) / 연결 끊김 / 인증서 / DNS / 기타)
+      ...(o.okBoards > 0 ? {} : { failureType: classifyFailure(o.lastError) }),
       checkedAt: new Date().toISOString(),
       // 2026-11-08: 날짜 기준 쪽 넘김 게시판의 실제 수집 범위(게시판별 "N쪽 읽음, 게시일 A ~ B").
       ...(o.coverage ? { coverage: o.coverage } : {}),
@@ -4839,6 +4877,31 @@ async function main() {
       (schoolExcludedTotal ? `, 학교 제외 ${schoolExcludedTotal}건` : "") +
       (outsideExcludedTotal ? `, 울산 외 지역 제외 ${outsideExcludedTotal}건` : "")
   );
+  // 2026-11-08 신설(요청사항): GitHub Actions가 "성공"으로 끝나도 실제로 수집에 실패한 기관 수와 원인을
+  // 분명히 보이게 한다 — 로그 맨 위 요약과, 실행 페이지의 Summary(GITHUB_STEP_SUMMARY, 있을 때만)에 쓴다.
+  const failedNow = [...orgStatus.values()].filter((o) => o.okBoards === 0);
+  const byType = {};
+  for (const o of failedNow) (byType[classifyFailure(o.lastError)] = byType[classifyFailure(o.lastError)] || []).push(o.org);
+  const failureLines = Object.entries(byType).map(([t, orgs]) => `- ${t} ${orgs.length}곳: ${orgs.join(", ")}`);
+  if (failedNow.length) {
+    console.log(`⚠ 실제 수집 실패 ${failedNow.length}개 기관 (워크플로 자체는 성공으로 끝남)`);
+    failureLines.forEach((l) => console.log(`  ${l}`));
+  }
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const coverageLines = perBoardCounts.filter((l) => l.startsWith("[수집 범위]")).map((l) => `- ${l.replace("[수집 범위] ", "")}`);
+    const md = [
+      `## 수집 결과 요약`,
+      `- 성공 ${okOrgCountEarly}개 기관, **실패 ${failedOrgCountEarly}개 기관**, 신규 공고 ${newItems.length}건`,
+      ...(failedNow.length ? [``, `### 수집 실패 기관 (원인별)`, ...failureLines] : []),
+      ...(coverageLines.length ? [``, `### 관공서 게시판 수집 범위`, ...coverageLines] : []),
+      ``,
+    ].join("\n");
+    try {
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+    } catch {
+      /* 요약 쓰기 실패는 수집 결과에 영향 없음 */
+    }
+  }
 
   console.log("\n=== 게시판별 결과 ===");
   perBoardCounts.forEach((l) => console.log(l));

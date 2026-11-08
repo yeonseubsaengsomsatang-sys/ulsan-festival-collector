@@ -270,6 +270,41 @@ function extractUctfCandidates(jsonText) {
   }
   return out;
 }
+// 2026-11-08 신설(요청사항 — "중구·동구도 수집"): 태화강마두희축제추진위원회 공지사항
+// (ulsanmaduhee.co.kr). 중구 대표 축제의 "체험부스 입점 단체 및 업체 모집"·"치맥페스티벌
+// F&B 음식부스 모집" 같은 부스 모집공고가 중구청 게시판이 아니라 이 사이트에만 올라오는
+// 것을 실측으로 확인함. 목록은 순수 HTTP로 서버 렌더링되고, 날짜는 연도 없이 "MM/DD"만
+// 있어 postedDate는 비워 둔다(추측 금지 — 상세 본문 분석에 맡김).
+// 동구 조선해양축제 공식 사이트(ussf.co.kr)는 공지 게시판이 없는 홍보 페이지라 추가하지 않음.
+const MADUHEE_ITEM_RE =
+  /<td class='text-left board-subject'><a href='(view\.php\?db=notice_2013&idx=\d+)[^']*'[^>]*>([^<]+)<\/a>/g;
+function extractMaduheeCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(MADUHEE_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(m[1], pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: null });
+  }
+  return out;
+}
+const JUNGGU_FESTIVAL_BOARDS = [1, 2].map((page) => ({
+  org: "태화강마두희축제추진위원회",
+  sourceOrg: "마두희축제 공지사항(중구)",
+  url: `https://ulsanmaduhee.co.kr/board/list.php?db=notice_2013&page=${page}`,
+  region: "울산",
+  city: "중구",
+  extractor: extractMaduheeCandidates,
+}));
+
 const ULSAN_FOUNDATION_BOARDS = [0, 1, 2].map((page) => ({
   org: "울산문화관광재단",
   sourceOrg: "울산문화관광재단 공지사항",
@@ -2861,6 +2896,7 @@ const JUNGGU_FILE_RE =
 // 잡는다(실측 확인). 또한 이 사이트는 "첨부"가 아니라 "붙임"이라는 글자를 쓰므로
 // 2000자 스코핑도 적용되지 않음(아래 extractAttachmentPdfUrls의 attachIdx 계산에서
 // 둘 다 안 걸려 전체 html을 보게 됨 — 의도한 동작).
+const MADUHEE_FILE_RE = /href='(download\.php\?db=notice_2013[^']*?&name=([^']+?\.(?:pdf|hwpx|hwp)))'/gi;
 const SOEBURI_FILE_RE =
   /<a href="([^"]*act=procFileDownload[^"]*)"[^>]*>\s*(?:\[[^\]]*\]\s*)?([^<]{1,200}?\.(pdf|hwpx|hwp))/gi;
 
@@ -2944,6 +2980,22 @@ function extractAttachmentPdfUrls(html, pageUrl) {
 
   const soeburiFile = new RegExp(SOEBURI_FILE_RE.source, "gi");
   while ((m = soeburiFile.exec(searchHtml))) {
+    const kind = attachmentKindOf(m[2]);
+    if (!kind) continue;
+    try {
+      out.push({ url: new URL(decodeEntities(m[1]), pageUrl).href, kind });
+    } catch {
+      /* ignore */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
+  // 2026-11-08 신설: 태화강마두희축제(ulsanmaduhee.co.kr) 첨부파일 — href를 작은따옴표로
+  // 감싸고 파일명이 링크 글자가 아니라 주소의 name= 값에만 있어 위 패턴들이 못 잡음
+  // (실측: 체험부스 모집 .hwp, 치맥페스티벌 음식부스 모집 공고문 .hwpx). 패턴이
+  // "download.php?db=notice_2013"로 매우 구체적이라 전체 html에서 찾는다.
+  const maduheeFile = new RegExp(MADUHEE_FILE_RE.source, "gi");
+  while ((m = maduheeFile.exec(html))) {
     const kind = attachmentKindOf(m[2]);
     if (!kind) continue;
     try {
@@ -3358,6 +3410,9 @@ async function fetchAttachmentPdfText(html, pageUrl) {
       text = await fetchHwpxText(att.url);
     } else if (att.kind === "hwp") {
       text = await fetchHwpText(att.url, { referer: pageUrl, cookie: att._cookie || null });
+      // 2026-11-08: 쿠키를 붙이면 오히려 파일을 안 주는 사이트(마두희축제 — 실측)가 있어,
+      // 쿠키로 실패했을 때만 쿠키 없이 한 번 더 시도한다(성공한 기존 사이트는 동작 동일).
+      if (!text && att._cookie) text = await fetchHwpText(att.url, { referer: pageUrl });
     }
     if (text) texts.push(text);
     if (texts.join("\n").length > 8000) break; // 과도하게 긴 첨부파일은 앞부분만
@@ -3883,6 +3938,7 @@ async function main() {
   // 흐름(상세페이지 분류, dedup, 데이터 저장)은 전부 동일하게 재사용한다.
   for (const board of [
     ...BUKGU_FESTIVAL_BOARDS,
+    ...JUNGGU_FESTIVAL_BOARDS,
     ...ULSAN_FOUNDATION_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
@@ -4214,6 +4270,7 @@ const ALL_BOARDS = [
   // 추출기를 쓰므로, 외부 점검 스크립트가 어느 쪽을 써야 하는지 구분할 수 있게 표시.
   ...BOARDS.map((b) => ({ ...b, region: b.region || "울산", isUlsanBaseBoard: true })),
   ...BUKGU_FESTIVAL_BOARDS,
+  ...JUNGGU_FESTIVAL_BOARDS,
   ...ULSAN_FOUNDATION_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,

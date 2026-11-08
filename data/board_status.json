@@ -237,7 +237,7 @@
     "okBoards": 0,
     "failedBoards": 2,
     "lastError": "HTTP 403 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "태화강마두희축제추진위원회",
@@ -247,7 +247,7 @@
     "okBoards": 0,
     "failedBoards": 2,
     "lastError": "HTTP 403",
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "전라남도 목포시청",
@@ -527,7 +527,7 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.644Z"
   },
   {
     "org": "울산광역시 동구청",
@@ -537,17 +537,17 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.644Z"
   },
   {
     "org": "울산광역시 남구청",
     "region": "울산",
     "status": "ok",
     "boards": 4,
-    "okBoards": 3,
-    "failedBoards": 1,
+    "okBoards": 4,
+    "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "울산광역시 울주군청",
@@ -557,7 +557,7 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "울산광역시청",
@@ -567,7 +567,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "울산광역시 북구청",
@@ -577,7 +577,7 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.644Z"
   },
   {
     "org": "울주문화재단",
@@ -587,7 +587,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "울산문화관광재단",
@@ -597,7 +597,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "고래문화재단",
@@ -607,7 +607,17 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-08T06:42:00.150Z"
+    "checkedAt": "2026-11-08T06:58:09.645Z"
+  },
+  {
+    "org": "플리모아",
+    "region": "울산",
+    "status": "ok",
+    "boards": 1,
+    "okBoards": 1,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-08T06:58:09.645Z"
   },
   {
     "org": "인천광역시청",

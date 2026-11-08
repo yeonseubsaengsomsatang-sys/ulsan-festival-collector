@@ -96,6 +96,36 @@ function isOutsideUlsanTitle(title) {
 
 const KEYWORDS_FOR_SEARCH = ["축제", "부스", "셀러", "프리마켓", "체험부스", "판매부스", "모집"];
 
+// 2026-11-08 신설: 날짜 기준 쪽 넘김용 게시판 묶음 — 1..maxPages 쪽 URL을 만들되, 실제로 몇 쪽까지
+// 읽을지는 main()의 BOARDS 반복문이 각 쪽의 게시일을 보고 정한다(최근 7일 이상 확보 시 중단).
+function pagedBoards({ org, sourceOrg, city, minPages, maxPages, pageUrl }) {
+  return Array.from({ length: maxPages }, (_, i) => ({
+    org,
+    sourceOrg,
+    url: pageUrl(i + 1),
+    ...(city ? { city } : {}),
+    pageGroup: sourceOrg,
+    page: i + 1,
+    minPages,
+    maxPages,
+  }));
+}
+// 목록 쪽에서 게시일로 보이는 날짜(YYYY-MM-DD / YYYY.MM.DD)만 모아 오름차순으로 돌려준다.
+// 바닥글의 "최종수정일"·저작권 연도 같은 잡음을 줄이려고 오늘 기준 최근 60일 안의 날짜만 쓴다.
+// 실측(2026-11-08): 남구청 "최근 업데이트:<span>날짜", 울산시청 "<strong>최종수정일</strong><span>날짜"처럼
+// 게시일이 아닌 페이지 정보 날짜가 섞여 있어, 바로 앞 60자에 수정일·업데이트·갱신 표현이 있으면 제외한다.
+function listPageDates(html, todayIso = new Date().toISOString().slice(0, 10)) {
+  const from = new Date(Date.parse(todayIso) - 60 * 86400000).toISOString().slice(0, 10);
+  const out = [];
+  for (const m of html.matchAll(/20\d\d[-.]\d{2}[-.]\d{2}/g)) {
+    const before = html.slice(Math.max(0, m.index - 60), m.index);
+    if (/수정일|업데이트|갱신/.test(before)) continue;
+    const d = m[0].replace(/\./g, "-");
+    if (d >= from && d <= todayIso) out.push(d);
+  }
+  return out.sort();
+}
+
 const BOARDS = [
   // ---- 북구청 (VERIFIED 2026-09-24: raw HTML confirmed server-rendered) ----
   // 2026-10-24 신설: city 필드 추가 — 홈페이지 "시·군·구" 필터(북구 전용 보기)가
@@ -121,12 +151,8 @@ const BOARDS = [
     ["북구청 북구공보", "S1T1903C104/A/26"],
     ["북구청 타기관소식", "S1T62C101/A/25"],
   ].flatMap(([sourceOrg, path]) =>
-    [1, 2, 3].map((page) => ({
-      org: "울산광역시 북구청",
-      sourceOrg,
-      url: `https://www.bukgu.ulsan.kr/lay1/bbs/${path}/list.do?rows=10&cpage=${page}`,
-      city: "북구",
-    }))
+    pagedBoards({ org: "울산광역시 북구청", sourceOrg, city: "북구", minPages: 3, maxPages: 12,
+      pageUrl: (page) => `https://www.bukgu.ulsan.kr/lay1/bbs/${path}/list.do?rows=10&cpage=${page}` })
   ),
 
   // ---- 중구청 (INFERRED: view.ulsan -> list.ulsan by the site's own naming convention) ----
@@ -137,12 +163,8 @@ const BOARDS = [
     ["중구청 보도자료", "BBS_0000090", "DOM_000000102003002000"],
     ["중구청 타기관소식", "BBS_0000093", "DOM_000000102003005000"],
   ].flatMap(([sourceOrg, boardId, menuCd]) =>
-    [1, 2, 3].map((page) => ({
-      org: "울산광역시 중구청",
-      sourceOrg,
-      url: `https://www.junggu.ulsan.kr/board/list.ulsan?boardId=${boardId}&menuCd=${menuCd}&paging=ok&startPage=${page}`,
-      city: "중구",
-    }))
+    pagedBoards({ org: "울산광역시 중구청", sourceOrg, city: "중구", minPages: 3, maxPages: 12,
+      pageUrl: (page) => `https://www.junggu.ulsan.kr/board/list.ulsan?boardId=${boardId}&menuCd=${menuCd}&paging=ok&startPage=${page}` })
   ),
 
   // ---- 동구청 (FIXED 2026-10-05: ?searchWrd= does nothing — the site's real search
@@ -150,23 +172,16 @@ const BOARDS = [
   // the same unfiltered page 1 every time. Switched to plain multi-page listing
   // (like 북구청) so the existing local keyword regex has real content to scan.) ----
   ...["BBSMSTR_000000000323", "BBSMSTR_000000000322"].flatMap((bbsId) =>
-    [1, 2, 3].map((page) => ({
-      org: "울산광역시 동구청",
-      sourceOrg: bbsId === "BBSMSTR_000000000323" ? "동구청 알림사항" : "동구청 보도자료",
-      url: `https://www.donggu.ulsan.kr/cop/bbs/selectBoardList.do?bbsId=${bbsId}&pageIndex=${page}`,
-      city: "동구",
-    }))
+    pagedBoards({ org: "울산광역시 동구청", sourceOrg: bbsId === "BBSMSTR_000000000323" ? "동구청 알림사항" : "동구청 보도자료",
+      city: "동구", minPages: 3, maxPages: 12,
+      pageUrl: (page) => `https://www.donggu.ulsan.kr/cop/bbs/selectBoardList.do?bbsId=${bbsId}&pageIndex=${page}` })
   ),
 
   // ---- 남구청 (FIXED 2026-10-05: bbsId=namguNews is a traffic/tax/civil-affairs board —
   // checked 18 pages back, zero festival-related posts. bbsId=press (보도자료) actually
   // carries them, e.g. "고래문화재단, 제30회 울산고래축제 자원봉사 활동가 모집".) ----
-  ...[1, 2, 3].map((page) => ({
-    org: "울산광역시 남구청",
-    sourceOrg: "남구청 보도자료",
-    url: `https://www.ulsannamgu.go.kr/cop/bbs/selectBoardList.do?bbsId=press&pageIndex=${page}`,
-    city: "남구",
-  })),
+  ...pagedBoards({ org: "울산광역시 남구청", sourceOrg: "남구청 보도자료", city: "남구", minPages: 3, maxPages: 12,
+    pageUrl: (page) => `https://www.ulsannamgu.go.kr/cop/bbs/selectBoardList.do?bbsId=press&pageIndex=${page}` }),
 
   // ---- 울주군청 (VERIFIED working search endpoint per site testing 2026-09-24) ----
   ...KEYWORDS_FOR_SEARCH.map((kw) => ({
@@ -177,7 +192,10 @@ const BOARDS = [
   })),
 
   // ---- 울산광역시청 (INFERRED: bbs/view.do -> bbs/list.do convention) ----
-  { org: "울산광역시청", sourceOrg: "울산시청 울산소식", url: "https://www.ulsan.go.kr/u/rep/bbs/list.do?bbsId=BBS_0000000000000003&mId=001004001001000000" },
+  // 2026-11-08: 1쪽만 읽던 것을 최소 5쪽(요청사항)·최대 12쪽으로. 이 게시판은 pageIndex가 아니라
+  // page 파라미터로 쪽이 바뀜(실측 — pageIndex=2는 1쪽과 같은 글이 나옴). 1쪽 주소는 기존과 동일.
+  ...pagedBoards({ org: "울산광역시청", sourceOrg: "울산시청 울산소식", minPages: 5, maxPages: 12,
+    pageUrl: (page) => "https://www.ulsan.go.kr/u/rep/bbs/list.do?bbsId=BBS_0000000000000003&mId=001004001001000000" + (page > 1 ? `&page=${page}` : "") }),
 
   // ---- 북구청·동구청·남구청 고시공고(eminwon) — 2026-10-23: 목록 발견용 헤드리스
   // 브라우저 + 상세조회용 고정 GET URL 조합으로 해결(EMINWON_PLAYWRIGHT_BOARDS 참고).
@@ -2305,7 +2323,25 @@ const BOOTH_KEYWORD_RE =
 // 2026-11-08 보강(울산고래축제 실측): "플리마켓 모집 최종 결과 공고", "푸드트럭 선정자 공고문",
 // "운영자 선정 공고"처럼 "결과 공고"/"선정자 공고"/"선정 공고"로 쓰는 결과 발표가 모집공고로
 // 잘못 분류돼 자동 승인될 뻔함 — 결과 발표 표현으로 추가.
-const RESULT_TITLE_RE = /(선정\s*결과|모집\s*결과|결과\s*안내|결과\s*공고|선정자\s*공고|선정\s*공고|마감되었|종료되었|성황리|성료|마무리)/;
+// 2026-11-08 보강(요청사항 — 결과 발표가 모집공고로 승인되지 않게): "공모 심사 결과 공고"(울산공업축제
+// 실측), "체험부스 선정 안내"(마두희 실측), "합격자 발표", "모집 마감 안내", "행사 종료 안내" 등.
+const RESULT_TITLE_RE =
+  /(선정\s*결과|모집\s*결과|심사\s*결과|결과\s*안내|결과\s*공고|결과\s*발표|선정자\s*공고|선정\s*공고|선정\s*안내|합격자|당선작|수상자|입상작|모집\s*마감\s*안내|종료\s*안내|마감되었|종료되었|성황리|성료|마무리)/;
+
+// 2026-11-08 신설(요청사항 — 제목에 "부스"가 없어도 판매·체험업체 모집일 수 있는 표현): 이 표현이
+// 제목에 있으면 "review"(관리자 검토 대기)로만 올린다 — 자동 승인(recruit)으로는 절대 분류하지 않음.
+// 실측 사례: "울산공업축제 먹거리쉼터 모집", "큰애기 청년야시장 운영자 모집", "수암한우야시장 매대 운영자
+// 모집", "봄꽃축제 화훼마켓 모집", "예술버스킹데이 참가 마켓 모집", "아트페어 부스 분양안내",
+// "고래밥상 참여단체 모집".
+const BOOTH_CANDIDATE_TITLE_RE =
+  /(먹거리\s*(?:쉼터|존|코너)|야시장[^\n]{0,15}(?:운영자|판매대|매대|상인)|(?:매대|판매대)\s*운영(?:자|팀|업체)?|마켓[^\n]{0,10}(?:셀러|참여|참가|입점|모집)|(?:셀러|참여업체|참가업체)[^\n]{0,6}모집|부스\s*(?:분양|임대)|(?:상품|물품|제품)\s*판매[^\n]{0,8}(?:참가|참여|업체|모집)|참여\s*단체\s*모집|참가\s*단체\s*모집|체험\s*프로그램[^\n]{0,8}운영(?:자|단체|팀|업체))/;
+// 본문·첨부에서 "판매·체험업체를 모집한다"는 문맥이 있는지(단순히 행사 안내에 "푸드트럭"이 언급된
+// 것과 구분하려고 모집/신청/접수 표현이 가까이 함께 있어야 함).
+// 부스와 무관한 일반 참가자 모집(첨부 확인 대상에서 제외) — 자원봉사·관람객·교육·공연·공모전·채용 등.
+const GENERAL_PARTICIPANT_TITLE_RE =
+  /(자원\s*봉사|봉사자|서포터즈|기자단|관람객|수강생|교육생|채용|공연팀|버스킹|가요제|댄스|퍼레이드|경연|공모전|사생대회|아카데미|만남\s*행사|진행요원)/;
+const ATTACHMENT_BOOTH_RECRUIT_RE =
+  /(부스|셀러|푸드트럭|판매자|판매대|매대|참가업체|참여업체|입점|먹거리)[^\n]{0,30}(모집|신청|접수|공모)|(모집|신청|공모)\s*(?:대상|분야|부문)[^\n]{0,40}(판매|부스|푸드트럭|셀러|체험|먹거리)/;
 // 본문에서 모집/접수/신청 기간 날짜 범위 추출 (2026-10-17: 날짜 표현 다양화 — 실제
 // 수집 데이터에서 "모집기간: YYYY.M.D~YYYY.M.D" 형태 하나만 잡던 기존 정규식이
 // "신청마감 YYYY-MM-DD"(마감일만 언급), "O월 O일부터 O월 O일까지"(연도 없는 한글 표현)
@@ -2564,6 +2600,15 @@ function classifyNotice(title, bodyText) {
       noticeType: "recruit",
       boothType: detectBoothType(title) || detectBoothType(bodyText || ""),
       reason: "제목에 판매부스/체험부스/프리마켓/셀러 등 부스 모집 키워드가 명확히 포함됨 — 우선 검토 대상.",
+    };
+  }
+  // 2026-11-08: 부스 단어는 없지만 판매·체험업체 모집 후보 표현(먹거리쉼터·야시장 운영자·매대·마켓 셀러·
+  // 부스 분양·참여단체·체험 프로그램 운영자 등)이 제목에 있으면 사람 확인용 "review"로만 분류.
+  if (!titleHasBooth && BOOTH_CANDIDATE_TITLE_RE.test(title)) {
+    return {
+      noticeType: "review",
+      boothType: detectBoothType(title) || detectBoothType(bodyText || "") || null,
+      reason: "제목에 판매·체험업체 모집으로 보이는 표현(먹거리쉼터·운영자·매대·마켓 셀러·부스 분양 등)이 있어 사람 확인 필요(자동 승인 안 함).",
     };
   }
   if (titleHasRecruit && !titleHasBooth) {
@@ -3273,7 +3318,12 @@ const JUNGGU_FILE_RE =
 // 잡는다(실측 확인). 또한 이 사이트는 "첨부"가 아니라 "붙임"이라는 글자를 쓰므로
 // 2000자 스코핑도 적용되지 않음(아래 extractAttachmentPdfUrls의 attachIdx 계산에서
 // 둘 다 안 걸려 전체 html을 보게 됨 — 의도한 동작).
-const MADUHEE_FILE_RE = /href='(download\.php\?db=notice_2013[^']*?&name=([^']+?\.(?:pdf|hwpx|hwp)))'/gi;
+// 2026-11-08 신설: 울산시청 게시판 첨부 — <a onclick="HHBbs.EncDownFile('/u','게시판ID','파일ID','순번')">
+// <img ...>파일명.pdf (크기)</a>. 실제 다운로드 주소는 /u/enc/media/bbsFileDown.do?bbsId=&atchFileId=&fileSn=
+// (실측: 2026 울산공업축제 푸드트럭 모집 공고 PDF를 이 주소로 받아 확인, 로그인 불필요).
+const ULSAN_CITY_FILE_RE =
+  /HHBbs\.EncDownFile\('([^']*)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)'\)[^>]*>[\s\S]{0,300}?([^<>]+?\.(?:pdf|hwpx|hwp))\s*(?:\([^)]*\))?\s*<\/a>/gi;
+const MADUHEE_FILE_RE =/href='(download\.php\?db=notice_2013[^']*?&name=([^']+?\.(?:pdf|hwpx|hwp)))'/gi;
 const SOEBURI_FILE_RE =
   /<a href="([^"]*act=procFileDownload[^"]*)"[^>]*>\s*(?:\[[^\]]*\]\s*)?([^<]{1,200}?\.(pdf|hwpx|hwp))/gi;
 
@@ -3371,6 +3421,23 @@ function extractAttachmentPdfUrls(html, pageUrl) {
   // 감싸고 파일명이 링크 글자가 아니라 주소의 name= 값에만 있어 위 패턴들이 못 잡음
   // (실측: 체험부스 모집 .hwp, 치맥페스티벌 음식부스 모집 공고문 .hwpx). 패턴이
   // "download.php?db=notice_2013"로 매우 구체적이라 전체 html에서 찾는다.
+  // 2026-11-08 신설: 울산시청 게시판 첨부(위 ULSAN_CITY_FILE_RE 참고) — 호출 형태가 매우 구체적이라 전체 html에서 찾음.
+  const cityFile = new RegExp(ULSAN_CITY_FILE_RE.source, "gi");
+  while ((m = cityFile.exec(html))) {
+    const kind = attachmentKindOf(m[5].trim());
+    if (!kind) continue;
+    try {
+      const origin = new URL(pageUrl).origin;
+      const url =
+        `${origin}${m[1]}/enc/media/bbsFileDown.do?bbsId=${encodeURIComponent(m[2])}` +
+        `&atchFileId=${encodeURIComponent(m[3])}&fileSn=${encodeURIComponent(m[4])}`;
+      out.push({ url, kind });
+    } catch {
+      /* ignore */
+    }
+  }
+  if (out.length) return out.slice(0, 2);
+
   const maduheeFile = new RegExp(MADUHEE_FILE_RE.source, "gi");
   while ((m = maduheeFile.exec(html))) {
     const kind = attachmentKindOf(m[2]);
@@ -3844,26 +3911,34 @@ async function fetchAndClassifyDetail(detailUrl, title, region, postedDate, prel
   // 2026-11-08 신설: 행사 주최기관 게시판(opts.attachmentReview)에서만 — 제목이 "고래밥상 참여단체
   // 모집"처럼 부스 단어 없이 일반 모집으로 보이고 본문은 첨부 공고문뿐인 경우, 첨부에 부스 관련
   // 표현이 있으면 "review"(관리자 검토 대기)로 올린다. 자동 승인 대상(recruit)으로는 절대 바꾸지 않음.
+  // 2026-11-08 확대(요청사항): 행사 주최기관뿐 아니라 울산 게시판 전체에 적용하고, 단순히 부스 단어가
+  // "언급"된 것이 아니라 판매·체험업체를 "모집·신청·접수"하는 문맥이 본문·첨부에 있을 때만 올린다.
+  // 자원봉사·관람객·수강생·공연팀·공모전 등 일반 참가자 모집은 첨부를 열지 않는다(오분류 방지).
   if (
     opts.attachmentReview &&
     cls.noticeType === "general" &&
     rawHtml &&
     RECRUIT_TITLE_RE.test(title) &&
-    !RESULT_TITLE_RE.test(title)
+    !RESULT_TITLE_RE.test(title) &&
+    !GENERAL_PARTICIPANT_TITLE_RE.test(title)
   ) {
     const attText = await fetchAttachmentPdfText(rawHtml, detailUrl);
-    if (attText && BOOTH_KEYWORD_RE.test(attText)) {
+    const evidence = [bodyText, attText].find((t) => t && ATTACHMENT_BOOTH_RECRUIT_RE.test(t));
+    if (evidence) {
       cls = {
         noticeType: "review",
-        boothType: detectBoothType(attText),
-        reason: "제목은 일반 모집으로 보이지만 첨부 공고문에 부스 관련 표현이 있어 사람 확인 필요.",
+        boothType: detectBoothType(evidence),
+        reason: `제목은 일반 모집으로 보이지만 ${evidence === attText ? "첨부 공고문" : "본문"}에 판매·체험업체 모집 문맥이 있어 사람 확인 필요(자동 승인 안 함).`,
       };
     }
   }
   result.noticeType = cls.noticeType;
   result.boothType = cls.boothType;
 
-  if (result.noticeType !== "recruit") {
+  // 2026-11-08: 울산 게시판(opts.attachmentReview)의 "review"(검토 대기) 공고도 아래에서 모집기간·장소 등을
+  // 같은 방식으로 뽑아 관리자가 검토할 때 볼 수 있게 한다. 승인 판정은 decideAutoPublishStatus가 recruit만
+  // 승인하므로 review는 그대로 검토 대기(pending)로 남는다.
+  if (result.noticeType !== "recruit" && !(opts.attachmentReview && result.noticeType === "review")) {
     result.recruitStatus = "unknown";
     result.memo = `${fetchFailNote}${cls.reason}`;
     return result;
@@ -4276,7 +4351,9 @@ async function main() {
         // 판매부스·체험부스·프리마켓 등 실제 부스 모집만 noticeType="recruit"(우선 검토)로
         // 남기고, 축제 개최/종료 소식이나 교육·자원봉사 등 부스 무관 모집은 "general"로,
         // 제목만으로 애매하면 "review"로 구분한다. (분류 정확도 개선 요청에 따른 변경)
-        const cls = await fetchAndClassifyDetail(c.url, c.title, "울산", null);
+        const cls = await fetchAndClassifyDetail(c.url, c.title, "울산", null, null, {
+          attachmentReview: (board.region || "울산") === "울산", // 2026-11-08: 울산 게시판은 본문·첨부 모집 문맥 확인
+        });
         newItems.push({
           // sha256 of the full URL, not a truncated base64 of it — URLs from the
           // same board share a long prefix, so slicing plain base64 collided across
@@ -4318,15 +4395,45 @@ async function main() {
       perBoardCounts.push(
         `${board.sourceOrg}: ${candidates.length}건 매칭 (원본 앵커 ${(html.match(/<a\s/g) || []).length}개 중) → 신규 ${newCount}건, 중복 ${dupCount}건${invalidCount ? `, 무효링크 ${invalidCount}건` : ""}${schoolCount ? `, 학교제외 ${schoolCount}건` : ""}${outsideCount ? `, 타지역제외 ${outsideCount}건` : ""}`
       );
+      return html;
   }
 
+  // 2026-11-08 변경(요청사항 — 울산 관공서 게시판 수집 범위를 "실제 게시 날짜 기준 최근 7일 이상"으로):
+  // pageGroup이 있는 보드는 쪽 번호 순서대로 읽다가, 최소 쪽수(minPages)를 넘겼고 그 쪽의 가장
+  // 오래된 게시일이 기준일(오늘-7일) 이전이면 그 게시판의 남은 쪽은 건너뛴다(최대 maxPages까지).
+  // 읽은 날짜 범위는 게시판마다 로그와 수집 상태(coverage)에 남기고, 7일을 못 채우면 "범위 부족"으로 표시.
+  const COVERAGE_DAYS = 7;
+  const coverageCutoff = new Date(Date.now() - COVERAGE_DAYS * 86400000).toISOString().slice(0, 10);
+  const pageGroups = new Map(); // pageGroup -> { covered, pagesRead, newest, oldest, board }
   for (const board of BOARDS.filter(inScope)) {
+    const g = board.pageGroup ? pageGroups.get(board.pageGroup) || { covered: false, pagesRead: 0, newest: null, oldest: null, board } : null;
+    if (g) pageGroups.set(board.pageGroup, g);
+    if (g && g.covered) continue; // 이미 7일 이상을 읽은 게시판의 나머지 쪽
     try {
-      await processStandardBoard(board);
+      const html = await processStandardBoard(board);
+      if (g) {
+        g.pagesRead = board.page;
+        const dates = listPageDates(html);
+        if (dates.length) {
+          g.newest = !g.newest || dates[dates.length - 1] > g.newest ? dates[dates.length - 1] : g.newest;
+          g.oldest = !g.oldest || dates[0] < g.oldest ? dates[0] : g.oldest;
+        }
+        // 최근 60일 안의 날짜가 3개 미만인 쪽은 대부분 오래된 글이라는 뜻 — 범위 충족으로 본다.
+        const reached = dates.length < 3 || dates[0] <= coverageCutoff;
+        if (board.page >= board.minPages && reached) g.covered = true;
+      }
     } catch (err) {
       perBoardCounts.push(`${board.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
       recordBoardResult(board, false, describeFetchError(err));
+      if (g) g.covered = true; // 접속 실패 시 같은 게시판의 다음 쪽을 계속 두드리지 않음
     }
+  }
+  for (const [groupKey, g] of pageGroups) {
+    const enough = g.covered && (!g.oldest || g.oldest <= coverageCutoff || g.pagesRead < g.board.maxPages);
+    const note = `${groupKey}: ${g.pagesRead}쪽 읽음, 게시일 ${g.oldest || "?"} ~ ${g.newest || "?"}${enough ? "" : ` — 범위 부족(최근 ${COVERAGE_DAYS}일 미만, 최대 ${g.board.maxPages}쪽 도달)`}`;
+    perBoardCounts.push(`[수집 범위] ${note}`);
+    const o = orgStatus.get(g.board.org);
+    if (o) (o.coverage = o.coverage || []).push(note);
   }
 
   // ---- 경주·김해·밀양·영주·경산·창원·하동 확대분: 실제 모집 여부까지 분류해서 기록 ----
@@ -4376,7 +4483,7 @@ async function main() {
         seen[c.url] = { firstSeen: new Date().toISOString(), org: board.org };
 
         const cls = await fetchAndClassifyDetail(c.url, c.title, board.region, c.postedDate || null, c.detailHtml || null, {
-          attachmentReview: board.sourceCategory === "organizer",
+          attachmentReview: board.region === "울산", // 2026-11-08: 주최기관 한정 → 울산 게시판 전체로 확대
         });
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(c.url).digest("base64url").slice(0, 16)}`,
@@ -4475,7 +4582,9 @@ async function main() {
           /* 보정 실패 — 목록 제목 그대로 사용 */
         }
 
-        const cls = await fetchAndClassifyDetail(detailUrl, title, board.region, null);
+        const cls = await fetchAndClassifyDetail(detailUrl, title, board.region, null, null, {
+          attachmentReview: board.region === "울산", // 2026-11-08: 고시공고도 본문·첨부 모집 문맥 확인
+        });
         newItems.push({
           id: `gh-${require("crypto").createHash("sha256").update(detailUrl).digest("base64url").slice(0, 16)}`,
           name: title,
@@ -4705,6 +4814,8 @@ async function main() {
       failedBoards: o.failedBoards,
       lastError: o.okBoards > 0 ? null : o.lastError,
       checkedAt: new Date().toISOString(),
+      // 2026-11-08: 날짜 기준 쪽 넘김 게시판의 실제 수집 범위(게시판별 "N쪽 읽음, 게시일 A ~ B").
+      ...(o.coverage ? { coverage: o.coverage } : {}),
     });
   }
   // 기관 목록을 지역별로 보기 좋게 정렬 — 실패(ok=false)부터, 그다음 지역명 순.

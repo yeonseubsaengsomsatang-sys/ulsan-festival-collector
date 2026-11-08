@@ -2763,6 +2763,99 @@ function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
   };
 }
 
+// ---- 2026-11-08 신설(민간 수집 3차): 트럭공고(truckgonggo.com) 울산 푸드트럭 모집 ----
+// 목록(/region/ulsan/)과 상세(/notice/...)는 서버에서 글자로 내려오고 robots.txt가 허용하는
+// 경로라 일반 HTTP로 읽는다. 연락처(로그인해야 보임)와 금지 경로(/api/, /login/ 등)는 쓰지 않는다.
+// 단체 대화방 글을 옮긴 "원문 확인 필요" 공고가 대부분이라 항상 관리자 검토 대기로 둔다.
+const TRUCKGONGGO_BOARD = {
+  org: "트럭공고",
+  sourceOrg: "트럭공고 울산 푸드트럭 모집",
+  region: "울산",
+  city: null,
+  sourceCategory: "aggregator",
+  url: "https://www.truckgonggo.com/region/ulsan/",
+};
+const TRUCKGONGGO_ROW_RE =
+  /data-region-row="true" href="(\/notice\/[^"]+)"><span[^>]*>([^<]+)<\/span><span[^>]*>([^<]+)<\/span>/g;
+function extractTruckgonggoRows(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(TRUCKGONGGO_ROW_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    out.push({ url: new URL(m[1], pageUrl).href, title: decodeEntities(m[2]).trim(), sub: decodeEntities(m[3]).trim() });
+  }
+  return out;
+}
+const TRUCKGONGGO_LABELS = ["일시", "장소", "입점비", "수수료(오더자)", "운영비(협회)", "시간", "모집", "참고"];
+function parseTruckgonggoDetail(html) {
+  const lines = html
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "")
+    .replace(/<[^>]+>/g, "\n")
+    .split("\n")
+    .map((s) => decodeEntities(s).trim())
+    .filter(Boolean);
+  const start = lines.indexOf("핵심 정보");
+  const fields = {};
+  if (start !== -1) {
+    for (const label of TRUCKGONGGO_LABELS) {
+      const i = lines.indexOf(label, start);
+      if (i !== -1 && lines[i + 1] && !TRUCKGONGGO_LABELS.includes(lines[i + 1])) fields[label] = lines[i + 1];
+    }
+  }
+  const og = (html.match(/<meta property="og:description" content="([^"]*)"/) || [])[1] || "";
+  const kind = lines.find((l) => /단톡 모집글|관공서|축제 공고/.test(l)) || "";
+  return { fields, og: decodeEntities(og), kind };
+}
+function buildTruckgonggoItem(row, detail, nowIso = new Date().toISOString()) {
+  const f = detail.fields;
+  const dates = parseFleamoaDates(detail.og || row.sub, nowIso.slice(0, 10)); // "11/29(일)" 형식·요일 확인 재사용
+  const feeParts = [
+    f["입점비"] && `입점비 ${f["입점비"]}`,
+    f["수수료(오더자)"] && `수수료 ${f["수수료(오더자)"]}`,
+    f["운영비(협회)"] && `운영비 ${f["운영비(협회)"]}`,
+  ].filter(Boolean);
+  const venue = f["장소"] && !/^울산\s*·?\s*(\(.*\))?$/.test(f["장소"]) ? f["장소"] : null; // "울산 · (상세주소 톡방공유)"는 장소 미상
+  return {
+    id: `gh-${require("crypto").createHash("sha256").update(row.url).digest("base64url").slice(0, 16)}`,
+    name: cleanTitle(row.title),
+    region: "울산",
+    city: null,
+    sourceOrg: TRUCKGONGGO_BOARD.sourceOrg,
+    sourceCategory: TRUCKGONGGO_BOARD.sourceCategory,
+    sourceUrl: row.url,
+    originalUrl: null,
+    postedDate: null,
+    applyStart: null,
+    applyEnd: null,
+    festivalStart: dates.festivalStart,
+    festivalEnd: dates.festivalEnd,
+    applyLink: row.url,
+    venue,
+    boothCount: f["모집"] || null,
+    fee: feeParts.length ? feeParts.join(" · ") : null,
+    facilities: null,
+    applyMethod: null,
+    boothType: "푸드트럭",
+    eligibility: null,
+    ulsanEligible: "unknown",
+    eligibilityCategory: "unknown",
+    restrictedRegion: null,
+    attachmentParsed: false,
+    linkStatus: "ok",
+    linkCheckedAt: nowIso,
+    linkCheckDetail: null,
+    collectedAt: nowIso,
+    status: "pending",
+    organizerType: "private", // 홈페이지 isOfficial() 기준값(민간). 모음 사이트 구분은 sourceCategory로.
+    noticeType: "review",
+    recruitStatus: "unknown",
+    memo:
+      `자동수집(트럭공고 — 푸드트럭 모집 모음 사이트${detail.kind ? `, ${detail.kind}` : ""}). ` +
+      `원문(단체 대화방 등)을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. 연락처는 사이트 로그인 필요(수집 안 함). ` +
+      `트럭공고 표시값: ${[f["일시"] && `일시 ${f["일시"]}`, f["장소"] && `장소 ${f["장소"]}`, ...feeParts, f["시간"] && `시간 ${f["시간"]}`, f["모집"] && `모집 ${f["모집"]}`, f["참고"] && `참고 ${f["참고"].slice(0, 80)}`].filter(Boolean).join(", ") || "없음"}.`,
+  };
+}
+
 // 같은 행사가 여러 사이트(관공서·주최기관·모음 사이트)에 올라온 경우를 막는 중복 판정.
 // 주소가 서로 달라 기존 canonicalDedupKey로는 못 거르므로, (1) 원문 링크가 기존 항목 주소와
 // 같거나 (2) 정리한 행사명이 서로 포함 관계(8글자 이상)이고 행사 시작일이 같거나 한쪽이 비어
@@ -4346,6 +4439,45 @@ async function main() {
     }
   }
 
+  // ---- 2026-11-08 신설(민간 수집 3차): 트럭공고 울산 푸드트럭 모집(공개 페이지, 일반 HTTP) ----
+  // 장소에 울산 외 지역이 함께 적힌 공고(예: "울산 · 포항")는 울산 행사인지 불분명해 제외한다.
+  if (inScope(TRUCKGONGGO_BOARD)) {
+    try {
+      const rows = extractTruckgonggoRows(await fetchText(TRUCKGONGGO_BOARD.url), TRUCKGONGGO_BOARD.url);
+      let added = 0;
+      let dup = 0;
+      let outside = 0;
+      for (const row of rows) {
+        if (seen[row.url]) continue;
+        const detail = parseTruckgonggoDetail(await fetchText(row.url));
+        const place = detail.fields["장소"] || row.sub;
+        if (!/울산/.test(place) || OTHER_REGION_RE.test(place)) {
+          outside++;
+          console.log(`  [지역 불명확 제외] 트럭공고 "${row.title}" — 장소: ${place}`);
+          seen[row.url] = { firstSeen: new Date().toISOString(), org: TRUCKGONGGO_BOARD.org };
+          continue;
+        }
+        const item = buildTruckgonggoItem(row, detail);
+        seen[row.url] = { firstSeen: new Date().toISOString(), org: TRUCKGONGGO_BOARD.org };
+        const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
+        if (d) {
+          dup++;
+          console.log(`  [중복 건너뜀] 트럭공고 "${item.name}" = 기존 "${d.name}" (${d.sourceOrg})`);
+          continue;
+        }
+        newItems.push(item);
+        added++;
+      }
+      perBoardCounts.push(
+        `${TRUCKGONGGO_BOARD.sourceOrg}: 목록 ${rows.length}건 → 신규 ${added}건, 중복 ${dup}건, 지역 불명확 제외 ${outside}건`
+      );
+      recordBoardResult(TRUCKGONGGO_BOARD, true);
+    } catch (err) {
+      perBoardCounts.push(`${TRUCKGONGGO_BOARD.sourceOrg}: FETCH FAILED (재시도 ${FETCH_MAX_RETRIES}회 모두 실패) — ${describeFetchError(err)}`);
+      recordBoardResult(TRUCKGONGGO_BOARD, false, describeFetchError(err));
+    }
+  }
+
   // 2026-10-24 신설(요청사항 — "같은 방식으로 반복 재시도 말고 다른 방식을 시도"):
   // 북구청(www.bukgu.ulsan.kr + eminwon.bukgu.ulsan.kr) CONNECT_TIMEOUT은 실제
   // GitHub Actions 3회 재검증 결과 지속적 차단이 아니라 간헐적 네트워크 문제로 확인됨
@@ -4515,6 +4647,9 @@ const ALL_BOARDS = [
 module.exports = {
   ALL_BOARDS,
   buildFleamoaItem,
+  extractTruckgonggoRows,
+  parseTruckgonggoDetail,
+  buildTruckgonggoItem,
   findCrossSourceDuplicate,
   parseFleamoaDates,
   extractCandidates,

@@ -677,6 +677,28 @@
     border-color: var(--line);
   }
   .apply-btn.closed-link:hover { border-color: var(--ink-muted); }
+  /* 2026-11-10: 네이버·민간 모집처 화면 — 기존 색 토큰만 사용 */
+  .source-notice {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .src-due-count { color: var(--status-rejected-fg); font-weight: 700; }
+  .src-heading { font-size: 16px; font-weight: 700; margin: 6px 0 6px; }
+  .src-help { font-size: 12.5px; color: var(--ink-muted); margin: 0 0 10px; }
+  .src-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .src-shortcuts .apply-btn { white-space: normal; }
+  .status-pill.src-due { background: var(--status-rejected-bg); color: var(--status-rejected-fg); }
+  .status-pill.src-today { background: var(--status-upcoming-bg); color: var(--status-upcoming-fg); }
+  .status-pill.src-checked { background: var(--status-closed-bg); color: var(--status-closed-fg); }
+  .src-manual { color: var(--ink-muted); font-size: 12px; }
+  .src-focus { font-size: 12.5px; font-weight: 700; color: var(--status-upcoming-fg); }
+  .src-past { border-left: 3px solid var(--line); padding-left: 8px; }
+  .src-past-head { font-weight: 700; color: var(--ink); }
   .empty-state {
     padding: 48px 24px;
     text-align: center;
@@ -1578,6 +1600,7 @@
       <div class="nav-group">
         <a class="nav-item ${activeKey === "home" ? "active" : ""}" href="#home">홈</a>
         <a class="nav-item ${activeKey === "browse" ? "active" : ""}" href="#browse">전국 모집공고</a>
+        <a class="nav-item ${activeKey === "sources" ? "active" : ""}" href="#sources">네이버·민간 모집처</a>
         <a class="nav-item ${activeKey === "myevents" ? "active" : ""}" href="#myevents">내 행사 관리</a>
         ${adminNavHtml}
         <a class="nav-item ${activeKey === "about" ? "active" : ""}" href="#about">서비스 안내</a>
@@ -1693,6 +1716,161 @@
   }
 
   // ---- 서비스 안내 ----
+  // ---- 2026-11-10 신설(요청사항): "네이버·민간 모집처" — 사람이 직접 확인하는 모집처 목록과 확인 일정 ----
+  // data/manual_sources.json(자동 수집과 무관한 별도 파일)을 읽는다. 여기 등록된 곳은 "모집공고가 올라오는 곳"일
+  // 뿐이라 절대 "모집중"으로 표시하지 않는다. 확인 일정: 블로그·카페 매주 월·수·금, 모집 집중 시기에는 매일,
+  // 기관 누리집은 everyDays 주기. 마지막 확인일이 일정보다 늦으면 "확인 필요"로 강조한다.
+  const SOURCE_KIND_LABEL = { naver_blog: "네이버 블로그", naver_cafe: "네이버 카페", institution: "기관 누리집" };
+  const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const WEEKDAY_KO = { sun: "일", mon: "월", tue: "화", wed: "수", thu: "목", fri: "금", sat: "토" };
+  let manualSourcesCache = null;
+  let sourcesKindFilter = "all";
+
+  function ymd(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function daysBetween(a, b) {
+    return Math.round((parseDate(b) - parseDate(a)) / 86400000);
+  }
+  function activeFocusPeriod(src, today) {
+    const md = ymd(today).slice(5);
+    return (src.focusPeriods || []).find(p => p.from <= p.to ? (md >= p.from && md <= p.to) : (md >= p.from || md <= p.to)) || null;
+  }
+  // 확인 상태 계산: { state: "checked" | "today" | "due", label, nextCheck, focus }
+  function sourceCheckStatus(src, today) {
+    const todayStr = ymd(today);
+    const last = src.lastChecked || null;
+    const focus = activeFocusPeriod(src, today);
+    const days = focus ? WEEKDAY_KEYS : ((src.check && src.check.days) || []);
+    if (days.length) {
+      let prevDue = null;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today); d.setDate(today.getDate() - i);
+        if (days.includes(WEEKDAY_KEYS[d.getDay()])) { prevDue = ymd(d); break; }
+      }
+      let nextCheck = null;
+      for (let i = 1; i <= 7; i++) {
+        const d = new Date(today); d.setDate(today.getDate() + i);
+        if (days.includes(WEEKDAY_KEYS[d.getDay()])) { nextCheck = ymd(d); break; }
+      }
+      if (last && prevDue && last >= prevDue) return { state: "checked", label: "확인 완료", nextCheck, focus };
+      if (prevDue === todayStr && (!last || daysBetween(last, todayStr) <= 3)) return { state: "today", label: "오늘 확인 예정", nextCheck: todayStr, focus };
+      return { state: "due", label: "확인 필요", nextCheck: todayStr, focus };
+    }
+    const every = (src.check && src.check.everyDays) || 30;
+    const age = last ? daysBetween(last, todayStr) : Infinity;
+    const next = last ? new Date(parseDate(last).getTime() + every * 86400000) : today;
+    return age <= every
+      ? { state: "checked", label: "확인 완료", nextCheck: ymd(next), focus }
+      : { state: "due", label: "확인 필요", nextCheck: todayStr, focus };
+  }
+  function scheduleText(src, status) {
+    if (status.focus) return "모집 집중 시기 — 매일 확인";
+    if (src.check && src.check.days) return "매주 " + src.check.days.map(d => WEEKDAY_KO[d]).join("·") + " 확인";
+    return `${(src.check && src.check.everyDays) || 30}일마다 확인`;
+  }
+  // 지난 모집글의 행사 날짜와 종료·예정 여부(행사일 기준 — "모집 중" 여부는 판단하지 않음)
+  function pastEventLabel(post, today) {
+    const fmt = s => { const [y, m, d] = s.split("-").map(Number); return `${y}.${m}.${d}`; };
+    if (post.eventStart) {
+      const start = post.eventStart, end = post.eventEnd || post.eventStart;
+      const range = start === end ? fmt(start) : `${fmt(start)}~${start.slice(0, 4) === end.slice(0, 4) ? fmt(end).slice(5) : fmt(end)}`;
+      const t = ymd(today);
+      const when = end < t ? "종료된 행사" : start > t ? "예정된 행사" : "행사 기간 중";
+      return `행사 ${range} (${when})`;
+    }
+    if (post.eventYear && post.eventYear < today.getFullYear()) return `행사 ${post.eventText || post.eventYear + "년"} (종료된 행사)`;
+    return `${post.eventText || "행사일 미확인"} — 현재 모집 여부는 원본 확인`;
+  }
+  function naverSearchUrl(query, where) {
+    return `https://search.naver.com/search.naver?where=${where === "article" ? "article" : "blog"}&query=${encodeURIComponent(query)}`;
+  }
+
+  async function renderManualSources() {
+    const main = document.getElementById("main");
+    if (!manualSourcesCache) {
+      main.innerHTML = `<div class="empty-state">모집처 목록을 불러오는 중입니다…</div>`;
+      try {
+        manualSourcesCache = await fetchDataJson("manual_sources.json");
+      } catch (e) {
+        main.innerHTML = `<div class="empty-state">모집처 목록을 불러오지 못했습니다(${escapeHtml(e.message)}). 잠시 후 다시 시도해 주세요.</div>`;
+        return;
+      }
+    }
+    const data = manualSourcesCache;
+    const today = new Date();
+    const items = (data.sources || []).map(src => ({ src, status: sourceCheckStatus(src, today) }));
+    const shown = items.filter(x => sourcesKindFilter === "all" || x.src.kind === sourcesKindFilter);
+    // 확인 필요 → 오늘 확인 예정 → 확인 완료 순, 같은 상태 안에서는 이름순
+    const rank = { due: 0, today: 1, checked: 2 };
+    shown.sort((a, b) => (rank[a.status.state] - rank[b.status.state]) || a.src.name.localeCompare(b.src.name, "ko"));
+    const dueCount = items.filter(x => x.status.state === "due").length;
+
+    const shortcuts = (data.searchShortcuts || []).map(s =>
+      `<a class="apply-btn" href="${naverSearchUrl(s.query, s.where)}" target="_blank" rel="noopener">🔎 ${escapeHtml(s.label)}</a>`
+    ).join("");
+    const kindOptions = `<option value="all" ${sourcesKindFilter === "all" ? "selected" : ""}>전체</option>` +
+      Object.entries(SOURCE_KIND_LABEL).map(([k, v]) => `<option value="${k}" ${k === sourcesKindFilter ? "selected" : ""}>${v}</option>`).join("");
+
+    const cards = shown.map(({ src, status }) => {
+      const lastAgo = src.lastChecked ? daysBetween(src.lastChecked, ymd(today)) : null;
+      const post = src.lastSeenPost;
+      return `
+        <div class="region-card">
+          <div class="card-tags">
+            <span class="org-badge private">${escapeHtml(SOURCE_KIND_LABEL[src.kind] || src.kind)}</span>
+            ${src.loginRequired ? `<span class="org-badge review">로그인 필요</span>` : ""}
+            <span class="status-pill src-${status.state}">${status.label}</span>
+          </div>
+          <div class="fest-name">${escapeHtml(src.name)}</div>
+          <dl class="region-card-rows">
+            <div><dt>지역</dt><dd>${escapeHtml(src.city || "-")}</dd></div>
+            <div><dt>주요 행사</dt><dd>${escapeHtml((src.mainEvents || []).join(", ") || "-")}</dd></div>
+            <div><dt>모집 유형</dt><dd>${escapeHtml((src.recruitTypes || []).join(", ") || "-")}</dd></div>
+            <div><dt>확인 일정</dt><dd>${escapeHtml(scheduleText(src, status))} <span class="src-manual">(수동 확인)</span></dd></div>
+            <div><dt>마지막 확인일</dt><dd>${src.lastChecked ? `${src.lastChecked}${lastAgo != null ? ` (${lastAgo === 0 ? "오늘" : lastAgo + "일 전"})` : ""}` : "기록 없음"}</dd></div>
+            <div><dt>다음 확인일</dt><dd>${status.nextCheck || "-"}</dd></div>
+          </dl>
+          ${status.focus ? `<div class="src-focus">📌 ${escapeHtml(status.focus.label)} — 평소보다 자주(매일) 확인하세요.</div>` : ""}
+          ${post ? `<div class="region-card-memo src-past">
+            <span class="src-past-head">지난 모집글 · ${escapeHtml(pastEventLabel(post, today))}</span><br>
+            원문 제목: <a href="${escapeHtml(post.url)}" target="_blank" rel="noopener">${escapeHtml(post.title)}</a>${post.date ? ` · 게시 ${escapeHtml(post.date)}` : ""}
+            <br><span class="src-manual">이 기록은 확인 당시의 글이며 현재 모집 여부와 무관합니다.</span>
+          </div>` : ""}
+          ${src.note ? `<div class="region-card-memo">${escapeHtml(src.note)}</div>` : ""}
+          <div class="region-card-actions">
+            <a class="apply-btn" href="${escapeHtml(src.url)}" target="_blank" rel="noopener">원본 보기</a>
+            ${src.naverQuery ? `<a class="apply-btn closed-link" href="${naverSearchUrl(src.naverQuery, src.kind === "naver_cafe" ? "article" : "blog")}" target="_blank" rel="noopener">네이버에서 검색</a>` : ""}
+          </div>
+        </div>`;
+    }).join("");
+
+    main.innerHTML = `
+      <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>네이버·민간 모집처</div>
+      <div class="page-head"><h1 class="page-title">네이버·민간 모집처</h1></div>
+      <div class="source-notice">
+        <b>모집처 안내 목록입니다 — 현재 모집 중인 공고 목록이 아닙니다.</b><br>
+        블로그·카페 등 자동 수집하지 않는 곳에서 셀러·부스 모집 글이 올라오는 <b>모집처</b>를 모아 두었습니다.
+        여기 등록됐다고 지금 모집 중이라는 뜻은 아니며, 실제 모집 여부와 일정·참가비는 반드시 원본에서 확인하세요.
+        현재 모집 중인 공고는 <a href="#browse">전국 모집공고</a>와 각 지역 화면에서 볼 수 있습니다.<br>
+        확인 일정은 <b>자동 수집이 아닌 사람의 수동 확인 일정</b>입니다(블로그·카페 매주 월·수·금, 모집 집중 시기에는 매일).
+        ${dueCount ? `<br><span class="src-due-count">지금 확인이 필요한 모집처 ${dueCount}곳</span>` : ""}
+      </div>
+      <h2 class="src-heading">네이버 검색 바로가기</h2>
+      <p class="src-help">네이버 검색 화면이 새 창으로 열립니다(이 사이트는 검색 결과를 가져오거나 저장하지 않습니다).</p>
+      <div class="src-shortcuts">${shortcuts}</div>
+      <h2 class="src-heading">모집처 ${items.length}곳</h2>
+      <div class="filter-bar">
+        <label for="sourcesKindFilter">종류</label>
+        <select id="sourcesKindFilter">${kindOptions}</select>
+      </div>
+      ${shown.length ? `<div class="region-card-grid">${cards}</div>` : `<div class="empty-state">해당하는 모집처가 없습니다.</div>`}
+      <p class="src-help">마지막 확인일 ${escapeHtml(data.updatedAt || "-")} 기준 목록입니다. 확인 결과는 관리자가 목록 파일을 갱신해 반영합니다.</p>`;
+
+    const sel = document.getElementById("sourcesKindFilter");
+    if (sel) sel.addEventListener("change", ev => { sourcesKindFilter = ev.target.value; renderManualSources(); });
+  }
+
   function renderAbout() {
     document.getElementById("main").innerHTML = `
       <div class="breadcrumb"><a href="#home">홈</a><span class="sep">/</span>서비스 안내</div>
@@ -1802,6 +1980,7 @@
         <div class="page-actions">
           <button class="view-all-btn" id="openAddFestival">+ 축제 추가</button>
           <a class="view-all-btn" href="#browse">전국 모집공고 →</a>
+          <a class="view-all-btn" href="#sources">네이버·민간 모집처 →</a>
           <a class="view-all-btn" href="#open-all">모집 중 전체 보기${openCount > 0 ? ` (${openCount})` : ""} →</a>
           <a class="view-all-btn" href="#closed-all">마감 전체 보기${closedCount > 0 ? ` (${closedCount})` : ""} →</a>
         </div>
@@ -2649,6 +2828,12 @@
     } else if (hash === "browse") {
       renderSidebar("browse");
       renderBrowse();
+    } else if (hash === "sources") {
+      renderSidebar("sources");
+      renderManualSources();
+      // 2026-11-10: 휴대폰(가로로 밀리는 메뉴)에서 이 메뉴가 화면 밖에 있으면 보이도록 맞춘다(이 화면에서만).
+      const activeNav = document.querySelector('#sidebar .nav-item.active');
+      if (activeNav && window.matchMedia("(max-width: 860px)").matches) activeNav.scrollIntoView({ block: "nearest", inline: "center" });
     } else if (hash === "about") {
       renderSidebar("about");
       renderAbout();

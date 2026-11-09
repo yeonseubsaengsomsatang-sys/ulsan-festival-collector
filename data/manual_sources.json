@@ -1,0 +1,299 @@
+{
+  "description": "네이버·민간 모집처 목록(사람이 직접 확인하는 수동 확인 대상). 자동 수집(scripts/collect.js)은 이 파일을 읽거나 쓰지 않는다. 여기 등록된 모집처는 '모집공고가 올라오는 곳'일 뿐이며, 현재 모집 중이라는 뜻이 아니다.",
+  "updatedAt": "2026-11-10",
+  "checkPolicy": {
+    "defaultDays": [
+      "mon",
+      "wed",
+      "fri"
+    ],
+    "note": "블로그·카페는 매주 월·수·금 확인. 모집 집중 시기에는 매일 추가 확인. 기관 누리집은 각 항목의 everyDays 주기로 확인."
+  },
+  "searchShortcuts": [
+    {
+      "label": "울산 플리마켓 셀러 모집",
+      "query": "울산 플리마켓 셀러 모집",
+      "where": "blog"
+    },
+    {
+      "label": "울산 프리마켓 셀러 모집",
+      "query": "울산 프리마켓 셀러 모집",
+      "where": "blog"
+    },
+    {
+      "label": "울산 푸드트럭 모집",
+      "query": "울산 푸드트럭 모집",
+      "where": "blog"
+    },
+    {
+      "label": "울산 체험부스 모집",
+      "query": "울산 체험부스 모집",
+      "where": "blog"
+    },
+    {
+      "label": "울산 야시장 셀러 모집",
+      "query": "울산 야시장 셀러 모집",
+      "where": "blog"
+    },
+    {
+      "label": "카페 글: 울산 셀러 모집",
+      "query": "울산 셀러 모집",
+      "where": "article"
+    }
+  ],
+  "sources": [
+    {
+      "id": "jinunjin",
+      "name": "지니어스진공방",
+      "kind": "naver_blog",
+      "city": "남구·중구",
+      "url": "https://blog.naver.com/jinunjin",
+      "mainEvents": [
+        "신정시장 플리마켓",
+        "웰컴시티 상생 골목마켓(상시 셀러)"
+      ],
+      "recruitTypes": [
+        "플리마켓 셀러"
+      ],
+      "operatorNote": "신정시장 사업단·웰컴시티상인회의 셀러 모집 글을 올리는 공방 블로그",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "상시 참여 셀러를 모집합니다.‘웰컴! 웰컴시티 상생 골목마켓!",
+        "date": "2026-11-05",
+        "url": "https://blog.naver.com/jinunjin/224466296032",
+        "eventStart": null,
+        "eventEnd": null,
+        "eventText": "행사일 없음(상시 셀러 모집 공지)"
+      },
+      "loginRequired": false,
+      "naverQuery": "지니어스진 셀러 모집",
+      "note": ""
+    },
+    {
+      "id": "dazzle62",
+      "name": "더맑음 주식회사",
+      "kind": "naver_blog",
+      "city": "남구",
+      "url": "https://blog.naver.com/dazzle62",
+      "mainEvents": [
+        "어울런(Earth-Ulsan RUN) 자원순환 바자회"
+      ],
+      "recruitTypes": [
+        "플리마켓 셀러",
+        "체험부스"
+      ],
+      "operatorNote": "어울런 주최·주관사(컬랩원㈜·더맑음㈜) 중 더맑음 블로그",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [
+        {
+          "label": "어울런 셀러 모집 시기",
+          "from": "09-01",
+          "to": "11-30"
+        }
+      ],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "울산 플리마켓 셀러 모집｜2026 어울런 자원순환 바자회 참가 신청",
+        "date": "2026-10-21",
+        "url": "https://blog.naver.com/dazzle62/224448532597",
+        "eventStart": "2026-12-05",
+        "eventEnd": "2026-12-05"
+      },
+      "loginRequired": false,
+      "naverQuery": "어울런 셀러 모집",
+      "note": "행사 시기는 해마다 달라질 수 있음"
+    },
+    {
+      "id": "ulju_love",
+      "name": "울주군 공식 블로그",
+      "kind": "naver_blog",
+      "city": "울주",
+      "url": "https://blog.naver.com/ulju_love",
+      "mainEvents": [
+        "덕신온마켓 키즈·플리마켓"
+      ],
+      "recruitTypes": [
+        "플리마켓 셀러",
+        "키즈 셀러"
+      ],
+      "operatorNote": "울주군청 공식 블로그(덕신온마켓 공고 일부는 울주군청 자동 수집으로도 들어옴)",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "온산 락(樂) 페스타 WITH 덕신온마켓 키즈&플리마켓 셀러 모집 안내",
+        "date": "2026-10-27",
+        "url": "https://blog.naver.com/ulju_love/224454176258",
+        "eventStart": "2026-10-31",
+        "eventEnd": "2026-11-01"
+      },
+      "loginRequired": false,
+      "naverQuery": "덕신온마켓 셀러 모집",
+      "note": ""
+    },
+    {
+      "id": "woori2019",
+      "name": "울산프리마켓",
+      "kind": "naver_cafe",
+      "city": "동구 등",
+      "url": "https://cafe.naver.com/woori2019",
+      "mainEvents": [
+        "대왕암공원상가 프리마켓"
+      ],
+      "recruitTypes": [
+        "프리마켓 셀러"
+      ],
+      "operatorNote": "울산 프리마켓 운영 카페",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "2026.1.10~11(토,일) 대왕암공원상가 프리마켓 셀러모집중",
+        "date": null,
+        "url": "https://cafe.naver.com/woori2019/5712",
+        "eventStart": "2026-01-10",
+        "eventEnd": "2026-01-11"
+      },
+      "loginRequired": true,
+      "naverQuery": "울산프리마켓 셀러모집",
+      "note": "글 내용은 카페 로그인·가입 후 확인 가능(검색 결과 제목으로만 확인함)"
+    },
+    {
+      "id": "eatsgo",
+      "name": "이츠고",
+      "kind": "naver_cafe",
+      "city": "울산 전역",
+      "url": "https://cafe.naver.com/eatsgo",
+      "mainEvents": [
+        "아파트 판매행사 푸드트럭"
+      ],
+      "recruitTypes": [
+        "푸드트럭"
+      ],
+      "operatorNote": "푸드트럭 모집 커뮤니티 카페(전국)",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "[251206] 울산 남구 아파트 판매행사 트럭 모집",
+        "date": null,
+        "url": "https://cafe.naver.com/eatsgo/22611",
+        "eventStart": "2025-12-06",
+        "eventEnd": "2025-12-06"
+      },
+      "loginRequired": true,
+      "naverQuery": "울산 아파트 행사 푸드트럭 모집",
+      "note": "글 내용은 카페 로그인·가입 후 확인 가능(검색 결과 제목으로만 확인함)"
+    },
+    {
+      "id": "uipa",
+      "name": "울산정보산업진흥원",
+      "kind": "institution",
+      "city": "울산 전역",
+      "url": "https://www.uipa.or.kr/",
+      "mainEvents": [
+        "울산의 밤 스토리 야시장"
+      ],
+      "recruitTypes": [
+        "야시장 참여상인",
+        "먹거리"
+      ],
+      "operatorNote": "울산시 스토리 야시장 참여상인 모집(2025년 하절기 모집 이력, 언론 보도 다수)",
+      "check": {
+        "everyDays": 30
+      },
+      "focusPeriods": [
+        {
+          "label": "스토리 야시장 참여상인 모집 시기(추정)",
+          "from": "05-15",
+          "to": "07-15"
+        }
+      ],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "「울산의 밤, 스토리 야시장」 2025년 하절기 참여상인 모집 공고",
+        "date": null,
+        "url": "https://www.uipa.or.kr/",
+        "eventStart": null,
+        "eventEnd": null,
+        "eventText": "2025년 하절기",
+        "eventYear": 2025
+      },
+      "loginRequired": false,
+      "naverQuery": "울산의 밤 스토리 야시장 참여상인 모집",
+      "note": "공지 화면이 브라우저 안에서 그려져 자동 수집 대상 아님"
+    },
+    {
+      "id": "xxongzoo",
+      "name": "와글와글 행사(마케터 블로그)",
+      "kind": "naver_blog",
+      "city": "울산",
+      "url": "https://blog.naver.com/xxongzoo",
+      "mainEvents": [
+        "어린이날 '와글와글' 실내동물원 행사 플리마켓"
+      ],
+      "recruitTypes": [
+        "플리마켓 셀러",
+        "체험부스"
+      ],
+      "operatorNote": "와글와글(구 와우쥬) 실내동물원 어린이날 행사 셀러 모집 글",
+      "check": {
+        "days": [
+          "mon",
+          "wed",
+          "fri"
+        ]
+      },
+      "focusPeriods": [
+        {
+          "label": "어린이날 행사 셀러 모집 시기(추정)",
+          "from": "04-01",
+          "to": "04-30"
+        }
+      ],
+      "lastChecked": "2026-11-09",
+      "lastSeenPost": {
+        "title": "어린이날 울산 행사 '와글와글' 행사 부스 셀러 모집합니다!",
+        "date": "2025-04-22",
+        "url": "https://blog.naver.com/xxongzoo/223843021607",
+        "eventStart": "2025-05-05",
+        "eventEnd": "2025-05-06"
+      },
+      "loginRequired": false,
+      "naverQuery": "와글와글 어린이날 셀러 모집 울산",
+      "note": "2025년 모집 이력 기준, 2026년 모집 여부 미확인"
+    }
+  ]
+}

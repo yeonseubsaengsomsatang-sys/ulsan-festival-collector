@@ -238,7 +238,7 @@
     "failedBoards": 2,
     "lastError": "HTTP 403 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
     "failureType": "접근 차단(HTTP 403)",
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.818Z"
   },
   {
     "org": "태화강마두희축제추진위원회",
@@ -249,7 +249,7 @@
     "failedBoards": 2,
     "lastError": "HTTP 403",
     "failureType": "접근 차단(HTTP 403)",
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "울산연극협회",
@@ -260,7 +260,7 @@
     "failedBoards": 1,
     "lastError": "HTTP 403",
     "failureType": "접근 차단(HTTP 403)",
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "전라남도 목포시청",
@@ -540,7 +540,7 @@
     "okBoards": 15,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z",
+    "checkedAt": "2026-11-09T14:21:01.818Z",
     "coverage": [
       "중구청 새소식: 3쪽 읽음, 게시일 2026-09-29 ~ 2026-11-06",
       "중구청 보도자료: 8쪽 읽음, 게시일 2026-11-02 ~ 2026-11-09",
@@ -555,7 +555,7 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z",
+    "checkedAt": "2026-11-09T14:21:01.818Z",
     "coverage": [
       "동구청 알림사항: 3쪽 읽음, 게시일 2026-10-16 ~ 2026-11-06",
       "동구청 보도자료: 3쪽 읽음, 게시일 2026-10-28 ~ 2026-11-04"
@@ -569,7 +569,7 @@
     "okBoards": 4,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z",
+    "checkedAt": "2026-11-09T14:21:01.818Z",
     "coverage": [
       "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-10 ~ 2026-11-03"
     ]
@@ -582,7 +582,7 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.818Z"
   },
   {
     "org": "울산광역시청",
@@ -592,7 +592,7 @@
     "okBoards": 5,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z",
+    "checkedAt": "2026-11-09T14:21:01.818Z",
     "coverage": [
       "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-10 ~ 2026-11-09"
     ]
@@ -605,7 +605,7 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z",
+    "checkedAt": "2026-11-09T14:21:01.818Z",
     "coverage": [
       "북구청 알림사항: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-09",
       "북구청 북구공보: 3쪽 읽음, 게시일 2026-09-10 ~ 2026-11-05",
@@ -620,17 +620,17 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "울산문화관광재단",
     "region": "울산",
     "status": "ok",
     "boards": 3,
-    "okBoards": 3,
-    "failedBoards": 0,
+    "okBoards": 2,
+    "failedBoards": 1,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "고래문화재단",
@@ -640,7 +640,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "플리모아",
@@ -650,7 +650,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "트럭공고",
@@ -660,7 +660,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "센트럴 플랫폼",
@@ -670,7 +670,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "울산대공원 장미축제 준비사무국",
@@ -680,7 +680,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "울산경제일자리진흥원",
@@ -690,7 +690,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-09T13:44:32.559Z"
+    "checkedAt": "2026-11-09T14:21:01.819Z"
   },
   {
     "org": "인천광역시청",

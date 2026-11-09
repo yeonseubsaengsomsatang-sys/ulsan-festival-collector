@@ -6,6 +6,9 @@ on:
   # 예약 실행은 울산 게시판만 수집한다(COLLECT_SCOPE=ulsan).
   schedule:
     - cron: "0 5 * * *"
+    # 2026-11-09 추가(요청사항): 매일 20:00 KST(= 11:00 UTC) 예약 실행 1회 추가 — 예약 지연·누락과
+    # 관공서 간헐적 접속 실패에 대비. 기존 14:00 실행은 그대로 유지.
+    - cron: "0 11 * * *"
   workflow_dispatch:
     inputs:
       scope:
@@ -16,9 +19,23 @@ on:
           - bukgu
           - all
         default: ulsan
+      # 2026-11-09 추가: 관공서 전체 실패 시 자동 재실행용(사람이 수동 실행할 때는 비워 두면 됨).
+      retry:
+        description: "자동 재실행 여부(자동 설정용 — 수동 실행 시 false 유지)"
+        type: string
+        default: "false"
+      retry_of:
+        description: "재실행 원인이 된 원 실행 번호(자동 설정용)"
+        type: string
+        default: ""
+      retry_reason:
+        description: "원 실행의 관공서 실패 원인(자동 설정용)"
+        type: string
+        default: ""
 
 permissions:
   contents: write
+  actions: write # 2026-11-09: 관공서 전체 실패 시 자동 재실행(workflow_dispatch) 요청용
 
 # 예약 실행과 수동 실행이 겹쳐 data 커밋이 충돌하지 않게 한 번에 하나만 실행.
 concurrency:
@@ -42,17 +59,34 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run collector
+        id: collect
         env:
           # 예약 실행(schedule)은 입력값이 없으므로 기본값 ulsan. ("all"은 collect.js가
           # 인식하지 않는 값이라 기존처럼 전체 지역을 수집함)
           COLLECT_SCOPE: ${{ github.event.inputs.scope || 'ulsan' }}
+          # 2026-11-09: 자동 재실행일 때만 값이 있음(결과 기록·Summary 표시용)
+          COLLECT_RETRY_OF: ${{ github.event.inputs.retry_of }}
+          COLLECT_RETRY_REASON: ${{ github.event.inputs.retry_reason }}
         run: node scripts/collect.js
 
       - name: Commit updated data (if changed)
         run: |
           git config user.name "festival-collector-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/seen.json data/collected.json data/board_status.json
+          git add data/seen.json data/collected.json data/board_status.json data/run_history.json
           git diff --cached --quiet || git commit -m "chore: daily collection $(date -u +%Y-%m-%d)"
           git pull --rebase origin main
           git push
+
+      # 2026-11-09 신설(요청사항): 울산 관공서 6곳이 모두 실패했을 때만 새 서버에서 1회 재실행 요청.
+      # 재실행된 실행은 다시 요청하지 않고, 다른 수집 작업이 대기·실행 중이면 생략한다(scripts/retry-on-gov-failure.sh).
+      - name: Retry once if all Ulsan government boards failed
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GOV_ALL_FAILED: ${{ steps.collect.outputs.gov_all_failed }}
+          REASON: ${{ steps.collect.outputs.gov_fail_reason }}
+          IS_RETRY: ${{ github.event.inputs.retry || 'false' }}
+          SCOPE: ${{ github.event.inputs.scope || 'ulsan' }}
+          RUN_ID: ${{ github.run_id }}
+        run: bash scripts/retry-on-gov-failure.sh

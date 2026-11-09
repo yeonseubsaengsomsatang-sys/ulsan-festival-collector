@@ -45,6 +45,17 @@ const DATA_DIR = path.join(__dirname, "..", "data");
 const SEEN_PATH = path.join(DATA_DIR, "seen.json");
 const OUT_PATH = path.join(DATA_DIR, "collected.json");
 const BOARD_STATUS_PATH = path.join(DATA_DIR, "board_status.json");
+// 2026-11-09 신설: 실행별 결과 기록(관공서 전체 실패·자동 재실행 결과·실패 기관 원인). 최근 60회분만 보관.
+const RUN_HISTORY_PATH = path.join(DATA_DIR, "run_history.json");
+// 자동 재실행 판정 대상 — 울산 관공서 6곳(이 6곳이 "모두" 실패한 경우만 재실행).
+const ULSAN_GOV_ORGS = [
+  "울산광역시청",
+  "울산광역시 중구청",
+  "울산광역시 남구청",
+  "울산광역시 동구청",
+  "울산광역시 북구청",
+  "울산광역시 울주군청",
+];
 
 // 2026-10-21: 대형 축제/보도자료뿐 아니라 소규모 프리마켓·주말장터·벼룩시장의 셀러
 // 모집공고도 놓치지 않도록 "주말장터"·"벼룩시장"을 추가(기존 "나눔장터"와 같은 성격의
@@ -5314,11 +5325,56 @@ async function main() {
     console.log(`⚠ 실제 수집 실패 ${failedNow.length}개 기관 (워크플로 자체는 성공으로 끝남)`);
     failureLines.forEach((l) => console.log(`  ${l}`));
   }
+
+  // 2026-11-09 신설(요청사항 — 자동 수집 안정화): 울산 관공서 6곳이 "모두" 실패했는지 판정해 워크플로에
+  // 알린다(GITHUB_OUTPUT gov_all_failed). 재실행 여부는 워크플로 단계가 결정하고, 재실행 실행(COLLECT_RETRY_OF가
+  // 있는 실행)에서는 결과만 기록한다. 실행마다 data/run_history.json에 결과를 남긴다(최근 60회분).
+  const govStatus = ULSAN_GOV_ORGS.map((org) => orgStatus.get(org)).filter(Boolean);
+  const govAllFailed = govStatus.length === ULSAN_GOV_ORGS.length && govStatus.every((o) => o.okBoards === 0);
+  const govFailedCauses = [...new Set(govStatus.filter((o) => o.okBoards === 0).map((o) => classifyFailure(o.lastError)))];
+  const retryOf = process.env.COLLECT_RETRY_OF || null;
+  const retryReason = process.env.COLLECT_RETRY_REASON || null;
+  const govLine = govAllFailed
+    ? `울산 관공서 ${ULSAN_GOV_ORGS.length}곳 모두 실패 (${govFailedCauses.join(", ")})`
+    : `울산 관공서 ${govStatus.filter((o) => o.okBoards > 0).length}/${govStatus.length}곳 정상`;
+  console.log(`[관공서 상태] ${govLine}${retryOf ? ` — 자동 재실행(원 실행 #${retryOf}, 최초 실패 원인: ${retryReason || "?"}) 결과: ${govAllFailed ? "재실행도 실패" : "재실행 성공"}` : ""}`);
+  if (process.env.GITHUB_OUTPUT) {
+    try {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `gov_all_failed=${govAllFailed}\ngov_fail_reason=${govFailedCauses.join(", ") || "-"}\n`);
+    } catch {
+      /* 출력 쓰기 실패 시 재실행만 안 될 뿐 수집 결과에는 영향 없음 */
+    }
+  }
+  try {
+    const history = fs.existsSync(RUN_HISTORY_PATH) ? JSON.parse(fs.readFileSync(RUN_HISTORY_PATH, "utf8")) : [];
+    history.push({
+      at: new Date().toISOString(),
+      runId: process.env.GITHUB_RUN_ID || "local",
+      event: process.env.GITHUB_EVENT_NAME || "local",
+      retryOf,
+      retryReason,
+      govAllFailed,
+      retryResult: retryOf ? (govAllFailed ? "재실행도 실패" : "재실행 성공") : null,
+      okOrgs: okOrgCountEarly,
+      failedOrgs: failedNow.map((o) => ({ org: o.org, cause: classifyFailure(o.lastError) })),
+      newItems: newItems.length,
+    });
+    fs.writeFileSync(RUN_HISTORY_PATH, JSON.stringify(history.slice(-60), null, 2));
+  } catch {
+    /* 기록 실패는 수집 결과에 영향 없음 */
+  }
+
   if (process.env.GITHUB_STEP_SUMMARY) {
     const coverageLines = perBoardCounts.filter((l) => l.startsWith("[수집 범위]")).map((l) => `- ${l.replace("[수집 범위] ", "")}`);
     const md = [
       `## 수집 결과 요약`,
       `- 성공 ${okOrgCountEarly}개 기관, **실패 ${failedOrgCountEarly}개 기관**, 신규 공고 ${newItems.length}건`,
+      `- ${govLine}`,
+      ...(retryOf
+        ? [`- **자동 재실행**: 원 실행 #${retryOf}의 관공서 전체 실패(최초 원인: ${retryReason || "?"})에 따른 1회 재실행 → **${govAllFailed ? "재실행도 실패(추가 재실행 없음)" : "재실행 성공"}**`]
+        : govAllFailed
+          ? [`- **관공서 전체 실패** — 워크플로가 새 서버에서 1회 자동 재실행을 요청합니다(다른 수집 작업이 대기·실행 중이면 생략).`]
+          : []),
       ...(failedNow.length ? [``, `### 수집 실패 기관 (원인별)`, ...failureLines] : []),
       ...(coverageLines.length ? [``, `### 관공서 게시판 수집 범위`, ...coverageLines] : []),
       ``,

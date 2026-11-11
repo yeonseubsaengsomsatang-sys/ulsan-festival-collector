@@ -122,5 +122,30 @@
       }
     ],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-11T12:54:01.364Z",
+    "runId": "43023654747",
+    "event": "workflow_dispatch",
+    "retryOf": "43020807403",
+    "retryReason": "접속 시간 초과",
+    "govAllFailed": false,
+    "retryResult": "재실행 성공",
+    "okOrgs": 14,
+    "failedOrgs": [
+      {
+        "org": "울산쇠부리축제추진위원회",
+        "cause": "주소 없음(HTTP 404)"
+      },
+      {
+        "org": "태화강마두희축제추진위원회",
+        "cause": "접근 차단(HTTP 403)"
+      },
+      {
+        "org": "울산연극협회",
+        "cause": "접근 차단(HTTP 403)"
+      }
+    ],
+    "newItems": 1
   }
 ]

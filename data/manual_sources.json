@@ -9,36 +9,247 @@
     ],
     "note": "블로그·카페는 매주 월·수·금 확인. 모집 집중 시기에는 매일 추가 확인. 기관 누리집은 각 항목의 everyDays 주기로 확인."
   },
-  "searchShortcuts": [
+  "searchGroups": [
     {
-      "label": "울산 플리마켓 셀러 모집",
-      "query": "울산 플리마켓 셀러 모집",
-      "where": "blog"
+      "id": "common",
+      "title": "공통 모집",
+      "open": true,
+      "items": [
+        {
+          "query": "울산 플리마켓 셀러 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 프리마켓 셀러 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 셀러 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 판매부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 체험부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 푸드트럭 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 먹거리장터 운영자 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 야시장 셀러 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 마켓 참가자 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 크리스마스마켓 참여상인 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        }
+      ]
     },
     {
-      "label": "울산 프리마켓 셀러 모집",
-      "query": "울산 프리마켓 셀러 모집",
-      "where": "blog"
+      "id": "district",
+      "title": "구·군별",
+      "open": false,
+      "items": [
+        {
+          "query": "울산 중구 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 남구 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 동구 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 북구 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울주 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        }
+      ]
     },
     {
-      "label": "울산 푸드트럭 모집",
-      "query": "울산 푸드트럭 모집",
-      "where": "blog"
+      "id": "festival",
+      "title": "축제별",
+      "open": false,
+      "items": [
+        {
+          "query": "울산고래축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산옹기축제 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "쇠부리축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "마두희축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "태화강 봄꽃축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산공업축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산대공원 장미축제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "처용문화제 부스 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        }
+      ]
     },
     {
-      "label": "울산 체험부스 모집",
-      "query": "울산 체험부스 모집",
-      "where": "blog"
+      "id": "apartment",
+      "title": "아파트·주말장터",
+      "open": false,
+      "items": [
+        {
+          "query": "울산 아파트 플리마켓 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 아파트 푸드트럭 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        },
+        {
+          "query": "울산 주말장터 셀러 모집",
+          "targets": [
+            "blog",
+            "cafe"
+          ]
+        }
+      ]
     },
     {
-      "label": "울산 야시장 셀러 모집",
-      "query": "울산 야시장 셀러 모집",
-      "where": "blog"
-    },
-    {
-      "label": "카페 글: 울산 셀러 모집",
-      "query": "울산 셀러 모집",
-      "where": "article"
+      "id": "band",
+      "title": "밴드 찾기",
+      "open": false,
+      "items": [
+        {
+          "query": "울산 플리마켓",
+          "targets": [
+            "band"
+          ]
+        },
+        {
+          "query": "울산 프리마켓",
+          "targets": [
+            "band"
+          ]
+        },
+        {
+          "query": "울산 셀러",
+          "targets": [
+            "band"
+          ]
+        },
+        {
+          "query": "울산 푸드트럭",
+          "targets": [
+            "band"
+          ]
+        }
+      ]
     }
   ],
   "sources": [
@@ -295,5 +506,6 @@
       "naverQuery": "와글와글 어린이날 셀러 모집 울산",
       "note": "2025년 모집 이력 기준, 2026년 모집 여부 미확인"
     }
-  ]
+  ],
+  "searchGroupsNote": "검색 바로가기는 외부 검색 화면(네이버 블로그·카페, 밴드)을 새 창으로 여는 링크일 뿐이며, 이 사이트와 수집기는 검색 결과를 가져오거나 저장하지 않는다. 네이버는 최신순이 기본이고, 화면에서 '최근 1개월'을 고를 수 있다."
 }

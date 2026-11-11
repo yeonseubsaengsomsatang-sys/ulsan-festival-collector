@@ -690,8 +690,37 @@
   .src-due-count { color: var(--status-rejected-fg); font-weight: 700; }
   .src-heading { font-size: 16px; font-weight: 700; margin: 6px 0 6px; }
   .src-help { font-size: 12.5px; color: var(--ink-muted); margin: 0 0 10px; }
-  .src-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-  .src-shortcuts .apply-btn { white-space: normal; }
+  /* 2026-11-12: 검색 바로가기 묶음(접기·펼치기) — 버튼은 손가락으로 누르기 쉽게 높이 44px 이상 */
+  .src-period { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 13px; }
+  .src-period-label { color: var(--ink-muted); }
+  .src-period-btn {
+    font: inherit; font-weight: 700; min-height: 44px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-muted);
+  }
+  .src-period-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .src-groups { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+  .src-group { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+  .src-group > summary {
+    cursor: pointer; list-style: none; padding: 12px 14px; min-height: 44px; box-sizing: border-box;
+    font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px;
+  }
+  .src-group > summary::-webkit-details-marker { display: none; }
+  .src-group > summary::before { content: "▸"; color: var(--ink-muted); transition: transform .15s; }
+  .src-group[open] > summary::before { transform: rotate(90deg); }
+  .src-group-count { font-weight: 400; font-size: 12.5px; color: var(--ink-muted); }
+  .src-query-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; padding: 0 12px 12px;
+  }
+  .src-query { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .src-query-text { font-size: 13.5px; font-weight: 600; word-break: keep-all; }
+  .src-query-btns { display: flex; gap: 6px; }
+  .src-query-btns .apply-btn {
+    flex: 1 1 0; min-height: 44px; display: flex; align-items: center; justify-content: center;
+    font-size: 13.5px; box-sizing: border-box;
+  }
+  @media (max-width: 520px) {
+    .src-query-grid { grid-template-columns: 1fr; padding: 0 10px 10px; }
+  }
   .status-pill.src-due { background: var(--status-rejected-bg); color: var(--status-rejected-fg); }
   .status-pill.src-today { background: var(--status-upcoming-bg); color: var(--status-upcoming-fg); }
   .status-pill.src-checked { background: var(--status-closed-bg); color: var(--status-closed-fg); }
@@ -1785,6 +1814,36 @@
   function naverSearchUrl(query, where) {
     return `https://search.naver.com/search.naver?where=${where === "article" ? "article" : "blog"}&query=${encodeURIComponent(query)}`;
   }
+  // 2026-11-12 신설: 검색 바로가기 묶음 — 외부 검색 화면을 새 창으로 여는 링크만 만든다(결과를 가져오거나 저장하지 않음).
+  // 네이버는 최신순(so:dd)이 기본이고, 기간은 전체(p:all) 또는 최근 1개월(p:1m) 중 화면에서 고른다.
+  const SEARCH_PERIOD_KEY = "festival.searchPeriod";
+  function loadSearchPeriod() {
+    try { return localStorage.getItem(SEARCH_PERIOD_KEY) === "1m" ? "1m" : "all"; } catch { return "all"; }
+  }
+  function saveSearchPeriod(v) {
+    try { localStorage.setItem(SEARCH_PERIOD_KEY, v); } catch { /* 저장 실패해도 화면 동작에는 영향 없음 */ }
+  }
+  function shortcutUrl(query, target, period) {
+    if (target === "band") return `https://www.band.us/search/band?keyword=${encodeURIComponent(query)}`;
+    const where = target === "cafe" ? "article" : "blog";
+    return `https://search.naver.com/search.naver?where=${where}&query=${encodeURIComponent(query)}&sm=tab_opt&nso=so%3Add%2Cp%3A${period === "1m" ? "1m" : "all"}`;
+  }
+  const SHORTCUT_TARGET_LABEL = { blog: "블로그", cafe: "카페", band: "밴드" };
+  function renderSearchGroups(groups, period) {
+    return (groups || []).map(g => `
+      <details class="src-group" ${g.open ? "open" : ""}>
+        <summary>${escapeHtml(g.title)} <span class="src-group-count">${g.items.length}개</span></summary>
+        <div class="src-query-grid">
+          ${g.items.map(it => `
+            <div class="src-query">
+              <div class="src-query-text">${escapeHtml(it.query)}</div>
+              <div class="src-query-btns">
+                ${it.targets.map(t => `<a class="apply-btn src-search-btn" data-query="${escapeHtml(it.query)}" data-target="${t}" href="${escapeHtml(shortcutUrl(it.query, t, period))}" target="_blank" rel="noopener">🔎 ${SHORTCUT_TARGET_LABEL[t] || t}</a>`).join("")}
+              </div>
+            </div>`).join("")}
+        </div>
+      </details>`).join("");
+  }
 
   async function renderManualSources() {
     const main = document.getElementById("main");
@@ -1806,9 +1865,8 @@
     shown.sort((a, b) => (rank[a.status.state] - rank[b.status.state]) || a.src.name.localeCompare(b.src.name, "ko"));
     const dueCount = items.filter(x => x.status.state === "due").length;
 
-    const shortcuts = (data.searchShortcuts || []).map(s =>
-      `<a class="apply-btn" href="${naverSearchUrl(s.query, s.where)}" target="_blank" rel="noopener">🔎 ${escapeHtml(s.label)}</a>`
-    ).join("");
+    const searchPeriod = loadSearchPeriod();
+    const shortcuts = renderSearchGroups(data.searchGroups, searchPeriod);
     const kindOptions = `<option value="all" ${sourcesKindFilter === "all" ? "selected" : ""}>전체</option>` +
       Object.entries(SOURCE_KIND_LABEL).map(([k, v]) => `<option value="${k}" ${k === sourcesKindFilter ? "selected" : ""}>${v}</option>`).join("");
 
@@ -1856,9 +1914,14 @@
         확인 일정은 <b>자동 수집이 아닌 사람의 수동 확인 일정</b>입니다(블로그·카페 매주 월·수·금, 모집 집중 시기에는 매일).
         ${dueCount ? `<br><span class="src-due-count">지금 확인이 필요한 모집처 ${dueCount}곳</span>` : ""}
       </div>
-      <h2 class="src-heading">네이버 검색 바로가기</h2>
-      <p class="src-help">네이버 검색 화면이 새 창으로 열립니다(이 사이트는 검색 결과를 가져오거나 저장하지 않습니다).</p>
-      <div class="src-shortcuts">${shortcuts}</div>
+      <h2 class="src-heading">검색 바로가기</h2>
+      <p class="src-help">네이버(블로그·카페)·밴드 검색 화면이 새 창으로 열립니다. 이 사이트는 검색 결과를 가져오거나 저장하지 않습니다.</p>
+      <div class="src-period" role="group" aria-label="네이버 검색 기간">
+        <span class="src-period-label">네이버 검색: 최신순 ·</span>
+        <button type="button" class="src-period-btn" data-period="all" aria-pressed="${searchPeriod === "all"}">전체 기간</button>
+        <button type="button" class="src-period-btn" data-period="1m" aria-pressed="${searchPeriod === "1m"}">최근 1개월</button>
+      </div>
+      <div class="src-groups">${shortcuts}</div>
       <h2 class="src-heading">모집처 ${items.length}곳</h2>
       <div class="filter-bar">
         <label for="sourcesKindFilter">종류</label>
@@ -1869,6 +1932,13 @@
 
     const sel = document.getElementById("sourcesKindFilter");
     if (sel) sel.addEventListener("change", ev => { sourcesKindFilter = ev.target.value; renderManualSources(); });
+    // 기간 선택은 화면을 다시 그리지 않고 링크 주소만 바꾼다(펼쳐 둔 묶음이 그대로 유지되도록).
+    main.querySelectorAll(".src-period-btn").forEach(btn => btn.addEventListener("click", () => {
+      const period = btn.dataset.period === "1m" ? "1m" : "all";
+      saveSearchPeriod(period);
+      main.querySelectorAll(".src-period-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.period === period)));
+      main.querySelectorAll(".src-search-btn").forEach(a => { a.href = shortcutUrl(a.dataset.query, a.dataset.target, period); });
+    }));
   }
 
   function renderAbout() {

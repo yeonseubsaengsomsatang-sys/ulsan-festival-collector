@@ -245,6 +245,9 @@ const EMINWON_PLAYWRIGHT_BOARDS = [
   { org: "울산광역시 중구청", sourceOrg: "중구청 고시공고(eminwon)", host: "eminwon.junggu.ulsan.kr", city: "중구", query: "?list_gubun=A&not_ancmt_se_code=01,02,04" },
   { org: "울산광역시 동구청", sourceOrg: "동구청 고시공고(eminwon)", host: "eminwon.donggu.ulsan.kr", city: "동구" },
   { org: "울산광역시 남구청", sourceOrg: "남구청 고시공고(eminwon)", host: "eminwon.ulsannamgu.go.kr", city: "남구" },
+  // 2026-11-11 추가(요청사항 — 울산 수집 기관 추가): 울주군만 빠져 있었음. 실측: 다른 구와
+  // 같은 eminwon 화면이며, 기본 목록은 "고시"만 보여 북구·중구처럼 고시+공고 전체 조건을 쓴다.
+  { org: "울산광역시 울주군청", sourceOrg: "울주군청 고시공고(eminwon)", host: "eminwon.ulju.ulsan.kr", city: "울주", query: "?list_gubun=A&not_ancmt_se_code=01,02,04" },
 ].map((b) => ({ ...b, region: "울산", listUrl: `https://${b.host}/emwp/jsp/ofr/OfrNotAncmtLSub.jsp${b.query || ""}` }));
 
 // 2026-10-23 신설: 북구청 산하 행사 주관기관(울산쇠부리축제추진위원회) 공식 공지사항 —
@@ -401,6 +404,40 @@ const ULSAN_FOUNDATION_BOARDS = [0, 1, 2].map((page) => ({
   region: "울산",
   city: null,
   extractor: extractUctfCandidates,
+}));
+
+// 2026-11-11 신설(요청사항 — 울산 수집 기관 추가): 울산시설공단(uic.or.kr) 알림사항 —
+// 울산대공원·어린이테마파크·태화강수상스포츠센터 등 시설 운영기관. 실측: 전체 약 290건 중
+// "푸드트럭(음식판매자동차) 영업자 모집 공고" 2건이 이 게시판에만 올라옴. 목록의 글 링크는
+// CSRF 토큰이 든 POST 폼이지만, 같은 상세 주소를 bbsId·nttId GET으로 열어도 본문이 그대로
+// 나오는 것을 확인해(HTTP 200) 그 GET 주소를 고정 링크로 쓴다. 날짜는 작성자 칸 다음 칸.
+const UIC_ITEM_RE =
+  /name="bbsId" value="(BBSMSTR_\d+)"[\s\S]{0,200}?name="nttId"\s+value="(\d+)"[\s\S]{0,600}?submit\(\);">([^<]+)<\/a>[\s\S]{0,400}?<td class="mobilehidden">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractUicCandidates(html, pageUrl) {
+  const out = [];
+  const re = new RegExp(UIC_ITEM_RE.source, "g");
+  let m;
+  while ((m = re.exec(html))) {
+    const title = cleanTitle(decodeEntities(m[3]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!NEW_SITE_KEYWORD_RE.test(title) || NOISE_RE.test(title)) continue;
+    let absUrl;
+    try {
+      absUrl = new URL(`/uimc/notify/noti01/selectBoardArticle.do?bbsId=${m[1]}&nttId=${m[2]}`, pageUrl).href;
+    } catch {
+      continue;
+    }
+    out.push({ title, url: absUrl, postedDate: m[4] });
+  }
+  return out;
+}
+const ULSAN_FACILITIES_BOARDS = [1, 2].map((page) => ({
+  org: "울산시설공단",
+  sourceOrg: "울산시설공단 알림사항",
+  url: `https://www.uic.or.kr/notify/noti01.do?pageIndex=${page}`,
+  region: "울산",
+  city: null,
+  extractor: extractUicCandidates,
 }));
 
 // ---- 경주시·김해시 확대 (2026-10-15 수동 검증) ----
@@ -3624,6 +3661,11 @@ const JUNGGU_FILE_RE =
 const ULSAN_CITY_FILE_RE =
   /HHBbs\.EncDownFile\('([^']*)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)'\)[^>]*>[\s\S]{0,300}?([^<>]+?\.(?:pdf|hwpx|hwp))\s*(?:\([^)]*\))?\s*<\/a>/gi;
 const MADUHEE_FILE_RE =/href='(download\.php\?db=notice_2013[^']*?&name=([^']+?\.(?:pdf|hwpx|hwp)))'/gi;
+// 2026-11-11 신설: 울산시설공단(uic.or.kr) 첨부파일 — onclick="fn_egov_downFile('암호화ID')" 뒤에
+// 파일명이 오는 형식. 실측: /cmm/fms/FileDownNotice.do?atchFileId=ID 를 GET으로 받으면 원본
+// .hwpx가 그대로 내려옴(HTTP 200). 다른 사이트 동작이 바뀌지 않도록 uic.or.kr에서만 쓴다.
+const UIC_FILE_RE =
+  /fn_egov_downFile\('([^']+)'\)[^>]*>\s*(?:\d+\.\s*)?([^<]{1,200}?\.(?:pdf|hwpx|hwp))/gi;
 const SOEBURI_FILE_RE =
   /<a href="([^"]*act=procFileDownload[^"]*)"[^>]*>\s*(?:\[[^\]]*\]\s*)?([^<]{1,200}?\.(pdf|hwpx|hwp))/gi;
 
@@ -3737,6 +3779,22 @@ function extractAttachmentPdfUrls(html, pageUrl) {
     }
   }
   if (out.length) return out.slice(0, 2);
+
+  let pageHost = "";
+  try {
+    pageHost = new URL(pageUrl).hostname;
+  } catch {
+    /* ignore */
+  }
+  if (/(^|\.)uic\.or\.kr$/.test(pageHost)) {
+    const uicFile = new RegExp(UIC_FILE_RE.source, "gi");
+    while ((m = uicFile.exec(html))) {
+      const kind = attachmentKindOf(m[2]);
+      if (!kind) continue;
+      out.push({ url: `https://www.uic.or.kr/cmm/fms/FileDownNotice.do?atchFileId=${m[1]}`, kind });
+    }
+    if (out.length) return out.slice(0, 2);
+  }
 
   const maduheeFile = new RegExp(MADUHEE_FILE_RE.source, "gi");
   while ((m = maduheeFile.exec(html))) {
@@ -4768,6 +4826,7 @@ async function main() {
     ...JUNGGU_FESTIVAL_BOARDS,
     ...NAMGU_FESTIVAL_BOARDS,
     ...ULSAN_FOUNDATION_BOARDS,
+    ...ULSAN_FACILITIES_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
     ...YEONGJU_GYEONGSAN_BOARDS,
@@ -5432,6 +5491,7 @@ const ALL_BOARDS = [
   ...JUNGGU_FESTIVAL_BOARDS,
   ...NAMGU_FESTIVAL_BOARDS,
   ...ULSAN_FOUNDATION_BOARDS,
+  ...ULSAN_FACILITIES_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,
   ...YEONGJU_GYEONGSAN_BOARDS,
@@ -5450,6 +5510,8 @@ const ALL_BOARDS = [
 ];
 
 module.exports = {
+  extractUicCandidates,
+  ULSAN_FACILITIES_BOARDS,
   ALL_BOARDS,
   buildFleamoaItem,
   extractDocLinks,

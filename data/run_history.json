@@ -221,5 +221,17 @@
     "okOrgs": 3,
     "failedOrgs": [],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-12T08:23:50.594Z",
+    "runId": "local",
+    "event": "local",
+    "retryOf": null,
+    "retryReason": null,
+    "govAllFailed": false,
+    "retryResult": null,
+    "okOrgs": 19,
+    "failedOrgs": [],
+    "newItems": 3
   }
 ]

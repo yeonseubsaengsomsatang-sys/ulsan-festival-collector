@@ -440,6 +440,34 @@ const ULSAN_FACILITIES_BOARDS = [1, 2].map((page) => ({
   extractor: extractUicCandidates,
 }));
 
+// 2026-11-12 신설(요청사항 — 울산 새 모집처 추가): 울산광역시청소년활동진흥센터(yesulsan.kr)
+// 공지사항 — 매년 3월 "울산광역시 청소년활동페스타(울청스타) 체험 부스 운영팀 모집 공고"가
+// 이 게시판에만 올라옴(실측: 2026-03-17 nf_num=418, 2025년 학과부스 공고도 확인). 서버 렌더링
+// HTML이고 글은 한 달 5건 안팎이라 2쪽(30건)이면 충분. 행: <a href="/notify/notice_view.jsp?
+// nf_num=N&crp=1">제목</a> … <td class="date">YYYY-MM-DD</td>. 자원봉사·직무교육 "참가자 모집"
+// 글이 대부분이라 NEW_SITE_KEYWORD_RE로는 잡음이 들어와(실측 2건), 연극협회·일자리진흥원처럼
+// 부스 관련 제목(isBoothRelatedTitle)만 받는다.
+const YESULSAN_ITEM_RE =
+  /<a href="(\/notify\/notice_view\.jsp\?nf_num=\d+)[^"]*">([^<]+)<\/a>[\s\S]{0,300}?<td class="date">(\d{4}-\d{2}-\d{2})<\/td>/g;
+function extractYesulsanCandidates(html, pageUrl) {
+  const out = [];
+  for (const m of html.matchAll(new RegExp(YESULSAN_ITEM_RE.source, "g"))) {
+    const title = cleanTitle(decodeEntities(m[2]).replace(/\s+/g, " ").trim());
+    if (title.length < 4 || title.length > 200) continue;
+    if (!isBoothRelatedTitle(title) || NOISE_RE.test(title)) continue;
+    out.push({ title, url: new URL(m[1], pageUrl).href, postedDate: m[3] });
+  }
+  return out;
+}
+const ULSAN_YOUTH_BOARDS = [1, 2].map((page) => ({
+  org: "울산광역시청소년활동진흥센터",
+  sourceOrg: "울산청소년활동진흥센터 공지사항",
+  url: `https://www.yesulsan.kr/notify/notice.jsp?crp=${page}`,
+  region: "울산",
+  city: null,
+  extractor: extractYesulsanCandidates,
+}));
+
 // ---- 경주시·김해시 확대 (2026-10-15 수동 검증) ----
 // 조사 방법: 각 사이트를 직접 fetch해서 실제 서버 렌더링 HTML에 글 목록이 나오는지
 // 확인하고, 나온 경우에만 등록함(추측 URL 없음). 조사 결과:
@@ -4842,6 +4870,7 @@ async function main() {
     ...NAMGU_FESTIVAL_BOARDS,
     ...ULSAN_FOUNDATION_BOARDS,
     ...ULSAN_FACILITIES_BOARDS,
+    ...ULSAN_YOUTH_BOARDS,
     ...GYEONGJU_GIMHAE_BOARDS,
     ...MIRYANG_BOARDS,
     ...YEONGJU_GYEONGSAN_BOARDS,
@@ -5507,6 +5536,7 @@ const ALL_BOARDS = [
   ...NAMGU_FESTIVAL_BOARDS,
   ...ULSAN_FOUNDATION_BOARDS,
   ...ULSAN_FACILITIES_BOARDS,
+  ...ULSAN_YOUTH_BOARDS,
   ...GYEONGJU_GIMHAE_BOARDS,
   ...MIRYANG_BOARDS,
   ...YEONGJU_GYEONGSAN_BOARDS,
@@ -5527,6 +5557,8 @@ const ALL_BOARDS = [
 module.exports = {
   extractUicCandidates,
   ULSAN_FACILITIES_BOARDS,
+  extractYesulsanCandidates,
+  ULSAN_YOUTH_BOARDS,
   ALL_BOARDS,
   buildFleamoaItem,
   extractDocLinks,

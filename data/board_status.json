@@ -507,7 +507,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-12T08:15:27.434Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "태화강마두희축제추진위원회",
@@ -517,7 +517,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-12T08:15:27.434Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산연극협회",
@@ -527,20 +527,20 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-12T08:15:27.434Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산광역시 중구청",
     "region": "울산",
     "status": "ok",
-    "boards": 13,
-    "okBoards": 13,
+    "boards": 14,
+    "okBoards": 14,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z",
+    "checkedAt": "2026-11-12T08:23:50.568Z",
     "coverage": [
-      "중구청 새소식: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-10",
-      "중구청 보도자료: 6쪽 읽음, 게시일 2026-11-04 ~ 2026-11-11",
+      "중구청 새소식: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-12",
+      "중구청 보도자료: 7쪽 읽음, 게시일 2026-11-05 ~ 2026-11-12",
       "중구청 타기관소식: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-02"
     ]
   },
@@ -552,7 +552,7 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z",
+    "checkedAt": "2026-11-12T08:23:50.568Z",
     "coverage": [
       "동구청 알림사항: 3쪽 읽음, 게시일 2026-10-20 ~ 2026-11-10",
       "동구청 보도자료: 3쪽 읽음, 게시일 2026-10-30 ~ 2026-11-09"
@@ -566,7 +566,7 @@
     "okBoards": 4,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z",
+    "checkedAt": "2026-11-12T08:23:50.568Z",
     "coverage": [
       "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-15 ~ 2026-11-11"
     ]
@@ -579,7 +579,7 @@
     "okBoards": 8,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산광역시청",
@@ -589,7 +589,7 @@
     "okBoards": 5,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z",
+    "checkedAt": "2026-11-12T08:23:50.568Z",
     "coverage": [
       "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-14 ~ 2026-11-09"
     ]
@@ -602,7 +602,7 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z",
+    "checkedAt": "2026-11-12T08:23:50.568Z",
     "coverage": [
       "북구청 알림사항: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-09",
       "북구청 북구공보: 3쪽 읽음, 게시일 2026-09-18 ~ 2026-11-05",
@@ -617,7 +617,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산문화관광재단",
@@ -627,7 +627,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "고래문화재단",
@@ -637,7 +637,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "플리모아",
@@ -647,7 +647,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "트럭공고",
@@ -657,7 +657,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "센트럴 플랫폼",
@@ -667,7 +667,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산대공원 장미축제 준비사무국",
@@ -677,7 +677,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산경제일자리진흥원",
@@ -687,7 +687,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "울산시설공단",
@@ -697,7 +697,17 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-11T18:15:17.059Z"
+    "checkedAt": "2026-11-12T08:23:50.568Z"
+  },
+  {
+    "org": "울산광역시청소년활동진흥센터",
+    "region": "울산",
+    "status": "ok",
+    "boards": 2,
+    "okBoards": 2,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-12T08:23:50.568Z"
   },
   {
     "org": "인천광역시청",

@@ -1206,5 +1206,17 @@
   "http://www.ulsantheatre.or.kr/news_01.html?query=view&table=LimBo&botype=LIS_B01_01&bid=1602": {
     "firstSeen": "2026-11-12T07:44:51.520Z",
     "org": "울산연극협회"
+  },
+  "https://www.junggu.ulsan.kr/board/view.ulsan?boardId=BBS_0000090&menuCd=DOM_000000102003002000&orderBy=TMP_FIELD4%20DESC,REGISTER_DATE%20DESC&paging=ok&startPage=6&dataSid=727640": {
+    "firstSeen": "2026-11-12T08:22:00.102Z",
+    "org": "울산광역시 중구청"
+  },
+  "https://www.junggu.ulsan.kr/board/view.ulsan?boardId=BBS_0000090&menuCd=DOM_000000102003002000&orderBy=TMP_FIELD4%20DESC,REGISTER_DATE%20DESC&paging=ok&startPage=6&dataSid=727639": {
+    "firstSeen": "2026-11-12T08:22:00.635Z",
+    "org": "울산광역시 중구청"
+  },
+  "https://www.uctf.or.kr/board/notice/view/202411323850": {
+    "firstSeen": "2026-11-12T08:22:53.095Z",
+    "org": "울산문화관광재단"
   }
 }

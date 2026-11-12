@@ -8080,8 +8080,9 @@
     "status": "approved",
     "organizerType": "private",
     "noticeType": "recruit",
-    "recruitStatus": "unknown",
-    "memo": "[2026-11-08 원문 확인] 웰컴시티상인회 측 블로그(2026-11-05 작성)에서 상시 참여 셀러 모집 확인. 장소 울산 중구 맨발의 청춘길(웰컴시티 후면), 주말·평일 상시 운영 추진, 11:00~19:00. 모집대상: 핸드메이드·의류·생활용품·먹거리 등 지역 소상공인·플리마켓 셀러. (출처: 플리모아 외부마켓소식 수집 → 원문 네이버 블로그 확인 후 승인. 원문: https://blog.naver.com/jinunjin/224466296032)"
+    "recruitStatus": "open",
+    "memo": "[2026-11-08 원문 확인] 웰컴시티상인회 측 블로그(2026-11-05 작성)에서 상시 참여 셀러 모집 확인. 장소 울산 중구 맨발의 청춘길(웰컴시티 후면), 주말·평일 상시 운영 추진, 11:00~19:00. 모집대상: 핸드메이드·의류·생활용품·먹거리 등 지역 소상공인·플리마켓 셀러. (출처: 플리모아 외부마켓소식 수집 → 원문 네이버 블로그 확인 후 승인. 원문: https://blog.naver.com/jinunjin/224466296032) [2026-11-12 플리모아 재확인: 상시 모집 표기 반영]",
+    "alwaysOpen": true
   },
   {
     "id": "gh-EhktDEVanVetyKOG",
@@ -8094,7 +8095,7 @@
     "originalUrl": "https://cafe.naver.com/kyerongapartment/3235617",
     "postedDate": null,
     "applyStart": null,
-    "applyEnd": null,
+    "applyEnd": "2026-10-21",
     "festivalStart": null,
     "festivalEnd": null,
     "applyLink": "https://cafe.naver.com/kyerongapartment/3235617",
@@ -8117,7 +8118,7 @@
     "organizerType": "private",
     "noticeType": "review",
     "recruitStatus": "closed",
-    "memo": "자동수집(플리모아 외부마켓소식 — 모음 사이트 공고, 원문: 네이버 카페 (울산 부동산 재테크)). 원문을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. 플리모아 표시값: 일시 10/21(토) · 10:00~16:00, 장소 울산 중구 울산중구종합사회복지관, 부스비 운영자 문의, 모집 부스 외부 공고, 선정 심사제. 원문 링크: https://cafe.naver.com/kyerongapartment/3235617"
+    "memo": "자동수집(플리모아 외부마켓소식 — 모음 사이트 공고, 원문: 네이버 카페 (울산 부동산 재테크)). 원문을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. 플리모아 표시값: 일시 10/21(토) · 10:00~16:00, 장소 울산 중구 울산중구종합사회복지관, 부스비 운영자 문의, 모집 부스 외부 공고, 선정 심사제. 원문 링크: https://cafe.naver.com/kyerongapartment/3235617 [2026-11-12 플리모아 재확인: applyEnd]"
   },
   {
     "id": "gh-fbrs5cmEVrvWBqO0",

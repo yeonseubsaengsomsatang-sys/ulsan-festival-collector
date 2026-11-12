@@ -1540,10 +1540,22 @@
     const okCount = boardStatusCache.length - failed.length;
     const latest = boardStatusCache.reduce((max, o) => (o.checkedAt || "") > max ? o.checkedAt : max, "");
     const summary = `전국 ${boardStatusCache.length}개 기관 중 수집 정상 ${okCount}개${failed.length > 0 ? `, 실패 ${failed.length}개` : ""} (${(latest || "").slice(0, 10) || "-"} 기준)`;
+    // 2026-11-12: 어디서 수집한 결과인지(collectedBy: "github" 서버 / "local" 사용자 PC) — PC 테스트 결과가
+    // 서버 결과처럼 보이던 문제 대응. 이 필드가 생기기 전 기록은 "기록 없음"으로 따로 센다(추측하지 않음).
+    const byRunner = { github: [], local: [], none: [] };
+    boardStatusCache.forEach(o => (byRunner[o.collectedBy] || byRunner.none).push(o));
+    const lastAt = list => list.reduce((max, o) => (o.checkedAt || "") > max ? o.checkedAt : max, "");
+    const fmtAt = iso => iso ? new Date(iso).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+    const runnerParts = [
+      byRunner.github.length ? `GitHub 서버 ${byRunner.github.length}개(마지막 ${fmtAt(lastAt(byRunner.github))})` : "",
+      byRunner.local.length ? `PC 보조수집 ${byRunner.local.length}개(마지막 ${fmtAt(lastAt(byRunner.local))})` : "",
+      byRunner.none.length ? `수집 위치 기록 없음 ${byRunner.none.length}개(이전 실행)` : ""
+    ].filter(Boolean).join(" · ");
+    const runnerLabel = o => o.collectedBy === "github" ? " [서버]" : o.collectedBy === "local" ? " [PC]" : "";
     const failedListHtml = failed.length > 0
-      ? `<ul style="margin:6px 0 0; padding-left:18px;">${failed.map(o => `<li>${escapeHtml(o.region || "")} ${escapeHtml(o.org || "")}${o.lastError ? ` — ${escapeHtml(o.lastError)}` : ""}</li>`).join("")}</ul>`
+      ? `<ul style="margin:6px 0 0; padding-left:18px;">${failed.map(o => `<li>${escapeHtml(o.region || "")} ${escapeHtml(o.org || "")}${runnerLabel(o)}${o.lastError ? ` — ${escapeHtml(o.lastError)}` : ""}</li>`).join("")}</ul>`
       : "";
-    return `<div class="page-sub" style="opacity:0.8;">${summary}</div>${failedListHtml}`;
+    return `<div class="page-sub" style="opacity:0.8;">${summary}</div><div class="page-sub" style="opacity:0.7; font-size:0.9em;">${runnerParts}</div>${failedListHtml}`;
   }
 
   // 2026-10-22 수정: "제외"(auto)와 "수정/삭제"(manual) 버튼은 관리자 전용 조작이다.

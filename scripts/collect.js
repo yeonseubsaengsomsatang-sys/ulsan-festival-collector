@@ -4565,13 +4565,19 @@ function extractCandidates(html, pageUrl) {
 // 보드까지 포함해 seen.json 전체 기준으로 범위를 넓혔다.
 // 2026-10-22: main() 바깥 모듈 스코프로 옮겨 module.exports로 테스트 가능하게 함
 // (동작은 그대로, require()해서 단독으로 검증할 수 있게 하기 위함).
+// 2026-11-12 수정(점검에서 발견 — 같은 글이 매일 새로 추가됨): 중구청 보도자료 링크는 글
+// 번호가 dataSid이고 쪽 번호(startPage)가 같이 붙어, 글이 다음 쪽으로 밀릴 때마다 키가
+// 바뀌었다(구교마을 문화축제 4건 등). 같은 이유로 경로의 ;jsessionid=…(보성군 6건)와 네이버
+// 블로그 RSS 링크의 fromRss 파라미터도 키에서 뺀다.
 function canonicalDedupKey(urlStr) {
   try {
     const u = new URL(urlStr);
-    const idParam = ["idx", "parm_bod_uid", "nttId", "bIdx", "article_seq", "dataId"]
+    const pathname = u.pathname.replace(/;jsessionid=[^/]*/i, "");
+    const idParam = ["idx", "parm_bod_uid", "nttId", "bIdx", "article_seq", "dataId", "dataSid"]
       .map((k) => u.searchParams.get(k))
       .find((v) => v);
-    return idParam ? `${u.origin}${u.pathname}|${idParam}` : `${u.origin}${u.pathname}${u.search}`;
+    u.searchParams.delete("fromRss");
+    return idParam ? `${u.origin}${pathname}|${idParam}` : `${u.origin}${pathname}${u.search}`;
   } catch {
     return urlStr;
   }
@@ -5393,6 +5399,8 @@ async function main() {
       // 2026-11-08: 실패 원인 분류(접속 시간 초과 / 접근 차단(403) / 주소 없음(404) / 연결 끊김 / 인증서 / DNS / 기타)
       ...(o.okBoards > 0 ? {} : { failureType: classifyFailure(o.lastError) }),
       checkedAt: new Date().toISOString(),
+      // 2026-11-12: 어디서 수집했는지 — PC 테스트 결과가 GitHub 서버 결과처럼 보이던 문제(점검에서 발견) 대응.
+      collectedBy: ON_GITHUB_ACTIONS ? "github" : "local",
       // 2026-11-08: 날짜 기준 쪽 넘김 게시판의 실제 수집 범위(게시판별 "N쪽 읽음, 게시일 A ~ B").
       ...(o.coverage ? { coverage: o.coverage } : {}),
     });

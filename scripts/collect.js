@@ -4600,7 +4600,17 @@ const BUKGU_ONLY = process.env.COLLECT_SCOPE === "bukgu";
 // 2026-11-03 신설(요청사항): COLLECT_SCOPE=ulsan — 울산 게시판(region "울산")만 수집.
 // 매일 자동 실행(cron)의 기본 범위. 다른 지역의 기존 데이터·기관 상태는 그대로 보존.
 const ULSAN_ONLY = process.env.COLLECT_SCOPE === "ulsan";
+// 2026-11-12 신설(요청사항 — 울산 실패 3곳 복구): 아래 기관들은 해외 IP(GitHub Actions)를
+// 호스팅사 방화벽에서 막아 등록 후 한 번도 Actions 수집에 성공한 적이 없음(로컬 한국 IP에서는
+// 200 정상 — 2026-11-12 실측). 그래서 사용자 PC에서 COLLECT_SCOPE=kr-local로 이 기관들만
+// 따로 수집해 push하고(scripts/collect-kr-local.ps1), Actions에서는 아예 건너뛰어 PC가 기록한
+// 마지막 상태를 "실패"로 덮어쓰지 않게 한다.
+const KR_IP_ONLY_ORGS = new Set(["울산쇠부리축제추진위원회", "태화강마두희축제추진위원회", "울산연극협회"]);
+const KR_LOCAL_ONLY = process.env.COLLECT_SCOPE === "kr-local";
+const ON_GITHUB_ACTIONS = process.env.GITHUB_ACTIONS === "true";
 function inScope(board) {
+  if (KR_LOCAL_ONLY) return KR_IP_ONLY_ORGS.has(board.org);
+  if (ON_GITHUB_ACTIONS && KR_IP_ONLY_ORGS.has(board.org)) return false;
   if (BUKGU_ONLY) return isBukguRelatedBoard(board);
   if (ULSAN_ONLY) return (board.region || "울산") === "울산";
   return true;
@@ -4615,6 +4625,11 @@ async function main() {
   }
   if (ULSAN_ONLY) {
     console.log("=== COLLECT_SCOPE=ulsan — 울산 게시판만 수집합니다 ===\n");
+  }
+  if (KR_LOCAL_ONLY) {
+    console.log(`=== COLLECT_SCOPE=kr-local — 해외 IP 차단 기관(${[...KR_IP_ONLY_ORGS].join(", ")})만 수집합니다 ===\n`);
+  } else if (ON_GITHUB_ACTIONS) {
+    console.log(`(해외 IP 차단 기관 ${KR_IP_ONLY_ORGS.size}곳은 Actions에서 건너뜀 — 사용자 PC의 kr-local 수집이 담당)\n`);
   }
 
   const seen = fs.existsSync(SEEN_PATH) ? JSON.parse(fs.readFileSync(SEEN_PATH, "utf8")) : {};
@@ -5323,7 +5338,7 @@ async function main() {
     // 2026-11-03 수정(요청사항 — 기존 데이터 삭제 금지): 부분 범위(ulsan/bukgu) 실행에서는
     // 45일 정리를 하지 않고, 전체 실행에서도 사람이 승인한(approved) 항목은 지우지 않는다.
     [...existingCollected, ...newItems].filter(
-      (i) => ULSAN_ONLY || BUKGU_ONLY || i.status === "approved" || new Date(i.collectedAt).getTime() >= cutoff
+      (i) => ULSAN_ONLY || BUKGU_ONLY || KR_LOCAL_ONLY || i.status === "approved" || new Date(i.collectedAt).getTime() >= cutoff
     )
   );
 

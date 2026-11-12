@@ -230,39 +230,6 @@
     "checkedAt": "2026-10-24T05:57:56.587Z"
   },
   {
-    "org": "울산쇠부리축제추진위원회",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 2,
-    "okBoards": 0,
-    "failedBoards": 2,
-    "lastError": "HTTP 404 [수집 불가: GitHub Actions IP가 호스팅사 방화벽에 차단된 것으로 추정(로컬에서는 정상 접속됨). 대체 경로 없음 확인(2026-10-24) — RSS는 사이트에서 공식적으로 잠가둠, 공개 API·안정적인 대체 공식 게시판 없음.]",
-    "failureType": "주소 없음(HTTP 404)",
-    "checkedAt": "2026-11-11T18:15:17.059Z"
-  },
-  {
-    "org": "태화강마두희축제추진위원회",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 2,
-    "okBoards": 0,
-    "failedBoards": 2,
-    "lastError": "HTTP 403",
-    "failureType": "접근 차단(HTTP 403)",
-    "checkedAt": "2026-11-11T18:15:17.059Z"
-  },
-  {
-    "org": "울산연극협회",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 1,
-    "okBoards": 0,
-    "failedBoards": 1,
-    "lastError": "HTTP 403",
-    "failureType": "접근 차단(HTTP 403)",
-    "checkedAt": "2026-11-11T18:15:17.059Z"
-  },
-  {
     "org": "전라남도 목포시청",
     "region": "전남",
     "status": "fetch_failed",
@@ -531,6 +498,36 @@
     "failedBoards": 0,
     "lastError": null,
     "checkedAt": "2026-10-24T05:57:56.587Z"
+  },
+  {
+    "org": "울산쇠부리축제추진위원회",
+    "region": "울산",
+    "status": "ok",
+    "boards": 2,
+    "okBoards": 2,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-12T07:44:51.524Z"
+  },
+  {
+    "org": "태화강마두희축제추진위원회",
+    "region": "울산",
+    "status": "ok",
+    "boards": 2,
+    "okBoards": 2,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-12T07:44:51.524Z"
+  },
+  {
+    "org": "울산연극협회",
+    "region": "울산",
+    "status": "ok",
+    "boards": 1,
+    "okBoards": 1,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-12T07:44:51.524Z"
   },
   {
     "org": "울산광역시 중구청",

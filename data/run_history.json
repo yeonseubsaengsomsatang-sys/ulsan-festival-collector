@@ -197,5 +197,17 @@
       }
     ],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-12T07:44:51.569Z",
+    "runId": "local",
+    "event": "local",
+    "retryOf": null,
+    "retryReason": null,
+    "govAllFailed": false,
+    "retryResult": null,
+    "okOrgs": 3,
+    "failedOrgs": [],
+    "newItems": 17
   }
 ]

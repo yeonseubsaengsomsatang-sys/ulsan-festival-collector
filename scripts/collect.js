@@ -2890,9 +2890,54 @@ function parseFleamoaDates(text, todayIso) {
   const iso = (d) => (d ? d.toISOString().slice(0, 10) : null);
   return { festivalStart: iso(start), festivalEnd: iso(end) };
 }
+// 2026-11-12: 플리모아 화면에는 모집기간 칸이 없다(실측 — 일시·장소·부스비·규격·모집 부스·선정 방식뿐).
+// 화면에 실제로 적힌 두 가지만 모집 상태로 쓴다:
+//   - 마감: "마감" 탭 / 부제의 "모집 마감" / "이 공고는 M월 D일에 모집이 끝났어요."(→ applyEnd)
+//   - 상시: 일시 칸의 "상시"(실측 "주말 및 평일 상시 · 11:00~19:00") → recruitStatus "open", alwaysOpen
+// 마감일은 지난 날짜이므로 오늘 이후로 계산되면 작년으로 본다.
+function parseFleamoaRecruitState(m, todayIso) {
+  const f = m.fields || {};
+  const notice = (m.closedNotice || "").match(/(\d{1,2})월\s*(\d{1,2})일에\s*모집이\s*끝났/);
+  if (notice || m.tab === "마감" || /모집\s*마감/.test(m.subtitle || "")) {
+    let end = null;
+    if (notice) {
+      const today = parseKoDate(todayIso);
+      end = parseKoMonthDay(notice[1], notice[2], today.getUTCFullYear());
+      if (end && end > today) end = parseKoMonthDay(notice[1], notice[2], today.getUTCFullYear() - 1);
+    }
+    return { recruitStatus: "closed", applyEnd: end ? end.toISOString().slice(0, 10) : null, alwaysOpen: false };
+  }
+  if (/상시/.test(f["일시"] || "")) return { recruitStatus: "open", applyEnd: null, alwaysOpen: true };
+  return { recruitStatus: "unknown", applyEnd: null, alwaysOpen: false };
+}
+// 이미 수집된 플리모아 항목을 다시 읽은 화면 값으로 갱신 — 빈 칸만 채우고 마감/상시 상태만 반영한다.
+// 사람이 정한 값(status·noticeType·이름)은 건드리지 않고, 마감된 항목을 다시 열지 않는다.
+function refreshFleamoaItem(existing, fresh) {
+  const changes = [];
+  if (fresh.recruitStatus === "closed" && existing.recruitStatus !== "closed") {
+    existing.recruitStatus = "closed";
+    existing.alwaysOpen = false;
+    changes.push("모집 마감 반영");
+  } else if (fresh.recruitStatus === "open" && fresh.alwaysOpen && existing.recruitStatus === "unknown") {
+    existing.recruitStatus = "open";
+    existing.alwaysOpen = true;
+    changes.push("상시 모집 표기 반영");
+  }
+  for (const k of ["applyEnd", "festivalStart", "festivalEnd", "venue", "fee", "facilities", "originalUrl", "city"]) {
+    if (existing[k] == null && fresh[k] != null) {
+      existing[k] = fresh[k];
+      changes.push(k);
+    }
+  }
+  if (changes.length) {
+    existing.memo = `${existing.memo || ""} [${fresh.collectedAt.slice(0, 10)} 플리모아 재확인: ${changes.join(", ")}]`.trim();
+  }
+  return changes;
+}
 function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
   const title = cleanTitle((m.title || m.listText || "").replace(/\s+/g, " ").trim());
   const f = m.fields || {};
+  const state = parseFleamoaRecruitState(m, nowIso.slice(0, 10));
   const cityRaw = ((m.subtitle || m.listText || "").match(/울산\s+(\S+?)(?:\s|·|$)/) || [])[1] || null;
   const city = cityRaw ? cityRaw.replace(/^울주군$/, "울주") : null;
   const dates = parseFleamoaDates(f["일시"] || m.subtitle, nowIso.slice(0, 10));
@@ -2915,7 +2960,7 @@ function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
     originalUrl: m.originalUrl || null,
     postedDate: null,
     applyStart: null,
-    applyEnd: null,
+    applyEnd: state.applyEnd,
     festivalStart: dates.festivalStart,
     festivalEnd: dates.festivalEnd,
     applyLink: m.originalUrl || m.url,
@@ -2937,7 +2982,8 @@ function buildFleamoaItem(m, nowIso = new Date().toISOString()) {
     status: "pending",
     organizerType: "private", // 홈페이지 isOfficial() 기준값(민간). 모음 사이트 구분은 sourceCategory로.
     noticeType: "review",
-    recruitStatus: m.tab === "마감" ? "closed" : "unknown",
+    recruitStatus: state.recruitStatus,
+    ...(state.alwaysOpen ? { alwaysOpen: true } : {}),
     memo:
       `자동수집(플리모아 외부마켓소식 — 모음 사이트 공고, 원문${m.src ? `: ${m.src}` : ""}). ` +
       `원문을 사람이 확인하기 전이라 자동 승인하지 않고 관리자 검토 대기로 둠. ` +
@@ -5122,8 +5168,20 @@ async function main() {
       const markets = await fetchFleamoaUlsanMarkets();
       let added = 0;
       let dup = 0;
+      let refreshed = 0;
       for (const m of markets) {
-        if (seen[m.url]) continue;
+        if (seen[m.url]) {
+          // 2026-11-12: 이미 수집한 공고도 다시 읽은 화면으로 마감·상시·빈 칸을 갱신(전에는 첫 수집 값에 고정됨)
+          const prev = existingCollected.find((i) => i.sourceUrl === m.url);
+          if (prev) {
+            const changes = refreshFleamoaItem(prev, buildFleamoaItem(m));
+            if (changes.length) {
+              refreshed++;
+              console.log(`  [갱신] 플리모아 "${prev.name}": ${changes.join(", ")}`);
+            }
+          }
+          continue;
+        }
         const item = buildFleamoaItem(m);
         seen[m.url] = { firstSeen: new Date().toISOString(), org: FLEAMOA_BOARD.org };
         const d = findCrossSourceDuplicate(item, [...existingCollected, ...newItems]);
@@ -5135,7 +5193,7 @@ async function main() {
         newItems.push(item);
         added++;
       }
-      perBoardCounts.push(`${FLEAMOA_BOARD.sourceOrg}: 울산 ${markets.length}건 (헤드리스 브라우저) → 신규 ${added}건, 타사이트 중복 ${dup}건`);
+      perBoardCounts.push(`${FLEAMOA_BOARD.sourceOrg}: 울산 ${markets.length}건 (헤드리스 브라우저) → 신규 ${added}건, 기존 갱신 ${refreshed}건, 타사이트 중복 ${dup}건`);
       recordBoardResult(FLEAMOA_BOARD, true);
     } catch (err) {
       perBoardCounts.push(`${FLEAMOA_BOARD.sourceOrg}: FETCH FAILED (헤드리스 브라우저) — ${describeFetchError(err)}`);
@@ -5637,6 +5695,8 @@ module.exports = {
   buildUcentralItem,
   findCrossSourceDuplicate,
   parseFleamoaDates,
+  parseFleamoaRecruitState,
+  refreshFleamoaItem,
   extractCandidates,
   extractPostCandidates,
   NEW_SITE_KEYWORD_RE,

@@ -148,7 +148,9 @@ async function fetchFleamoaUlsanMarkets() {
         const subtitle = lines.find((l) => /^울산\s/.test(l) && l.includes("·")) || "";
         const src = (lines.find((l) => /^출처:/.test(l)) || "").replace(/^출처:\s*/, "").replace(/\s*·.*$/, "");
         const originalUrl = [...document.querySelectorAll("a")].filter((a) => /원문/.test(a.innerText)).map((a) => a.href)[0] || null;
-        return { title, fields, intro, subtitle, src, originalUrl };
+        // 2026-11-12: 마감 안내 문구(실측 "이 공고는 10월 21일에 모집이 끝났어요.")
+        const closedNotice = lines.find((l) => /모집이 끝났어요/.test(l)) || "";
+        return { title, fields, intro, subtitle, src, originalUrl, closedNotice };
       }, FLEAMOA_FIELD_LABELS);
       out.push({ url: card.href, tab: card.tab, listText: card.text, ...d });
     }

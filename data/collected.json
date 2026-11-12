@@ -4958,9 +4958,10 @@
     "collectedAt": "2026-11-03T06:06:59.889Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 결과·선정 공고(으)로 재분류]",
+    "titleRefined": "제목상 결과·선정 공고(으)로 재분류"
   },
   {
     "id": "gh-AWcRxuqhjJpaGxtc",
@@ -4992,9 +4993,10 @@
     "collectedAt": "2026-11-03T06:06:59.976Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-txLPN3kGT1eMUUCL",
@@ -5026,9 +5028,10 @@
     "collectedAt": "2026-11-03T06:07:00.066Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-3Kq2KlpEhJjoZTm9",
@@ -5128,9 +5131,10 @@
     "collectedAt": "2026-11-03T06:07:00.438Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-DF1NecU3C_pmqsgI",
@@ -5196,9 +5200,10 @@
     "collectedAt": "2026-11-03T06:07:00.676Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-WOVs2bXOfgVTBH7n",
@@ -5298,9 +5303,10 @@
     "collectedAt": "2026-11-03T06:07:01.045Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-Vi9XiZlzBynwlNP4",
@@ -5502,9 +5508,10 @@
     "collectedAt": "2026-11-03T07:45:02.261Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 북구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산광역시 북구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-VINvrkPD7WXAOe33",
@@ -5536,9 +5543,10 @@
     "collectedAt": "2026-11-03T07:45:07.394Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 북구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산광역시 북구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-sSa_zNPS53Ve2cV8",
@@ -5672,9 +5680,10 @@
     "collectedAt": "2026-11-05T12:58:32.607Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-pIGZ4RQB3xfwCBZH",
@@ -5740,9 +5749,10 @@
     "collectedAt": "2026-11-08T06:08:52.900Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 결과·선정 공고(으)로 재분류]",
+    "titleRefined": "제목상 결과·선정 공고(으)로 재분류"
   },
   {
     "id": "gh-bfIARwPZ50CxNTqf",
@@ -5774,9 +5784,10 @@
     "collectedAt": "2026-11-08T06:08:53.195Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 결과·선정 공고(으)로 재분류]",
+    "titleRefined": "제목상 결과·선정 공고(으)로 재분류"
   },
   {
     "id": "gh-vPtqqV9sddwBZ4X1",
@@ -5808,9 +5819,10 @@
     "collectedAt": "2026-11-08T06:08:53.430Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-1iqsxD1rofCsZkVn",
@@ -5910,9 +5922,10 @@
     "collectedAt": "2026-11-08T06:08:55.074Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-wKu1vMpk_sbpZKNe",
@@ -6080,9 +6093,10 @@
     "collectedAt": "2026-11-08T06:08:56.151Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-2Itm6JCeSV-pyTkF",
@@ -6148,9 +6162,10 @@
     "collectedAt": "2026-11-08T06:08:57.481Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-sgCcWy_08KX1XYPf",
@@ -6522,9 +6537,10 @@
     "collectedAt": "2026-11-08T06:09:00.504Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요."
+    "memo": "로컬 수집(2026-11-08, 태화강마두희축제추진위원회 — 검증된 공식 URL; GitHub Actions 접속이 HTTP 403으로 차단돼 이 PC에서 수집함). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-frznky1C7B188TWH",
@@ -6995,7 +7011,7 @@
     "applyLink": "https://www.ulsanwhale.com/menu_03/03.jsp?prc=view&n=166",
     "venue": "장생포 고래문화특구 고래생태체험관 앞",
     "boothCount": "12개 부스 ※ 행사장 상황에 따라 변동 될 수 있음",
-    "fee": null,
+    "fee": "무료",
     "facilities": null,
     "applyMethod": null,
     "boothType": "플리마켓",
@@ -7990,9 +8006,10 @@
     "collectedAt": "2026-11-08T06:41:16.604Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
-    "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 고래문화재단 — 검증된 공식 URL). 제목은 일반 모집으로 보이지만 첨부 공고문에 부스 관련 표현이 있어 사람 확인 필요."
+    "noticeType": "general",
+    "recruitStatus": "closed",
+    "memo": "자동수집(GitHub Actions, 고래문화재단 — 검증된 공식 URL). 제목은 일반 모집으로 보이지만 첨부 공고문에 부스 관련 표현이 있어 사람 확인 필요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-RA-GdvQiJ0CWLmMi",
@@ -8478,9 +8495,10 @@
     "collectedAt": "2026-11-09T13:41:18.986Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-5Eeo-ZfdoCNwZF5z",
@@ -8512,10 +8530,11 @@
     "collectedAt": "2026-11-10T13:18:21.881Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.",
-    "duplicateOf": "gh-1I5WogRc8zx8yeF9"
+    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "duplicateOf": "gh-1I5WogRc8zx8yeF9",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-4Maq6P1gxKFSY5SU",
@@ -8547,10 +8566,11 @@
     "collectedAt": "2026-11-11T12:50:20.632Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.",
-    "duplicateOf": "gh-1I5WogRc8zx8yeF9"
+    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "duplicateOf": "gh-1I5WogRc8zx8yeF9",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-vo7O0GbPxJjTygjr",
@@ -8582,10 +8602,11 @@
     "collectedAt": "2026-11-12T08:22:01.197Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요.",
-    "duplicateOf": "gh-1I5WogRc8zx8yeF9"
+    "memo": "자동수집(GitHub Actions, 울산광역시 중구청). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "duplicateOf": "gh-1I5WogRc8zx8yeF9",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-E_ss4ohFzixf_wxf",
@@ -8651,9 +8672,10 @@
     "collectedAt": "2026-11-12T07:44:46.662Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-NSMbXZtVQOZQG8_8",
@@ -8719,9 +8741,10 @@
     "collectedAt": "2026-11-12T07:44:46.811Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 결과·선정 공고(으)로 재분류]",
+    "titleRefined": "제목상 결과·선정 공고(으)로 재분류"
   },
   {
     "id": "gh-DAFVs6dgK6ODlcQm",
@@ -8753,9 +8776,10 @@
     "collectedAt": "2026-11-12T07:44:47.073Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-BD6pN1Y27Lf5w7-H",
@@ -8787,9 +8811,10 @@
     "collectedAt": "2026-11-12T07:44:48.205Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-EYDvlQHca-1Utsj9",
@@ -8821,9 +8846,10 @@
     "collectedAt": "2026-11-12T07:44:48.497Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-R-BQuKH4b9QD3DCn",
@@ -8889,9 +8915,10 @@
     "collectedAt": "2026-11-12T07:44:48.652Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-2v4KxITZ802ef6KD",
@@ -8957,9 +8984,10 @@
     "collectedAt": "2026-11-12T07:44:49.007Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
-    "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함."
+    "noticeType": "general",
+    "recruitStatus": "closed",
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. 첨부 PDF·HWPX·HWP 공고문에서 세부정보를 추가로 확인함. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-1zFw1utCwiHMlFsp",
@@ -8991,9 +9019,10 @@
     "collectedAt": "2026-11-12T07:44:49.103Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-q_haq8bC73W2YM7w",
@@ -9025,9 +9054,10 @@
     "collectedAt": "2026-11-12T07:44:49.188Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목만으로는 모집공고 여부가 불분명하지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 행사 소식(으)로 재분류]",
+    "titleRefined": "제목상 행사 소식(으)로 재분류"
   },
   {
     "id": "gh-H4fDNRqCKVC_MHdP",
@@ -9127,9 +9157,10 @@
     "collectedAt": "2026-11-12T07:44:49.432Z",
     "status": "pending",
     "organizerType": "official",
-    "noticeType": "review",
+    "noticeType": "general",
     "recruitStatus": "unknown",
-    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요."
+    "memo": "자동수집(GitHub Actions, 울산쇠부리축제추진위원회 — 검증된 공식 URL). 제목은 일반 참가자·프로그램 모집으로 보이지만 본문에 부스 관련 표현이 있어 사람 확인 필요. 모집기간을 확인하지 못함 — 원문을 직접 확인하세요. [제목상 인력·용역·공연 모집(으)로 재분류]",
+    "titleRefined": "제목상 인력·용역·공연 모집(으)로 재분류"
   },
   {
     "id": "gh-3YpoTJXFoUGliMSy",

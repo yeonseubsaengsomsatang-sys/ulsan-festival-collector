@@ -2568,9 +2568,18 @@ function extractBoothCount(text) {
   const m = text.match(BOOTH_COUNT_RE);
   return m ? cleanValue(m[1]) : null;
 }
+// 2026-11-12 보강(점검에서 발견 — 울산 부스 모집 17건 중 15건 참가비 비어 있음): "입점료 : 무료"(고래축제
+// 플리마켓 실측), "출점비", "부스비 :", "참가비 무료"처럼 라벨이 다르거나 콜론 없이 금액·무료가 바로
+// 붙는 표현을 추가로 잡는다. "부스 사용료, 가스 사용료 …"(치맥페스티벌 — 부담 항목 나열)처럼 라벨만
+// 있고 값이 없는 문장은 잡지 않도록, 콜론 없는 경우엔 값이 무료/없음/금액일 때만 인정한다.
+// 플리모아처럼 값 자리에 "-"만 있으면 미확인(null)으로 둔다.
+const FEE_LABEL_SRC = "참\\s*가\\s*비(?:\\s*용)?|입\\s*점\\s*(?:비|료)|출\\s*점\\s*(?:비|료)|부\\s*스\\s*(?:비|사\\s*용\\s*료|이\\s*용\\s*료)|참\\s*여\\s*비";
+const FEE_LABELED_RE = new RegExp(`(?:${FEE_LABEL_SRC})\\s*(?:[:：]|\\))\\s*([^\\n]{1,40})`);
+const FEE_BARE_RE = new RegExp(`(?:${FEE_LABEL_SRC})\\s+((?:무\\s*료|없\\s*음|\\d[\\d,]*\\s*(?:만\\s*)?원)[^\\n]{0,30})`);
 function extractFee(text) {
-  const m = text.match(FEE_RE);
-  return m ? cleanValue(m[1]) : null;
+  const m = text.match(FEE_RE) || text.match(FEE_LABELED_RE) || text.match(FEE_BARE_RE);
+  const v = m ? cleanValue(m[1]) : null;
+  return v && /[0-9가-힣]/.test(v) ? v : null;
 }
 function extractApplyMethod(text) {
   const m = text.match(APPLY_METHOD_RE);
@@ -2732,6 +2741,39 @@ function classifyNotice(title, bodyText) {
     noticeType: "general",
     boothType: null,
     reason: "제목상 모집공고가 아니라 일반 축제 개최/소식으로 분류됨.",
+  };
+}
+
+// 2026-11-12 신설(점검에서 발견 — 날짜 없는 "확인 필요" 37건): 수집 경로마다(본문의 "부스" 언급, 첨부 검토,
+// 예전 규칙으로 저장된 항목 등) 분류가 들쭉날쭉해 결과 공고·행사 소식·인력 모집·지난해 공고가 "확인 필요"로
+// 남아 있었다. 저장 직전에 모든 항목(신규·기존)에 제목 기준 재분류를 한 번 더 적용한다. 원칙:
+//   - 등급을 내리기만 한다(recruit/review → general, 또는 recruitStatus → closed). 올리지 않는다.
+//   - 사람이 승인한 항목(status "approved")은 건드리지 않는다.
+//   - 제목에 부스·판매 표현이 있으면(실제 부스일 수 있음) 행사 소식·인력 규칙은 적용하지 않는다.
+//   - 이미 적용된 항목은 다시 바꾸지 않는다(titleRefined 표시 — 매 실행 결과가 같게).
+const TITLE_EVENT_NEWS_RE = /(개최|임시\s*주차장|주차\s*안내|셔틀\s*버스|교통\s*통제|행사\s*안내|축제\s*안내)/;
+const TITLE_STAFF_SERVICE_RE =
+  /(채용|행정\s*인력|기간제|사무국장|운영\s*대행|용역|입찰|제안서|슬로건|운영\s*PD|운영자\s*\(관리자\)|공연\s*(?:단체|팀)|콘서트|가요제|진행\s*요원|자원\s*봉사|봉사\s*관리|댄스|퍼레이드|예술인\s*참가자|경연|공모(?:전)?$|공모\s*안내)/;
+function refineNoticeByTitle(item, todayIso = new Date().toISOString()) {
+  if (item.status === "approved" || item.titleRefined) return item;
+  const title = item.name || "";
+  if (item.noticeType !== "recruit" && item.noticeType !== "review") return item;
+  const boothInTitle = BOOTH_KEYWORD_RE.test(title) || BOOTH_CANDIDATE_TITLE_RE.test(title);
+  let rule = null;
+  if (RESULT_TITLE_RE.test(title) || /평가\s*결과|본선\s*결과|진출\s*결과/.test(title)) rule = "결과·선정 공고";
+  else if (!boothInTitle && !RECRUIT_TITLE_RE.test(title) && TITLE_EVENT_NEWS_RE.test(title)) rule = "행사 소식";
+  else if (!boothInTitle && TITLE_STAFF_SERVICE_RE.test(title)) rule = "인력·용역·공연 모집";
+  const years = (title.match(/20\d{2}/g) || []).map(Number);
+  const thisYear = Number(todayIso.slice(0, 4));
+  const pastYearOnly = years.length > 0 && Math.max(...years) < thisYear;
+  if (!rule && !pastYearOnly) return item;
+  const note = rule ? `제목상 ${rule}(으)로 재분류` : `제목의 연도(${Math.max(...years)})가 지나 마감으로 처리`;
+  return {
+    ...item,
+    ...(rule ? { noticeType: "general" } : {}),
+    ...(pastYearOnly ? { recruitStatus: "closed" } : {}),
+    titleRefined: note,
+    memo: `${item.memo || ""} [${note}]`.trim(),
   };
 }
 
@@ -3948,15 +3990,21 @@ function hwpxXmlToText(xml) {
     .replace(/&gt;/g, ">")
     .trim();
 }
+// 2026-11-12 수정(점검에서 발견): 한글 공고문은 사진을 넣으면 수십 MB가 된다(청소년활동페스타 공고문
+// 57MB 실측) — 15MB 제한에 걸려 자격·기간·참가비를 못 읽었다. HWP/HWPX는 문서 안의 텍스트 레코드만
+// 꺼내므로 크기가 커도 파싱 부담이 작아 80MB까지 허용하고, 내려받는 시간을 감안해 제한 시간도 늘린다.
+// PDF(fetchPdfText)는 파싱 비용이 커서 기존 15MB 제한을 그대로 둔다.
+const HWP_MAX_BYTES = 80 * 1024 * 1024;
+const HWP_FETCH_TIMEOUT_MS = 60000;
 async function fetchHwpxText(url) {
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": BROWSER_UA },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      signal: AbortSignal.timeout(HWP_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 15 * 1024 * 1024) return null;
+    if (buf.length > HWP_MAX_BYTES) return null;
     const entries = readZipCentralDirectory(buf)
       .filter((e) => /Contents\/section\d+\.xml/i.test(e.name))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -4200,10 +4248,10 @@ async function fetchHwpText(url, { referer, cookie } = {}) {
     const headers = { "User-Agent": BROWSER_UA };
     if (referer) headers["Referer"] = referer;
     if (cookie) headers["Cookie"] = cookie;
-    const res = await fetch(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(HWP_FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 15 * 1024 * 1024) return null;
+    if (buf.length > HWP_MAX_BYTES) return null;
     return extractHwp5BodyText(buf);
   } catch {
     return null;
@@ -5374,7 +5422,7 @@ async function main() {
     // 45일 정리를 하지 않고, 전체 실행에서도 사람이 승인한(approved) 항목은 지우지 않는다.
     [...existingCollected, ...newItems].filter(
       (i) => ULSAN_ONLY || BUKGU_ONLY || KR_LOCAL_ONLY || i.status === "approved" || new Date(i.collectedAt).getTime() >= cutoff
-    )
+    ).map((i) => refineNoticeByTitle(i))
   );
 
   // 2026-10-24 수정(버그 발견 — COLLECT_SCOPE=bukgu로 북구만 돌렸더니 기존 board_status.json
@@ -5609,6 +5657,7 @@ module.exports = {
   extractPostedDateFromBody,
   resolveYearlessMonthDay,
   classifyNotice,
+  refineNoticeByTitle,
   decideAutoPublishStatus,
   canonicalDedupKey,
   dedupeByCanonicalUrl,

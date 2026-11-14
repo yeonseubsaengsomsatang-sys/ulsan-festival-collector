@@ -536,15 +536,15 @@
     "org": "울산광역시 중구청",
     "region": "울산",
     "status": "ok",
-    "boards": 14,
-    "okBoards": 14,
+    "boards": 13,
+    "okBoards": 13,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github",
     "coverage": [
       "중구청 새소식: 3쪽 읽음, 게시일 2026-10-08 ~ 2026-11-13",
-      "중구청 보도자료: 7쪽 읽음, 게시일 2026-11-06 ~ 2026-11-13",
+      "중구청 보도자료: 6쪽 읽음, 게시일 2026-11-07 ~ 2026-11-13",
       "중구청 타기관소식: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-02"
     ]
   },
@@ -556,7 +556,7 @@
     "okBoards": 7,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github",
     "coverage": [
       "동구청 알림사항: 3쪽 읽음, 게시일 2026-10-23 ~ 2026-11-13",
@@ -571,7 +571,7 @@
     "okBoards": 4,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github",
     "coverage": [
       "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-15 ~ 2026-11-11"
@@ -585,7 +585,7 @@
     "okBoards": 7,
     "failedBoards": 1,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -596,10 +596,10 @@
     "okBoards": 5,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github",
     "coverage": [
-      "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-14 ~ 2026-11-13"
+      "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-17 ~ 2026-11-13"
     ]
   },
   {
@@ -610,7 +610,7 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github",
     "coverage": [
       "북구청 알림사항: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-09",
@@ -626,7 +626,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -637,7 +637,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -648,7 +648,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -659,7 +659,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -670,7 +670,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -681,7 +681,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -692,7 +692,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -703,7 +703,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -714,7 +714,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {
@@ -725,7 +725,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-13T18:16:40.129Z",
+    "checkedAt": "2026-11-14T12:01:27.601Z",
     "collectedBy": "github"
   },
   {

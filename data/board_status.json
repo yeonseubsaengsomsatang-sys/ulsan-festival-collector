@@ -540,7 +540,7 @@
     "okBoards": 13,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github",
     "coverage": [
       "중구청 새소식: 3쪽 읽음, 게시일 2026-10-08 ~ 2026-11-13",
@@ -553,10 +553,10 @@
     "region": "울산",
     "status": "ok",
     "boards": 7,
-    "okBoards": 6,
-    "failedBoards": 1,
+    "okBoards": 7,
+    "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github",
     "coverage": [
       "동구청 알림사항: 3쪽 읽음, 게시일 2026-10-23 ~ 2026-11-13",
@@ -571,10 +571,10 @@
     "okBoards": 3,
     "failedBoards": 1,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github",
     "coverage": [
-      "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-15 ~ 2026-11-11"
+      "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-18 ~ 2026-11-11"
     ]
   },
   {
@@ -585,7 +585,7 @@
     "okBoards": 8,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -596,10 +596,10 @@
     "okBoards": 5,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github",
     "coverage": [
-      "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-17 ~ 2026-11-13"
+      "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-17 ~ 2026-11-15"
     ]
   },
   {
@@ -610,12 +610,12 @@
     "okBoards": 10,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github",
     "coverage": [
       "북구청 알림사항: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-09",
       "북구청 북구공보: 3쪽 읽음, 게시일 2026-09-18 ~ 2026-11-05",
-      "북구청 타기관소식: 3쪽 읽음, 게시일 2026-09-15 ~ 2026-11-08"
+      "북구청 타기관소식: 3쪽 읽음, 게시일 2026-09-18 ~ 2026-11-08"
     ]
   },
   {
@@ -626,7 +626,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -637,7 +637,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -648,7 +648,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -659,7 +659,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -670,7 +670,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -681,7 +681,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -692,7 +692,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -703,7 +703,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -714,7 +714,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {
@@ -725,7 +725,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-14T16:49:54.023Z",
+    "checkedAt": "2026-11-15T12:35:55.575Z",
     "collectedBy": "github"
   },
   {

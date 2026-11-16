@@ -1234,5 +1234,9 @@
   "https://www.junggu.ulsan.kr/board/view.ulsan?boardId=BBS_0000090&menuCd=DOM_000000102003002000&orderBy=TMP_FIELD4%20DESC,REGISTER_DATE%20DESC&paging=ok&startPage=2&dataSid=727790": {
     "firstSeen": "2026-11-16T13:24:52.781Z",
     "org": "울산광역시 중구청"
+  },
+  "https://eminwon.bukgu.ulsan.kr/emwp/gov/mogaha/ntis/web/ofr/action/OfrAction.do?pageIndex=&jndinm=OfrNotAncmtEJB&context=NTIS&method=selectOfrNotAncmt&methodnm=selectOfrNotAncmtRegst&not_ancmt_mgt_no=45460&homepage_pbs_yn=Y&subCheck=Y&ofr_pageSize=10&not_ancmt_se_code=&title=&cha_dep_code_nm=&initValue=Y&countYn=Y&list_gubun=&not_ancmt_sj=": {
+    "firstSeen": "2026-11-16T20:45:14.272Z",
+    "org": "울산광역시 북구청"
   }
 }

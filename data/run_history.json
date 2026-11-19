@@ -437,5 +437,17 @@
     "okOrgs": 3,
     "failedOrgs": [],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-19T14:15:28.766Z",
+    "runId": "44540849327",
+    "event": "schedule",
+    "retryOf": null,
+    "retryReason": null,
+    "govAllFailed": false,
+    "retryResult": null,
+    "okOrgs": 16,
+    "failedOrgs": [],
+    "newItems": 0
   }
 ]

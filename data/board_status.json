@@ -230,98 +230,6 @@
     "checkedAt": "2026-10-24T05:57:56.587Z"
   },
   {
-    "org": "울산광역시 중구청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 4,
-    "okBoards": 0,
-    "failedBoards": 4,
-    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.junggu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp?list_gubun=A&not_ancmt_se_code=01,02,04\", waiting until \"networkidle\"\n",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github",
-    "coverage": [
-      "중구청 새소식: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)",
-      "중구청 보도자료: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)",
-      "중구청 타기관소식: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)"
-    ]
-  },
-  {
-    "org": "울산광역시 동구청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 3,
-    "okBoards": 0,
-    "failedBoards": 3,
-    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.donggu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github",
-    "coverage": [
-      "동구청 알림사항: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)",
-      "동구청 보도자료: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)"
-    ]
-  },
-  {
-    "org": "울산광역시 남구청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 2,
-    "okBoards": 0,
-    "failedBoards": 2,
-    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.ulsannamgu.go.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp\", waiting until \"networkidle\"\n",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github",
-    "coverage": [
-      "남구청 보도자료: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)"
-    ]
-  },
-  {
-    "org": "울산광역시 울주군청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 8,
-    "okBoards": 0,
-    "failedBoards": 8,
-    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.ulju.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp?list_gubun=A&not_ancmt_se_code=01,02,04\", waiting until \"networkidle\"\n",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github"
-  },
-  {
-    "org": "울산광역시청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 1,
-    "okBoards": 0,
-    "failedBoards": 1,
-    "lastError": "fetch failed (원인: UND_ERR_CONNECT_TIMEOUT)",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github",
-    "coverage": [
-      "울산시청 울산소식: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함)"
-    ]
-  },
-  {
-    "org": "울산광역시 북구청",
-    "region": "울산",
-    "status": "fetch_failed",
-    "boards": 8,
-    "okBoards": 0,
-    "failedBoards": 8,
-    "lastError": "page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"https://eminwon.bukgu.ulsan.kr/emwp/jsp/ofr/OfrNotAncmtLSub.jsp?list_gubun=A&not_ancmt_se_code=01,02,04\", waiting until \"networkidle\"\n",
-    "failureType": "접속 시간 초과",
-    "checkedAt": "2026-11-19T19:32:28.359Z",
-    "collectedBy": "github",
-    "coverage": [
-      "북구청 알림사항: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함) [지연 재시도 결과]",
-      "북구청 북구공보: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함) [지연 재시도 결과]",
-      "북구청 타기관소식: 접속 실패로 범위 미확인 (접속 시간 초과 — 1쪽부터 실패, 추가 쪽 요청 안 함) [지연 재시도 결과]"
-    ]
-  },
-  {
     "org": "전라남도 목포시청",
     "region": "전남",
     "status": "fetch_failed",
@@ -592,6 +500,92 @@
     "checkedAt": "2026-10-24T05:57:56.587Z"
   },
   {
+    "org": "울산광역시 중구청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 14,
+    "okBoards": 14,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github",
+    "coverage": [
+      "중구청 새소식: 3쪽 읽음, 게시일 2026-10-14 ~ 2026-11-19",
+      "중구청 보도자료: 7쪽 읽음, 게시일 2026-11-12 ~ 2026-11-19",
+      "중구청 타기관소식: 3쪽 읽음, 게시일 2026-10-07 ~ 2026-11-02"
+    ]
+  },
+  {
+    "org": "울산광역시 동구청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 7,
+    "okBoards": 7,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github",
+    "coverage": [
+      "동구청 알림사항: 3쪽 읽음, 게시일 2026-10-26 ~ 2026-11-19",
+      "동구청 보도자료: 3쪽 읽음, 게시일 2026-11-06 ~ 2026-11-17"
+    ]
+  },
+  {
+    "org": "울산광역시 남구청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 4,
+    "okBoards": 4,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github",
+    "coverage": [
+      "남구청 보도자료: 3쪽 읽음, 게시일 2026-09-22 ~ 2026-11-11"
+    ]
+  },
+  {
+    "org": "울산광역시 울주군청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 8,
+    "okBoards": 8,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github"
+  },
+  {
+    "org": "울산광역시청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 5,
+    "okBoards": 5,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github",
+    "coverage": [
+      "울산시청 울산소식: 5쪽 읽음, 게시일 2026-09-21 ~ 2026-11-18"
+    ]
+  },
+  {
+    "org": "울산광역시 북구청",
+    "region": "울산",
+    "status": "ok",
+    "boards": 10,
+    "okBoards": 10,
+    "failedBoards": 0,
+    "lastError": null,
+    "checkedAt": "2026-11-19T19:36:03.556Z",
+    "collectedBy": "github",
+    "coverage": [
+      "북구청 알림사항: 3쪽 읽음, 게시일 2026-10-14 ~ 2026-11-19",
+      "북구청 북구공보: 3쪽 읽음, 게시일 2026-09-22 ~ 2026-11-19",
+      "북구청 타기관소식: 3쪽 읽음, 게시일 2026-09-23 ~ 2026-11-19"
+    ]
+  },
+  {
     "org": "울산쇠부리축제추진위원회",
     "region": "울산",
     "status": "ok",
@@ -632,7 +626,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -643,7 +637,7 @@
     "okBoards": 3,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -654,7 +648,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -665,7 +659,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -676,7 +670,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -687,7 +681,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -698,7 +692,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -709,7 +703,7 @@
     "okBoards": 1,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -720,7 +714,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {
@@ -731,7 +725,7 @@
     "okBoards": 2,
     "failedBoards": 0,
     "lastError": null,
-    "checkedAt": "2026-11-19T19:32:28.359Z",
+    "checkedAt": "2026-11-19T19:36:03.556Z",
     "collectedBy": "github"
   },
   {

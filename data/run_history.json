@@ -558,5 +558,42 @@
     "okOrgs": 16,
     "failedOrgs": [],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-21T18:08:23.675Z",
+    "runId": "44932123342",
+    "event": "schedule",
+    "retryOf": null,
+    "retryReason": null,
+    "govAllFailed": true,
+    "retryResult": null,
+    "okOrgs": 10,
+    "failedOrgs": [
+      {
+        "org": "울산광역시 북구청",
+        "cause": "접속 시간 초과"
+      },
+      {
+        "org": "울산광역시 중구청",
+        "cause": "접속 시간 초과"
+      },
+      {
+        "org": "울산광역시 동구청",
+        "cause": "접속 시간 초과"
+      },
+      {
+        "org": "울산광역시 남구청",
+        "cause": "접속 시간 초과"
+      },
+      {
+        "org": "울산광역시 울주군청",
+        "cause": "접속 시간 초과"
+      },
+      {
+        "org": "울산광역시청",
+        "cause": "접속 시간 초과"
+      }
+    ],
+    "newItems": 0
   }
 ]

@@ -703,5 +703,22 @@
     "okOrgs": 16,
     "failedOrgs": [],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-24T20:59:11.092Z",
+    "runId": "45485709245",
+    "event": "schedule",
+    "retryOf": null,
+    "retryReason": null,
+    "govAllFailed": false,
+    "retryResult": null,
+    "okOrgs": 15,
+    "failedOrgs": [
+      {
+        "org": "플리모아",
+        "cause": "페이지 구조 변경 의심"
+      }
+    ],
+    "newItems": 0
   }
 ]

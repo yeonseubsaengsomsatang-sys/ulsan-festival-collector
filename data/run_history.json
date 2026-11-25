@@ -781,5 +781,17 @@
       }
     ],
     "newItems": 0
+  },
+  {
+    "at": "2026-11-25T20:39:49.978Z",
+    "runId": "45696451375",
+    "event": "workflow_dispatch",
+    "retryOf": "45693384554",
+    "retryReason": "접속 시간 초과",
+    "govAllFailed": false,
+    "retryResult": "재실행 성공",
+    "okOrgs": 16,
+    "failedOrgs": [],
+    "newItems": 0
   }
 ]

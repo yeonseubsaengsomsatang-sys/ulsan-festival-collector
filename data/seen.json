@@ -1246,5 +1246,9 @@
   "https://www.donggu.ulsan.kr/cop/bbs/selectBoardArticle.do?bbsId=BBSMSTR_000000000322&nttId=213692": {
     "firstSeen": "2026-11-25T15:21:58.711Z",
     "org": "울산광역시 동구청"
+  },
+  "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardArticle.do?bbsId=press&nttId=540183": {
+    "firstSeen": "2026-11-26T14:49:34.757Z",
+    "org": "울산광역시 남구청"
   }
 }

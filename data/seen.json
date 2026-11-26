@@ -1250,5 +1250,9 @@
   "https://www.ulsannamgu.go.kr/cop/bbs/selectBoardArticle.do?bbsId=press&nttId=540183": {
     "firstSeen": "2026-11-26T14:49:34.757Z",
     "org": "울산광역시 남구청"
+  },
+  "https://eminwon.ulju.ulsan.kr/emwp/gov/mogaha/ntis/web/ofr/action/OfrAction.do?pageIndex=&jndinm=OfrNotAncmtEJB&context=NTIS&method=selectOfrNotAncmt&methodnm=selectOfrNotAncmtRegst&not_ancmt_mgt_no=68577&homepage_pbs_yn=Y&subCheck=Y&ofr_pageSize=10&not_ancmt_se_code=&title=&cha_dep_code_nm=&initValue=Y&countYn=Y&list_gubun=&not_ancmt_sj=": {
+    "firstSeen": "2026-11-26T19:57:23.589Z",
+    "org": "울산광역시 울주군청"
   }
 }
